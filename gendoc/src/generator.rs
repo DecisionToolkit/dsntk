@@ -217,7 +217,7 @@ impl HTMLGenerator {
     } else {
       "Decision Table"
     };
-    body.add_child(HtmlElement::h1(document_title));
+    body.add_child(HtmlElement::h1(document_title).attribute("id", decision_table.id()));
     // add decision table
     match &decision_table.preferred_orientation() {
       DecisionTableOrientation::RuleAsRow => {
@@ -613,7 +613,7 @@ fn create_description(optional_description: &Option<String>) -> HtmlElement {
   }
 }
 
-/// Creates SVG solid edge line with black-filled arrow at the end.  
+/// Creates SVG solid edge line with black-filled arrow at the end.
 fn create_svg_edge_solid_with_black_arrow(way_points: &[DcPoint]) -> HtmlElement {
   // prepare line
   let points = way_points.iter().fold("".to_string(), |acc, w| format!("{}{},{} ", acc, w.x, w.y));
@@ -643,7 +643,7 @@ fn create_svg_edge_solid_with_black_arrow(way_points: &[DcPoint]) -> HtmlElement
   create_svg_group(vec![svg_edge, svg_arrow])
 }
 
-/// Creates SVG dashed edge line with thin arrow at the end.  
+/// Creates SVG dashed edge line with thin arrow at the end.
 fn create_svg_edge_dashed_with_thin_arrow(way_points: &[DcPoint]) -> HtmlElement {
   // prepare line
   let points = way_points.iter().fold("".to_string(), |acc, w| format!("{}{},{} ", acc, w.x, w.y));
@@ -668,7 +668,7 @@ fn create_svg_edge_dashed_with_thin_arrow(way_points: &[DcPoint]) -> HtmlElement
   create_svg_group(vec![svg_edge, svg_arrow])
 }
 
-/// Creates SVG dashed edge line with black end-point at the end.  
+/// Creates SVG dashed edge line with black end-point at the end.
 fn create_svg_edge_dashed_with_end_point(way_points: &[DcPoint]) -> HtmlElement {
   // prepare line
   let points = way_points.iter().fold("".to_string(), |acc, w| format!("{}{},{} ", acc, w.x, w.y));
