@@ -13,6 +13,7 @@ mod compatibility;
 mod exhaustive;
 mod input_data;
 mod simulation;
+mod temporal_functions;
 mod various;
 
 macro_rules! from_examples {
