@@ -16,4 +16,7 @@ dsntk-macros = { workspace = true }
 
 [dev-dependencies]
 dsntk-examples = { workspace = true }
+dsntk-model = { workspace = true }
+dsntk-feel = { workspace = true }
+dsntk-model-evaluator = { workspace = true }
 walkdir = { workspace = true }
