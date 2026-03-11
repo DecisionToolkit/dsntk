@@ -51,7 +51,10 @@ fn validate_argument_type(param_type: &str, arg: &Value) -> Result<(), String> {
       _ => Err(format!("simple DTO conversion to object failed, class: {param_type}, type: {}", xsd_type_name(arg))),
     },
     s if s.starts_with("[L") => Ok(()),
-    "char" => Err(format!("simple DTO conversion to object failed, class: {param_type}, type: {}", xsd_type_name(arg))),
+    "char" => match arg {
+      Value::String(s) if s.chars().count() == 1 => Ok(()),
+      _ => Err(format!("simple DTO conversion to object failed, class: {param_type}, type: {}", xsd_type_name(arg))),
+    },
     _ => Ok(()),
   }
 }
@@ -79,6 +82,8 @@ fn evaluate_builtin(class_name: &str, method_name: &str, parameter_types: &[Stri
     "java.lang.Float" => evaluate_java_lang_float(class_name, method_name, parameter_types, arguments),
     "java.lang.Double" => evaluate_java_lang_double(class_name, method_name, parameter_types, arguments),
     "java.lang.Long" => evaluate_java_lang_long(class_name, method_name, parameter_types, arguments),
+    "java.lang.Short" => evaluate_java_lang_short(class_name, method_name, parameter_types, arguments),
+    "java.lang.Byte" => evaluate_java_lang_byte(class_name, method_name, parameter_types, arguments),
     _ => value_null!("java.lang.ClassNotFoundException: {}", class_name),
   }
 }
@@ -118,7 +123,18 @@ fn evaluate_java_lang_math(class_name: &str, method_name: &str, parameter_types:
         value_null!("expected number argument")
       }
     }
-    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(", ")),
+    "max" if parameter_types.len() == 2 && matches!(parameter_types[0].as_str(), "double" | "float" | "int" | "long") && parameter_types[0] == parameter_types[1] => {
+      if let (Value::Number(a), Value::Number(b)) = (&arguments[0], &arguments[1]) {
+        if a >= b {
+          Value::Number(*a)
+        } else {
+          Value::Number(*b)
+        }
+      } else {
+        value_null!("expected number arguments")
+      }
+    }
+    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(",")),
   }
 }
 
@@ -133,6 +149,13 @@ fn evaluate_java_lang_string(class_name: &str, method_name: &str, parameter_type
         Value::String(s)
       } else {
         value_null!("expected number argument")
+      }
+    }
+    "valueOf" if parameter_types == ["char"] => {
+      if let Value::String(s) = &arguments[0] {
+        Value::String(s.clone())
+      } else {
+        value_null!("expected string argument")
       }
     }
     "format" if !parameter_types.is_empty() && parameter_types[0] == "java.lang.String" => {
@@ -154,7 +177,7 @@ fn evaluate_java_lang_string(class_name: &str, method_name: &str, parameter_type
         value_null!("expected string argument")
       }
     }
-    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(", ")),
+    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(",")),
   }
 }
 
@@ -180,7 +203,7 @@ fn evaluate_java_lang_integer(class_name: &str, method_name: &str, parameter_typ
         value_null!("expected string argument")
       }
     }
-    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(", ")),
+    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(",")),
   }
 }
 
@@ -204,7 +227,7 @@ fn evaluate_java_lang_float(class_name: &str, method_name: &str, parameter_types
         value_null!("expected number argument")
       }
     }
-    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(", ")),
+    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(",")),
   }
 }
 
@@ -221,7 +244,7 @@ fn evaluate_java_lang_double(class_name: &str, method_name: &str, parameter_type
         value_null!("expected string argument")
       }
     }
-    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(", ")),
+    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(",")),
   }
 }
 
@@ -237,6 +260,38 @@ fn evaluate_java_lang_long(class_name: &str, method_name: &str, parameter_types:
         value_null!("expected number argument")
       }
     }
-    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(", ")),
+    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(",")),
+  }
+}
+
+/// Evaluates methods of `java.lang.Short`.
+fn evaluate_java_lang_short(class_name: &str, method_name: &str, parameter_types: &[String], arguments: &[Value]) -> Value {
+  match method_name {
+    "valueOf" if parameter_types == ["short"] => {
+      if let Value::Number(n) = &arguments[0] {
+        let v: f64 = n.to_string().parse().unwrap_or(0.0);
+        let i = v as i64;
+        Value::Number(FeelNumber::new(i, 0))
+      } else {
+        value_null!("expected number argument")
+      }
+    }
+    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(",")),
+  }
+}
+
+/// Evaluates methods of `java.lang.Byte`.
+fn evaluate_java_lang_byte(class_name: &str, method_name: &str, parameter_types: &[String], arguments: &[Value]) -> Value {
+  match method_name {
+    "valueOf" if parameter_types == ["byte"] => {
+      if let Value::Number(n) = &arguments[0] {
+        let v: f64 = n.to_string().parse().unwrap_or(0.0);
+        let i = v as i64;
+        Value::Number(FeelNumber::new(i, 0))
+      } else {
+        value_null!("expected number argument")
+      }
+    }
+    _ => value_null!("java.lang.NoSuchMethodException: {}.{}({})", class_name, method_name, parameter_types.join(",")),
   }
 }

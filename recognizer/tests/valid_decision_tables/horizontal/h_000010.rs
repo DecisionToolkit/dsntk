@@ -6,7 +6,7 @@ fn _0001() {
     // expected information item name
     None,
     // expected output label
-    Some("Day"),
+    None,
     // expected hit policy
     HitPolicy::Collect(BuiltinAggregator::List),
     // expected aggregation
