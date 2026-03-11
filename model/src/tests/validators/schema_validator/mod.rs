@@ -10,7 +10,7 @@ mod test_input_data_v13;
 mod test_input_data_v14;
 mod test_root_element_v13;
 
-fn document(input: &str) -> Document {
+fn document(input: &str) -> Document<'_> {
   Document::parse(input).unwrap()
 }
 

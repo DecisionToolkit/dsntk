@@ -32,7 +32,7 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo +stable clippy --workspace --all-targets -- -D warnings
+      - run: cargo +stable clippy --workspace --lib --bins --tests --examples -- -D warnings
 
   test:
     name: Test

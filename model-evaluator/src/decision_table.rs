@@ -15,7 +15,7 @@ fn contains_comparison_expressions(node: &AstNode) -> bool {
     AstNode::ExpressionList(items) => {
       // If any item in the expression list is a comparison operation,
       // we should evaluate the expressions directly
-      items.iter().any(|item| contains_comparison_operators(item))
+      items.iter().any(contains_comparison_operators)
     }
     _ => contains_comparison_operators(node),
   }
@@ -38,8 +38,8 @@ fn contains_comparison_operators(node: &AstNode) -> bool {
     AstNode::Between(expr, start, end) => contains_comparison_operators(expr) || contains_comparison_operators(start) || contains_comparison_operators(end),
     AstNode::In(left, right) => contains_comparison_operators(left) || contains_comparison_operators(right),
     AstNode::InstanceOf(expr, _) => contains_comparison_operators(expr),
-    AstNode::List(items) => items.iter().any(|item| contains_comparison_operators(item)),
-    AstNode::Context(items) => items.iter().any(|item| contains_comparison_operators(item)),
+    AstNode::List(items) => items.iter().any(contains_comparison_operators),
+    AstNode::Context(items) => items.iter().any(contains_comparison_operators),
     AstNode::ContextEntry(_, value) => contains_comparison_operators(value),
     AstNode::Filter(expr, filter) => contains_comparison_operators(expr) || contains_comparison_operators(filter),
     AstNode::Every(_, expr) => contains_comparison_operators(expr),
@@ -48,12 +48,12 @@ fn contains_comparison_operators(node: &AstNode) -> bool {
     AstNode::If(condition, then_expr, else_expr) => {
       contains_comparison_operators(condition) || contains_comparison_operators(then_expr) || contains_comparison_operators(else_expr)
     }
-    AstNode::PositionalParameters(items) => items.iter().any(|item| contains_comparison_operators(item)),
-    AstNode::NamedParameters(items) => items.iter().any(|item| contains_comparison_operators(item)),
+    AstNode::PositionalParameters(items) => items.iter().any(contains_comparison_operators),
+    AstNode::NamedParameters(items) => items.iter().any(contains_comparison_operators),
     AstNode::NamedParameter(_, expr) => contains_comparison_operators(expr),
-    AstNode::FormalParameters(items) => items.iter().any(|item| contains_comparison_operators(item)),
+    AstNode::FormalParameters(items) => items.iter().any(contains_comparison_operators),
     AstNode::FormalParameter(_, expr) => contains_comparison_operators(expr),
-    AstNode::ExpressionList(items) => items.iter().any(|item| contains_comparison_operators(item)),
+    AstNode::ExpressionList(items) => items.iter().any(contains_comparison_operators),
     _ => false,
   }
 }
@@ -398,10 +398,10 @@ fn evaluate_parsed_decision_table(scope: &FeelScope, parsed_decision_table: &Par
   }
   // evaluate all rules
   let mut evaluated_rules = vec![];
-  for (_rule_index, parsed_rule) in parsed_decision_table.rules.iter().enumerate() {
+  for parsed_rule in parsed_decision_table.rules.iter() {
     let mut input_entry_values = vec![];
     let mut matches = true;
-    for (_input_index, evaluator) in parsed_rule.input_entries_evaluators.iter().enumerate() {
+    for evaluator in parsed_rule.input_entries_evaluators.iter() {
       let input_value: Value = evaluator(scope);
 
       // Handle expression lists containing comparison results

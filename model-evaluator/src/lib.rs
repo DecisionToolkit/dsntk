@@ -86,7 +86,7 @@ mod utilities {
 
   /// Prepares the difference in text format.
   fn diff(a: usize, b: usize) -> String {
-    let diff = if a > b { a - b } else { b - a };
+    let diff = a.abs_diff(b);
     if diff > 0 {
       Text::new(ColorMode::On).red().s(format!("{:>9}", diff)).clear().to_string()
     } else {

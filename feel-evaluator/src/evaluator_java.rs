@@ -135,7 +135,7 @@ fn evaluate_java_lang_string(class_name: &str, method_name: &str, parameter_type
         value_null!("expected number argument")
       }
     }
-    "format" if parameter_types.len() >= 1 && parameter_types[0] == "java.lang.String" => {
+    "format" if !parameter_types.is_empty() && parameter_types[0] == "java.lang.String" => {
       if let Value::String(fmt_str) = &arguments[0] {
         let mut result = fmt_str.clone();
         for arg in &arguments[1..] {

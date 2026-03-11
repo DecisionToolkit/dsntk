@@ -516,8 +516,7 @@ impl<'lexer> Lexer<'lexer> {
     // Parse number using a state machine.
     //------------------------------------------------------------------------------------------------------------------
     let mut state = 1;
-    loop {
-      let Some(ch) = self.char_at(0) else { break };
+    while let Some(ch) = self.char_at(0) {
       match state {
         1 => match ch {
           '0'..='9' => {
