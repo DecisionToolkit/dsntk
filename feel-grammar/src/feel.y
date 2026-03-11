@@ -148,12 +148,12 @@ simple_expressions:
   ;
 
 simple_positive_unary_test:
-    LT expression {/* comparison_unary_lt */}
-  | LE expression {/* comparison_unary_le */}
-  | GT expression {/* comparison_unary_gt */}
-  | GE expression {/* comparison_unary_ge */}
-  | EQ expression {/* comparison_unary_eq */}
-  | NE expression {/* comparison_unary_ne */}
+    LT endpoint {/* comparison_unary_lt */}
+  | LE endpoint {/* comparison_unary_le */}
+  | GT endpoint {/* comparison_unary_gt */}
+  | GE endpoint {/* comparison_unary_ge */}
+  | EQ endpoint {/* comparison_unary_eq */}
+  | NE endpoint {/* comparison_unary_ne */}
   | interval
   ;
 
