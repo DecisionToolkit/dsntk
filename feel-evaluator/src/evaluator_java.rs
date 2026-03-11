@@ -125,7 +125,11 @@ fn evaluate_java_lang_math(class_name: &str, method_name: &str, parameter_types:
     }
     "max" if parameter_types.len() == 2 && matches!(parameter_types[0].as_str(), "double" | "float" | "int" | "long") && parameter_types[0] == parameter_types[1] => {
       if let (Value::Number(a), Value::Number(b)) = (&arguments[0], &arguments[1]) {
-        if a >= b { Value::Number(*a) } else { Value::Number(*b) }
+        if a >= b {
+          Value::Number(*a)
+        } else {
+          Value::Number(*b)
+        }
       } else {
         value_null!("expected number arguments")
       }
