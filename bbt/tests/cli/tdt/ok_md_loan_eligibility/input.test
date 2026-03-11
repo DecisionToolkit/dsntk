@@ -1,0 +1,7 @@
+% { Credit Score: 800, Annual Income: 80000,  Employment: "Employed" },   { Decision: "Approved", Rate: 3.5 }
+% { Credit Score: 720, Annual Income: 50000,  Employment: "Employed" },   { Decision: "Approved", Rate: 5.0 }
+% { Credit Score: 680, Annual Income: 70000,  Employment: "Employed" },   { Decision: "Review",   Rate: 7.5 }
+% { Credit Score: 600, Annual Income: 90000,  Employment: "Employed" },   { Decision: "Denied",   Rate: null }
+% { Credit Score: 800, Annual Income: 100000, Employment: "Unemployed" }, { Decision: "Denied",   Rate: null }
+% { Credit Score: 750, Annual Income: 50000,  Employment: "Employed" },   { Decision: "Approved", Rate: 3.5 }
+% { Credit Score: 700, Annual Income: 40000,  Employment: "Employed" },   { Decision: "Approved", Rate: 5.0 }

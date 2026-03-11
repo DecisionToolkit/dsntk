@@ -1,0 +1,6 @@
+% { Customer Type: "Private",  Order Value: 500,  Years: 1 }, null(no rules matched, no output value defined)
+% { Customer Type: "Business", Order Value: 500,  Years: 1 }, 0.05
+% { Customer Type: "Private",  Order Value: 2000, Years: 1 }, 0.03
+% { Customer Type: "Business", Order Value: 2000, Years: 4 }, 0.10
+% { Customer Type: "Business", Order Value: 6000, Years: 6 }, 0.18
+% { Customer Type: "Private",  Order Value: 6000, Years: 6 }, 0.13

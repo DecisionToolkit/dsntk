@@ -1,0 +1,9 @@
+% { Priority: "Critical", Tier: "Enterprise" }, 1
+% { Priority: "Critical", Tier: "Business" },   4
+% { Priority: "Critical", Tier: "Free" },       24
+% { Priority: "High",     Tier: "Enterprise" }, 4
+% { Priority: "High",     Tier: "Business" },   8
+% { Priority: "High",     Tier: "Free" },       48
+% { Priority: "Medium",   Tier: "Enterprise" }, 8
+% { Priority: "Medium",   Tier: "Business" },   24
+% { Priority: "Medium",   Tier: "Free" },       72

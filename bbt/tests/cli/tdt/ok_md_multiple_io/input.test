@@ -1,0 +1,5 @@
+% { Age: 30, Income: 100000, Credit: 800 }, { Decision: "Platinum", Rate: 2.9,  Limit: 50000 }
+% { Age: 22, Income:  60000, Credit: 720 }, { Decision: "Gold",     Rate: 4.5,  Limit: 25000 }
+% { Age: 19, Income:  35000, Credit: 660 }, { Decision: "Silver",   Rate: 6.9,  Limit: 10000 }
+% { Age: 17, Income:  90000, Credit: 800 }, { Decision: "Denied",   Rate: null, Limit: 0 }
+% { Age: 30, Income:  20000, Credit: 600 }, { Decision: "Denied",   Rate: null, Limit: 0 }

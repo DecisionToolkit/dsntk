@@ -1,0 +1,4 @@
+% { Status: "Active" },   true
+% { Status: "Enabled" },  true
+% { Status: "Disabled" }, false
+% { Status: "Inactive" }, false

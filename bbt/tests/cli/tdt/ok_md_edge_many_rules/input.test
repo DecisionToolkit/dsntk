@@ -1,0 +1,10 @@
+% { Value: 0 },     1
+% { Value: 7 },     2
+% { Value: 12 },    3
+% { Value: 42 },    9
+% { Value: 50 },    11
+% { Value: 73 },    15
+% { Value: 99 },    20
+% { Value: 100 },   20
+% { Value: -1 },    0
+% { Value: 101 },   0

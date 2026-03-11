@@ -1,0 +1,4 @@
+% { Code: 1 }, { Label: "Approved", Active: true,  Amount: 1000 }
+% { Code: 2 }, { Label: "Denied",   Active: false, Amount: 0 }
+% { Code: 3 }, { Label: "Pending",  Active: true,  Amount: 500.50 }
+% { Code: 4 }, { Label: null,       Active: null,  Amount: null }

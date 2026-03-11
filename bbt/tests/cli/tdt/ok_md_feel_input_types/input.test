@@ -1,0 +1,8 @@
+% { Age: 30, Status: "Gold",      Active: true,  Value: 100 },  "Premium"
+% { Age: 25, Status: "Platinum",  Active: true,  Value: 50 },   "Premium"
+% { Age: 40, Status: "Silver",    Active: true,  Value: 10 },   "Standard"
+% { Age: 10, Status: "Gold",      Active: true,  Value: 100 },  "Minor"
+% { Age: 70, Status: "Silver",    Active: true,  Value: 100 },  "Senior"
+% { Age: 30, Status: "Cancelled", Active: true,  Value: 100 },  "Cancelled"
+% { Age: 30, Status: "Gold",      Active: false, Value: 100 },  "Inactive"
+% { Age: 30, Status: "Gold",      Active: true,  Value: null },  "Premium"

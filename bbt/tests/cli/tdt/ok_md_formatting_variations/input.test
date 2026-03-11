@@ -1,0 +1,3 @@
+% { Customer Type: "Business", Order Amount: 50 },  0.05
+% { Customer Type: "Business", Order Amount: 200 }, 0.10
+% { Customer Type: "Private",  Order Amount: 500 }, 0.02

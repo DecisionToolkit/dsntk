@@ -1,0 +1,4 @@
+% { Count: 15, Amount: 2000, Status: "Active" },     "VIP"
+% { Count: 8,  Amount: 800,  Status: "Active" },     "Regular"
+% { Count: 3,  Amount: 200,  Status: "Suspended" },  "Paused"
+% { Count: 2,  Amount: 100,  Status: "Active" },     "Basic"

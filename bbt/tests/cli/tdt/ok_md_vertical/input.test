@@ -1,0 +1,5 @@
+% { Customer: "Business", Order:   5 }, 0.10
+% { Customer: "Business", Order:  10 }, 0.15
+% { Customer: "Business", Order: 100 }, 0.15
+% { Customer: "Private",  Order:   5 }, 0.05
+% { Customer: "Private",  Order: 100 }, 0.05

@@ -1,0 +1,9 @@
+% { Weight: 0.5,  Zone: "Domestic",       Express: false }, 5.99
+% { Weight: 0.5,  Zone: "Domestic",       Express: true },  12.99
+% { Weight: 3.0,  Zone: "Domestic",       Express: false }, 9.99
+% { Weight: 3.0,  Zone: "Domestic",       Express: true },  19.99
+% { Weight: 10.0, Zone: "Domestic",       Express: false }, 15.99
+% { Weight: 10.0, Zone: "Domestic",       Express: true },  29.99
+% { Weight: 0.5,  Zone: "International",  Express: false }, 14.99
+% { Weight: 0.5,  Zone: "International",  Express: true },  29.99
+% { Weight: 3.0,  Zone: "International",  Express: false }, 24.99

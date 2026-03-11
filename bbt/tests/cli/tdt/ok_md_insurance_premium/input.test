@@ -1,0 +1,6 @@
+% { Age: 30, Smoker: false }, 100
+% { Age: 20, Smoker: false }, 150
+% { Age: 65, Smoker: false }, 175
+% { Age: 20, Smoker: true },  350
+% { Age: 65, Smoker: true },  375
+% { Age: 40, Smoker: true },  300
