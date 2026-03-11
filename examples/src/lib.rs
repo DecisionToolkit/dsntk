@@ -68,6 +68,10 @@ mod utilities {
   /// with the number of compatibility test models in TCK repository.
   #[test]
   fn compare_the_number_of_models() {
+    if !std::path::Path::new("../../tck/TestCases").exists() {
+      eprintln!("Skipping compare_the_number_of_models: TCK repository not found at ../../tck/TestCases");
+      return;
+    }
     let tck_models = count_models("../../tck/TestCases");
     let tck_adjusted_models = tck_models
       .iter()

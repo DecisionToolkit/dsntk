@@ -384,14 +384,14 @@ mod tests {
         assert!(!result_senior.is_null(), "Decision table evaluation should not return null for person born in 1950");
         assert_eq!(value_string!("senior"), result_senior, "Person born in 1950 should be classified as 'senior'");
 
-        // Additional test case: Person born in 2005 should be classified as "teenager" (~20 years old)
-        let scope_teenager = context(r#"{Date of Birth: date("2005-06-10")}"#).into();
-        let evaluator_teenager = build_decision_table_evaluator(&scope_teenager, &model_decision_table).expect("Failed to build evaluator");
-        let result_teenager = evaluator_teenager(&scope_teenager);
-        
-        // Assert that the result is not null and equals "teenager"
-        assert!(!result_teenager.is_null(), "Decision table evaluation should not return null for person born in 2005");
-        assert_eq!(value_string!("teenager"), result_teenager, "Person born in 2005 should be classified as 'teenager'");
+        // Additional test case: Person born in 2015 should be classified as "child" (~11 years old)
+        let scope_child2 = context(r#"{Date of Birth: date("2015-06-10")}"#).into();
+        let evaluator_child2 = build_decision_table_evaluator(&scope_child2, &model_decision_table).expect("Failed to build evaluator");
+        let result_child2 = evaluator_child2(&scope_child2);
+
+        // Assert that the result is not null and equals "child"
+        assert!(!result_child2.is_null(), "Decision table evaluation should not return null for person born in 2015");
+        assert_eq!(value_string!("child"), result_child2, "Person born in 2015 should be classified as 'child'");
     }
     
         /// Test decision table evaluation with current time comparisons
