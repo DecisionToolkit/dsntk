@@ -5,7 +5,7 @@ use dsntk_feel::{scope, FeelScope};
 fn _0001_decision_table_input_with_function_calls() {
   // Test that decision table input entries can contain expressions with function calls
   let node = dsntk_feel_parser::parse_unary_tests(&scope!(), "Date < today()", false).unwrap();
-  
+
   // Verify the AST structure is correct for decision table input evaluation
   let expected = r#"
        ExpressionList
@@ -25,7 +25,7 @@ fn _0001_decision_table_input_with_function_calls() {
 fn _0002_decision_table_input_with_complex_expressions() {
   // Test that decision table input entries can contain complex expressions
   let node = dsntk_feel_parser::parse_unary_tests(&scope!(), "Amount > calculate_total() + 100", false).unwrap();
-  
+
   let expected = r#"
        ExpressionList
        └─ Gt
@@ -47,7 +47,7 @@ fn _0002_decision_table_input_with_complex_expressions() {
 fn _0003_decision_table_input_with_temporal_functions() {
   // Test that decision table input entries can contain temporal function calls
   let node = dsntk_feel_parser::parse_unary_tests(&scope!(), "Time > now()", false).unwrap();
-  
+
   let expected = r#"
        ExpressionList
        └─ Gt
@@ -66,7 +66,7 @@ fn _0003_decision_table_input_with_temporal_functions() {
 fn _0004_decision_table_input_with_multiple_expressions() {
   // Test that decision table input entries can contain multiple expressions
   let node = dsntk_feel_parser::parse_unary_tests(&scope!(), "Date < today(), Amount > 1000, Status = \"active\"", false).unwrap();
-  
+
   let expected = r#"
        ExpressionList
        ├─ Lt
@@ -95,7 +95,7 @@ fn _0004_decision_table_input_with_multiple_expressions() {
 fn _0005_decision_table_input_with_backward_compatibility() {
   // Test that traditional unary test syntax still works
   let node = dsntk_feel_parser::parse_unary_tests(&scope!(), "<5, >10, =15", false).unwrap();
-  
+
   let expected = r#"
        ExpressionList
        ├─ UnaryLt
@@ -115,7 +115,7 @@ fn _0005_decision_table_input_with_backward_compatibility() {
 fn _0006_decision_table_input_with_age_calculation() {
   // Test that decision table input entries can contain age calculation expressions
   let node = dsntk_feel_parser::parse_unary_tests(&scope!(), "years and months duration(Birth Date, today()).years < 13", false).unwrap();
-  
+
   let expected = r#"
        ExpressionList
        └─ Lt
@@ -142,8 +142,13 @@ fn _0006_decision_table_input_with_age_calculation() {
 #[test]
 fn _0007_decision_table_input_with_complex_age_conditions() {
   // Test that decision table input entries can contain complex age conditions with multiple comparisons
-  let node = dsntk_feel_parser::parse_unary_tests(&scope!(), "years and months duration(Birth Date, today()).years >= 13 and years and months duration(Birth Date, today()).years < 18", false).unwrap();
-  
+  let node = dsntk_feel_parser::parse_unary_tests(
+    &scope!(),
+    "years and months duration(Birth Date, today()).years >= 13 and years and months duration(Birth Date, today()).years < 18",
+    false,
+  )
+  .unwrap();
+
   let expected = r#"
        ExpressionList
        └─ And
@@ -189,7 +194,7 @@ fn _0007_decision_table_input_with_complex_age_conditions() {
 fn _0008_decision_table_input_with_age_boundary_conditions() {
   // Test that decision table input entries can contain age boundary conditions
   let node = dsntk_feel_parser::parse_unary_tests(&scope!(), "years and months duration(Birth Date, today()).years = 13", false).unwrap();
-  
+
   let expected = r#"
        ExpressionList
        └─ Eq

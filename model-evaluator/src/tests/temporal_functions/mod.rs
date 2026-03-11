@@ -6,7 +6,7 @@
 //! - today_function: Tests for today() function with comparisons
 //! - age_calculations: Tests for age calculations using years and months duration
 
+pub mod age_calculations;
 pub mod date_time_comparisons;
 pub mod duration_functions;
 pub mod today_function;
-pub mod age_calculations;

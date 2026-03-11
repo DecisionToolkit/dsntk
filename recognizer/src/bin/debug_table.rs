@@ -1,7 +1,7 @@
 use dsntk_recognizer::from_unicode;
 
 fn main() {
-    let table = r#"
+  let table = r#"
 ┌───┬─────────────╥─────────────┬─────────────┐
 │F │Age          ║Age Group    │Notes        │
 ╞═══╪═════════════╬═════════════╪═════════════╡
@@ -16,17 +16,17 @@ fn main() {
 │4 │>=65         ║"senior"     │"65+ years"  │
 └───┴─────────────╨─────────────┴─────────────┘
 "#;
-    
-    match from_unicode(table, false) {
-        Ok(decision_table) => {
-            println!("Successfully recognized table!");
-            println!("Hit policy: {:?}", decision_table.hit_policy);
-            println!("Input clauses: {}", decision_table.input_clauses.len());
-            println!("Output clauses: {}", decision_table.output_clauses.len());
-            println!("Rules: {}", decision_table.rules.len());
-        }
-        Err(e) => {
-            println!("Error: {}", e);
-        }
+
+  match from_unicode(table, false) {
+    Ok(decision_table) => {
+      println!("Successfully recognized table!");
+      println!("Hit policy: {:?}", decision_table.hit_policy);
+      println!("Input clauses: {}", decision_table.input_clauses.len());
+      println!("Output clauses: {}", decision_table.output_clauses.len());
+      println!("Rules: {}", decision_table.rules.len());
     }
+    Err(e) => {
+      println!("Error: {}", e);
+    }
+  }
 }

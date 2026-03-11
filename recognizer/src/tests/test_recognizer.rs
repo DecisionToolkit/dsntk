@@ -356,27 +356,11 @@ fn test_age_calculation_01() {
   eq_orientation(rec, DecisionTableOrientation::RulesAsRows);
   eq_input_expressions(rec, &["Age"]);
   eq_input_values(rec, EMPTY_OPT_VECTOR);
-  eq_input_entries(
-    rec,
-    &[
-      &["<13"],
-      &["<18"],
-      &["<65"],
-      &[">=65"],
-    ],
-  );
+  eq_input_entries(rec, &[&["<13"], &["<18"], &["<65"], &[">=65"]]);
   eq_output_label(rec, Some("Age Group".to_string()));
   eq_output_components(rec, EMPTY_OPT_VECTOR);
   eq_output_values(rec, EMPTY_OPT_VECTOR);
-  eq_output_entries(
-    rec,
-    &[
-      &[r#""child""#],
-      &[r#""teenager""#],
-      &[r#""adult""#],
-      &[r#""senior""#],
-    ],
-  );
+  eq_output_entries(rec, &[&[r#""child""#], &[r#""teenager""#], &[r#""adult""#], &[r#""senior""#]]);
   eq_annotations(rec, EMPTY_VECTOR);
   eq_annotation_entries(rec, EMPTY_MATRIX);
 }
@@ -389,23 +373,11 @@ fn test_temporal_functions() {
   eq_orientation(rec, DecisionTableOrientation::RulesAsRows);
   eq_input_expressions(rec, &["Function"]);
   eq_input_values(rec, EMPTY_OPT_VECTOR);
-  eq_input_entries(
-    rec,
-    &[
-      &["now()"],
-      &["today()"],
-    ],
-  );
+  eq_input_entries(rec, &[&["now()"], &["today()"]]);
   eq_output_label(rec, Some("Result".to_string()));
   eq_output_components(rec, EMPTY_OPT_VECTOR);
   eq_output_values(rec, EMPTY_OPT_VECTOR);
-  eq_output_entries(
-    rec,
-    &[
-      &["now()"],
-      &["today()"],
-    ],
-  );
+  eq_output_entries(rec, &[&["now()"], &["today()"]]);
   eq_annotations(rec, EMPTY_VECTOR);
   eq_annotation_entries(rec, EMPTY_MATRIX);
 }

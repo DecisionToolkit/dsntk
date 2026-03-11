@@ -11,26 +11,20 @@ use std::cmp::Ordering;
 /// Checks if an AST node contains comparison expressions that should be evaluated directly
 /// rather than wrapped in `AstNode::In` expressions.
 fn contains_comparison_expressions(node: &AstNode) -> bool {
-    match node {
-        AstNode::ExpressionList(items) => {
-            // If any item in the expression list is a comparison operation,
-            // we should evaluate the expressions directly
-            items.iter().any(|item| contains_comparison_operators(item))
-        }
-        _ => contains_comparison_operators(node),
+  match node {
+    AstNode::ExpressionList(items) => {
+      // If any item in the expression list is a comparison operation,
+      // we should evaluate the expressions directly
+      items.iter().any(|item| contains_comparison_operators(item))
     }
+    _ => contains_comparison_operators(node),
+  }
 }
-
 
 /// Recursively checks if an AST node contains comparison operators.
 fn contains_comparison_operators(node: &AstNode) -> bool {
   match node {
-    AstNode::Lt(_, _)
-    | AstNode::Le(_, _)
-    | AstNode::Gt(_, _)
-    | AstNode::Ge(_, _)
-    | AstNode::Eq(_, _)
-    | AstNode::Nq(_, _) => true,
+    AstNode::Lt(_, _) | AstNode::Le(_, _) | AstNode::Gt(_, _) | AstNode::Ge(_, _) | AstNode::Eq(_, _) | AstNode::Nq(_, _) => true,
     AstNode::FunctionInvocation(func, args) => contains_comparison_operators(func) || contains_comparison_operators(args),
     AstNode::Path(lhs, rhs) => contains_comparison_operators(lhs) || contains_comparison_operators(rhs),
     AstNode::Neg(expr) => contains_comparison_operators(expr),
@@ -41,9 +35,7 @@ fn contains_comparison_operators(node: &AstNode) -> bool {
     AstNode::Exp(left, right) => contains_comparison_operators(left) || contains_comparison_operators(right),
     AstNode::And(left, right) => contains_comparison_operators(left) || contains_comparison_operators(right),
     AstNode::Or(left, right) => contains_comparison_operators(left) || contains_comparison_operators(right),
-    AstNode::Between(expr, start, end) => {
-      contains_comparison_operators(expr) || contains_comparison_operators(start) || contains_comparison_operators(end)
-    }
+    AstNode::Between(expr, start, end) => contains_comparison_operators(expr) || contains_comparison_operators(start) || contains_comparison_operators(end),
     AstNode::In(left, right) => contains_comparison_operators(left) || contains_comparison_operators(right),
     AstNode::InstanceOf(expr, _) => contains_comparison_operators(expr),
     AstNode::List(items) => items.iter().any(|item| contains_comparison_operators(item)),
@@ -54,9 +46,7 @@ fn contains_comparison_operators(node: &AstNode) -> bool {
     AstNode::Some(_, expr) => contains_comparison_operators(expr),
     AstNode::For(_, expr) => contains_comparison_operators(expr),
     AstNode::If(condition, then_expr, else_expr) => {
-      contains_comparison_operators(condition)
-        || contains_comparison_operators(then_expr)
-        || contains_comparison_operators(else_expr)
+      contains_comparison_operators(condition) || contains_comparison_operators(then_expr) || contains_comparison_operators(else_expr)
     }
     AstNode::PositionalParameters(items) => items.iter().any(|item| contains_comparison_operators(item)),
     AstNode::NamedParameters(items) => items.iter().any(|item| contains_comparison_operators(item)),
@@ -332,7 +322,7 @@ fn parse_decision_table(scope: &FeelScope, decision_table: &DecisionTable) -> Re
     let mut input_entries_evaluators = vec![];
     for (i, (input_expression, input_values)) in input_expressions_and_values.iter().enumerate() {
       let input_entry_node = dsntk_feel_parser::parse_unary_tests(scope, &rule.input_entries[i].text, false)?;
-      
+
       // Check if the input entry node contains comparison expressions (like "Date < today()")
       // If so, we should evaluate the comparison directly instead of wrapping in AstNode::In
       let node = if contains_comparison_expressions(&input_entry_node) {
@@ -347,7 +337,7 @@ fn parse_decision_table(scope: &FeelScope, decision_table: &DecisionTable) -> Re
         // Traditional unary test without allowed input values
         AstNode::In(Box::new(input_expression.clone()), Box::new(input_entry_node))
       };
-      
+
       input_entries_evaluators.push(dsntk_feel_evaluator::prepare(&node));
     }
     // parse output clause
@@ -413,7 +403,7 @@ fn evaluate_parsed_decision_table(scope: &FeelScope, parsed_decision_table: &Par
     let mut matches = true;
     for (_input_index, evaluator) in parsed_rule.input_entries_evaluators.iter().enumerate() {
       let input_value: Value = evaluator(scope);
-      
+
       // Handle expression lists containing comparison results
       let is_true = match &input_value {
         Value::ExpressionList(values) => {
@@ -422,7 +412,7 @@ fn evaluate_parsed_decision_table(scope: &FeelScope, parsed_decision_table: &Par
         }
         _ => input_value.is_true(),
       };
-      
+
       if !is_true {
         matches = false;
       }

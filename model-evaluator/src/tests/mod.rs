@@ -5,8 +5,7 @@ use dsntk_feel::FeelScope;
 use dsntk_model::DmnElement;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::sync::Arc;
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 use walkdir::WalkDir;
 
 mod compatibility;
@@ -55,7 +54,12 @@ macro_rules! static_context {
 }
 
 use dsntk_model::NamedElement;
-use {from_examples, model_evaluator, model_evaluator_from_examples, model_name_from_examples, model_namespace_from_examples, static_context};
+use from_examples;
+use model_evaluator;
+use model_evaluator_from_examples;
+use model_name_from_examples;
+use model_namespace_from_examples;
+use static_context;
 
 /// Utility function that creates a `FEEL` context from specified input expression.
 pub fn context(input: &str) -> FeelContext {

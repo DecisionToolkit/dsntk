@@ -65,7 +65,12 @@ macro_rules! static_context {
 }
 
 use dsntk_model::NamedElement;
-use {from_examples, iter, model_evaluator_from_examples, model_name_from_examples, model_namespace_from_examples, static_context};
+use from_examples;
+use iter;
+use model_evaluator_from_examples;
+use model_name_from_examples;
+use model_namespace_from_examples;
+use static_context;
 
 /// Utility function that builds a model evaluator from a single DMN model.
 fn build_model_evaluator(model_content: &str) -> Arc<ModelEvaluator> {
