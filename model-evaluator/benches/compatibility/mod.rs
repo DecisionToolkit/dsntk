@@ -69,7 +69,7 @@ use {from_examples, iter, model_evaluator_from_examples, model_name_from_example
 
 /// Utility function that builds a model evaluator from a single DMN model.
 fn build_model_evaluator(model_content: &str) -> Arc<ModelEvaluator> {
-  let definitions = dsntk_model::parse(model_content).unwrap();
+  let definitions = dsntk_model::from_xml(model_content).unwrap();
   ModelEvaluator::new(&[definitions]).unwrap()
 }
 
@@ -77,20 +77,20 @@ fn build_model_evaluator(model_content: &str) -> Arc<ModelEvaluator> {
 fn build_model_evaluators(model_content: &[&str]) -> Arc<ModelEvaluator> {
   let mut definitions = vec![];
   for content in model_content {
-    definitions.push(dsntk_model::parse(content).unwrap());
+    definitions.push(dsntk_model::from_xml(content).unwrap());
   }
   ModelEvaluator::new(&definitions).unwrap()
 }
 
 /// Utility function that returns a model namespace from a single DMN model.
 fn build_model_namespace(model_content: &str) -> String {
-  let definitions = dsntk_model::parse(model_content).unwrap();
+  let definitions = dsntk_model::from_xml(model_content).unwrap();
   definitions.namespace().to_string()
 }
 
 /// Utility function that returns a model namespace from a single DMN model.
 fn build_model_name(model_content: &str) -> String {
-  let definitions = dsntk_model::parse(model_content).unwrap();
+  let definitions = dsntk_model::from_xml(model_content).unwrap();
   definitions.name().to_string()
 }
 

@@ -94,6 +94,14 @@ pub fn err_xml_expected_mandatory_text_content(s: &str) -> DsntkError {
   ModelParserError(format!("expected mandatory text content in node '{s}'")).into()
 }
 
+pub fn err_yaml_parsing_model_failed(s: &str) -> DsntkError {
+  ModelParserError(format!("parsing model from YAML failed with reason: {s}")).into()
+}
+
+pub fn err_yaml_expected_mandatory_attribute(attr_name: &str) -> DsntkError {
+  ModelParserError(format!("expected value for mandatory attribute '{attr_name}'")).into()
+}
+
 /// Errors related with validating the decision model.
 #[derive(ToErrorMessage)]
 struct ModelValidatorError(String);

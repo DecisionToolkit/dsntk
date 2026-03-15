@@ -233,6 +233,11 @@ tasks:
     cmds:
       - cmd: cargo +stable test -p dsntk-feel-parser
 
+  test-model:
+    desc: Runs tests in debug mode
+    cmds:
+      - cmd: cargo +stable test -p dsntk-model
+
   test-recognizer:
     desc: Runs tests in debug mode
     cmds:

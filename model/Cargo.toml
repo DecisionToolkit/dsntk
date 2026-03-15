@@ -13,9 +13,12 @@ edition = { workspace = true }
 [dependencies]
 petgraph = { workspace = true }
 roxmltree = { workspace = true }
+yaml-rust = { workspace = true }
 dsntk-common = { workspace = true }
-dsntk-examples = { workspace = true }
 dsntk-feel = { workspace = true }
 dsntk-feel-parser = { workspace = true }
 dsntk-macros = { workspace = true }
 dsntk-recognizer = { workspace = true }
+
+[dev-dependencies]
+dsntk-examples = { workspace = true }

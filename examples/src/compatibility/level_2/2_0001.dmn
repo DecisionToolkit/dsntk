@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<definitions namespace="https://dsntk.io/2_0001/"
-             name="2_001"
+<definitions namespace="https://decision-toolkit.org/2_0001/"
+             name="2_0001"
              id="_2_0001"
              xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
              xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
@@ -8,68 +8,65 @@
              xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/">
     <description>
         Compliance level 2: Test 0001
-        
-          The decision named **Greeting Message** has a label defined in diagram definition.
-        
-          In the diagram this decision is depicted as **GREETING MESSAGE**.
-        
-          The output variable name remains **Greeting Message**.
+
+        The decision named **Greeting Message** has a label defined in diagram definition.
+        In the diagram this decision is depicted as **GREETING MESSAGE**.
+        The output variable name remains **Greeting Message**.
     </description>
-    
+
     <decision name="Greeting Message" id="_75b3add2-4d36-4a19-a76c-268b49b2f436">
         <description>
             This decision prepares a greeting message.
-            'Hello' is prepended to the value of the input variable named 'Full Name'. 
+            "Hello" is prepended to the value of the input variable named 'Full Name'.
         </description>
         <question>
             What is the greeting suitable for our customer?
         </question>
         <allowedAnswers>
-            The proper greeting is in the format:
-              Hello {customer's full name}   
+            The proper greeting is in the format: Hello {customer's full name}
         </allowedAnswers>
-        <variable typeRef="string" name="Greeting Message" label="GREETING MESSAGE"/>
-        <informationRequirement id="_8c935b50-10b7-426b-80a9-dddb4264b4a9">
+        <variable typeRef="string" name="Greeting Message" label="GREETING MESSAGE" id="_3215b422-b937-4360-9d1c-4c677cae5dfd"/>
+        <informationRequirement id="_70c3f69a-63f3-4197-96ce-b206c8bd2a6b">
             <requiredInput href="#_cba86e4d-e91c-46a2-9176-e9adf88e15db"/>
         </informationRequirement>
-        <literalExpression>
+        <literalExpression id="_5baa6245-f6fc-4685-8973-fa873817e2c1">
             <text>"Hello " + Full Name</text>
         </literalExpression>
     </decision>
-    
+
     <inputData name="Full Name" id="_cba86e4d-e91c-46a2-9176-e9adf88e15db">
         <description>
             Full name of the customer provided by calling service.
         </description>
-        <variable typeRef="string" name="Full Name" label="Customer's name" id="_id_variable_full_name">
+        <variable typeRef="string" name="Full Name" label="Customer's name" id="_4bc2161f-2f3b-4260-b454-0a01aed0e46b">
             <description>Full name of the person that will be sent greetings from this decision model.</description>
         </variable>
     </inputData>
-    
-    <dmndi:DMNDI>
-        <dmndi:DMNDiagram name="Decision Requirement Diagram" resolution="300" id="_d3a3312e-5924-4f7b-ac0e-232ef9203ff6">
-            <dmndi:Size width="190.0" height="240.0"/>
-            <dmndi:DMNShape dmnElementRef="_75b3add2-4d36-4a19-a76c-268b49b2f436" id="_ebf33cfc-0ee3-4708-af8b-91c52237b7d6" sharedStyle="style1">
-                <dc:Bounds x="20.0" y="20.0" width="150.0" height="60.0"/>
-                <dmndi:DMNLabel sharedStyle="style1">
-                    <dmndi:Text>GREETING MESSAGE</dmndi:Text>
-                </dmndi:DMNLabel>
-            </dmndi:DMNShape>
-            <dmndi:DMNShape dmnElementRef="_cba86e4d-e91c-46a2-9176-e9adf88e15db" id="_48ea7a1d-2575-4cb7-8b63-8baa4cb3b371" sharedStyle="style2">
-                <dc:Bounds x="20.0" y="160.0" width="150.0" height="60.0"/>
-            </dmndi:DMNShape>
-            <dmndi:DMNEdge dmnElementRef="_8c935b50-10b7-426b-80a9-dddb4264b4a9" id="_e9a73517-0ba2-4b31-b308-82279ae21591">
-                <di:waypoint x="95.0" y="160.0"/>
-                <di:waypoint x="95.0" y="80.0"/>
-            </dmndi:DMNEdge>
-        </dmndi:DMNDiagram>
-        <dmndi:DMNStyle id="style1" fontFamily="Arial,Helvetica,sans-serif" fontSize="18" fontBold="true" fontUnderline="true" fontItalic="true" fontStrikeThrough="true" labelVerticalAlignment="start">
-            <dmndi:FillColor red="10" green="255" blue="255"/>
-            <dmndi:StrokeColor red="255" green="0" blue="0"/>
-            <dmndi:FontColor red="0" green="200" blue="0"/>
-        </dmndi:DMNStyle>
-        <dmndi:DMNStyle id="style2" fontFamily="Arial,sans-serif" fontSize="12" fontBold="true" fontUnderline="true">
-            <dmndi:StrokeColor red="255" green="0" blue="0"/>
-        </dmndi:DMNStyle>
-    </dmndi:DMNDI>
+
+    <!--    <dmndi:DMNDI>-->
+    <!--        <dmndi:DMNDiagram name="Decision Requirement Diagram" resolution="300" id="_d3a3312e-5924-4f7b-ac0e-232ef9203ff6">-->
+    <!--            <dmndi:Size width="190.0" height="240.0"/>-->
+    <!--            <dmndi:DMNShape dmnElementRef="_75b3add2-4d36-4a19-a76c-268b49b2f436" id="_ebf33cfc-0ee3-4708-af8b-91c52237b7d6" sharedStyle="style1">-->
+    <!--                <dc:Bounds x="20.0" y="20.0" width="150.0" height="60.0"/>-->
+    <!--                <dmndi:DMNLabel sharedStyle="style1">-->
+    <!--                    <dmndi:Text>GREETING MESSAGE</dmndi:Text>-->
+    <!--                </dmndi:DMNLabel>-->
+    <!--            </dmndi:DMNShape>-->
+    <!--            <dmndi:DMNShape dmnElementRef="_cba86e4d-e91c-46a2-9176-e9adf88e15db" id="_48ea7a1d-2575-4cb7-8b63-8baa4cb3b371" sharedStyle="style2">-->
+    <!--                <dc:Bounds x="20.0" y="160.0" width="150.0" height="60.0"/>-->
+    <!--            </dmndi:DMNShape>-->
+    <!--            <dmndi:DMNEdge dmnElementRef="_70c3f69a-63f3-4197-96ce-b206c8bd2a6b" id="_e9a73517-0ba2-4b31-b308-82279ae21591">-->
+    <!--                <di:waypoint x="95.0" y="160.0"/>-->
+    <!--                <di:waypoint x="95.0" y="80.0"/>-->
+    <!--            </dmndi:DMNEdge>-->
+    <!--        </dmndi:DMNDiagram>-->
+    <!--        <dmndi:DMNStyle id="style1" fontFamily="Arial,Helvetica,sans-serif" fontSize="18" fontBold="true" fontUnderline="true" fontItalic="true" fontStrikeThrough="true" labelVerticalAlignment="start">-->
+    <!--            <dmndi:FillColor red="10" green="255" blue="255"/>-->
+    <!--            <dmndi:StrokeColor red="255" green="0" blue="0"/>-->
+    <!--            <dmndi:FontColor red="0" green="200" blue="0"/>-->
+    <!--        </dmndi:DMNStyle>-->
+    <!--        <dmndi:DMNStyle id="style2" fontFamily="Arial,sans-serif" fontSize="12" fontBold="true" fontUnderline="true">-->
+    <!--            <dmndi:StrokeColor red="255" green="0" blue="0"/>-->
+    <!--        </dmndi:DMNStyle>-->
+    <!--    </dmndi:DMNDI>-->
 </definitions>

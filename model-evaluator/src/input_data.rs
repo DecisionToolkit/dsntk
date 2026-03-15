@@ -55,8 +55,8 @@ mod tests {
 
   /// Utility function for building input data evaluator from definitions,
   /// and item definition evaluator from definitions.
-  fn build_evaluators(xml: &str) -> (InputDataEvaluator, ItemDefinitionEvaluator) {
-    let definitions = dsntk_model::parse(xml).unwrap();
+  fn build_evaluators(content: &str) -> (InputDataEvaluator, ItemDefinitionEvaluator) {
+    let definitions = dsntk_model::from_xml(content).unwrap();
     let mut def_definitions = DefDefinitions::default();
     def_definitions.add_model(&definitions);
     (InputDataEvaluator::new(&def_definitions), ItemDefinitionEvaluator::new(&def_definitions).unwrap())

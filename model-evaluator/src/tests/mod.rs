@@ -5,8 +5,7 @@ use dsntk_feel::FeelScope;
 use dsntk_model::DmnElement;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::sync::Arc;
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 use walkdir::WalkDir;
 
 mod compatibility;
@@ -73,7 +72,7 @@ pub fn context(input: &str) -> FeelContext {
 
 /// Utility function that builds a model evaluator from single XML model definitions.
 fn build_model_evaluator(model_content: &str) -> Arc<ModelEvaluator> {
-  let definitions = dsntk_model::parse(model_content).unwrap();
+  let definitions = dsntk_model::from_xml(model_content).unwrap();
   ModelEvaluator::new(&[definitions]).unwrap()
 }
 
@@ -81,20 +80,20 @@ fn build_model_evaluator(model_content: &str) -> Arc<ModelEvaluator> {
 fn build_model_evaluators(model_content: &[&str]) -> Arc<ModelEvaluator> {
   let mut definitions = vec![];
   for content in model_content {
-    definitions.push(dsntk_model::parse(content).unwrap());
+    definitions.push(dsntk_model::from_xml(content).unwrap());
   }
   ModelEvaluator::new(&definitions).unwrap()
 }
 
 /// Utility function that returns a model namespace from a single DMN model.
 fn build_model_namespace(model_content: &str) -> String {
-  let definitions = dsntk_model::parse(model_content).unwrap();
+  let definitions = dsntk_model::from_xml(model_content).unwrap();
   definitions.namespace().to_string()
 }
 
 /// Utility function that returns a model names from a single DMN model.
 fn build_model_name(model_content: &str) -> String {
-  let definitions = dsntk_model::parse(model_content).unwrap();
+  let definitions = dsntk_model::from_xml(model_content).unwrap();
   definitions.name().to_string()
 }
 

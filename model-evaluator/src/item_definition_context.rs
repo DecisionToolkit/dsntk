@@ -173,7 +173,7 @@ mod tests {
 
   /// Utility function for building item definition evaluator from definitions.
   fn build_evaluator(xml: &str) -> ItemDefinitionContextEvaluator {
-    let definitions = dsntk_model::parse(xml).unwrap();
+    let definitions = dsntk_model::from_xml(xml).unwrap();
     let mut def_definitions = DefDefinitions::default();
     def_definitions.add_model(&definitions);
     ItemDefinitionContextEvaluator::new(&def_definitions).unwrap()

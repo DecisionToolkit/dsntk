@@ -997,7 +997,7 @@ fn export_decision_table(dectab_file_name: &str, html_file_name: &str, dectab_fi
 /// Parses DMN model loaded from XML file and prints ASCII report.
 fn parse_dmn_model(dmn_file_name: &str, cm: ColorMode) {
   match fs::read_to_string(dmn_file_name) {
-    Ok(dmn_file_content) => match dsntk_model::parse(&dmn_file_content) {
+    Ok(dmn_file_content) => match dsntk_model::from_xml(&dmn_file_content) {
       Ok(definitions) => {
         dsntk_gendoc::print_model(definitions, cm);
       }
@@ -1012,7 +1012,7 @@ fn evaluate_dmn_model(input_file_name: &str, dmn_file_name: &str, invocable_name
   match fs::read_to_string(dmn_file_name) {
     Ok(dmn_file_content) => match fs::read_to_string(input_file_name) {
       Ok(input_file_content) => match dsntk_evaluator::evaluate_context(&FeelScope::default(), &input_file_content) {
-        Ok(input_data) => match dsntk_model::parse(&dmn_file_content) {
+        Ok(input_data) => match dsntk_model::from_xml(&dmn_file_content) {
           Ok(definitions) => {
             let model_namespace = definitions.namespace().to_string();
             let model_name = definitions.name().to_string();
@@ -1043,7 +1043,7 @@ fn test_dmn_model(test_file_name: &str, dmn_file_name: &str, invocable_name: &st
       return;
     }
   };
-  let definitions = match dsntk_model::parse(&dmn_file_content) {
+  let definitions = match dsntk_model::from_xml(&dmn_file_content) {
     Ok(definitions) => definitions,
     Err(reason) => {
       eprintln!("parsing model file failed with reason: {reason}");
@@ -1085,7 +1085,7 @@ fn test_dmn_model(test_file_name: &str, dmn_file_name: &str, invocable_name: &st
 /// Exports DMN model loaded from `XML` file to `HTML` output file.
 fn export_dmn_model(dmn_file_name: &str, html_file_name: &str) {
   match fs::read_to_string(dmn_file_name) {
-    Ok(dmn_file_content) => match dsntk_model::parse(&dmn_file_content) {
+    Ok(dmn_file_content) => match dsntk_model::from_xml(&dmn_file_content) {
       Ok(definitions) => {
         let html_output = dsntk_gendoc::dmn_model_to_html(&definitions);
         if let Err(reason) = fs::write(html_file_name, html_output) {

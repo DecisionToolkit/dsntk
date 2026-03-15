@@ -9,14 +9,14 @@ use dsntk_feel::{Name, FEEL_TYPE_NAME_ANY};
 use roxmltree::{Node, NodeType};
 
 /// Parses the XML input document containing DMN model into [Definitions].
-pub fn parse(input: &str) -> Result<Definitions> {
+pub fn from_xml(input: &str) -> Result<Definitions> {
   // parse document
   match roxmltree::Document::parse(input) {
     Ok(document) => {
       // firstly validate the document against the XML Schema
       let node = validate_schema(&document)?;
       // initialize the model parser
-      let mut model_parser = ModelParser::new();
+      let mut model_parser = Parser::new();
       // parse the model into definitions
       let definitions = model_parser.parse_definitions(&node)?;
       // validate the final model against several rules defined in specification
@@ -26,15 +26,15 @@ pub fn parse(input: &str) -> Result<Definitions> {
   }
 }
 
-/// XML parser for DMN model.
-pub struct ModelParser {
+/// DMN model parser from XML format.
+struct Parser {
   /// Model namespace used in parsed definitions.
   namespace: String,
   /// Model name used in parsed definitions.
   model_name: String,
 }
 
-impl ModelParser {
+impl Parser {
   /// Creates new model parser.
   fn new() -> Self {
     Self {
@@ -46,15 +46,15 @@ impl ModelParser {
   /// Parses model [Definitions].
   fn parse_definitions(&mut self, node: &Node) -> Result<Definitions> {
     self.namespace = required_uri(node, ATTR_NAMESPACE)?;
-    self.model_name = required_attribute(node, ATTR_NAME)?;
+    self.model_name = required_name(node)?;
     let definitions = Definitions {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
-      name: required_name(node)?,
+      name: self.model_name.clone(),
       feel_name: required_feel_name(node)?,
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       expression_language: optional_uri(node, ATTR_EXPRESSION_LANGUAGE)?,
@@ -86,8 +86,8 @@ impl ModelParser {
     let name = required_name(node)?;
     let feel_name = required_feel_name(node)?;
     let id = optional_id(node);
-    let description = optional_child_optional_content(node, NODE_DESCRIPTION);
-    let label = optional_attribute(node, ATTR_LABEL);
+    let description = optional_description(node);
+    let label = optional_label(node);
     let extension_elements = self.parse_extension_elements(node);
     let extension_attributes = self.parse_extension_attributes(node);
     let type_language = optional_attribute(node, ATTR_TYPE_LANGUAGE);
@@ -167,8 +167,8 @@ impl ModelParser {
         namespace: self.namespace.clone(),
         model_name: self.model_name.clone(),
         id: optional_id(child_node),
-        description: optional_child_optional_content(child_node, NODE_DESCRIPTION),
-        label: optional_attribute(child_node, ATTR_LABEL),
+        description: optional_description(child_node),
+        label: optional_label(child_node),
         extension_elements: self.parse_extension_elements(child_node),
         extension_attributes: self.parse_extension_attributes(child_node),
         name,
@@ -195,12 +195,12 @@ impl ModelParser {
         name,
         feel_name,
         id: optional_id(child_node),
-        description: optional_child_optional_content(child_node, NODE_DESCRIPTION),
-        label: optional_attribute(child_node, ATTR_LABEL),
+        description: optional_description(child_node),
+        label: optional_label(child_node),
         extension_elements: self.parse_extension_elements(child_node),
         extension_attributes: self.parse_extension_attributes(child_node),
-        question: optional_child_optional_content(child_node, NODE_QUESTION),
-        allowed_answers: optional_child_optional_content(child_node, NODE_ALLOWED_ANSWERS),
+        question: optional_child_optional_content(child_node, NODE_QUESTION).map(|value| value.trim().to_string()),
+        allowed_answers: optional_child_optional_content(child_node, NODE_ALLOWED_ANSWERS).map(|value| value.trim().to_string()),
         variable,
         decision_logic: self.parse_optional_child_expression_instance(child_node)?,
         information_requirements: self.parse_information_requirements(child_node, NODE_INFORMATION_REQUIREMENT)?,
@@ -227,8 +227,8 @@ impl ModelParser {
         name,
         feel_name,
         id: optional_id(child_node),
-        description: optional_child_optional_content(child_node, NODE_DESCRIPTION),
-        label: optional_attribute(child_node, ATTR_LABEL),
+        description: optional_description(child_node),
+        label: optional_label(child_node),
         extension_elements: self.parse_extension_elements(child_node),
         extension_attributes: self.parse_extension_attributes(child_node),
         variable,
@@ -256,8 +256,8 @@ impl ModelParser {
         name,
         feel_name,
         id: optional_id(child_node),
-        description: optional_child_optional_content(child_node, NODE_DESCRIPTION),
-        label: optional_attribute(child_node, ATTR_LABEL),
+        description: optional_description(child_node),
+        label: optional_label(child_node),
         extension_elements: self.parse_extension_elements(child_node),
         extension_attributes: self.parse_extension_attributes(child_node),
         variable,
@@ -279,8 +279,8 @@ impl ModelParser {
         namespace: self.namespace.clone(),
         model_name: self.model_name.clone(),
         id: optional_id(child_node),
-        description: optional_child_optional_content(child_node, NODE_DESCRIPTION),
-        label: optional_attribute(child_node, ATTR_LABEL),
+        description: optional_description(child_node),
+        label: optional_label(child_node),
         extension_elements: self.parse_extension_elements(child_node),
         extension_attributes: self.parse_extension_attributes(child_node),
         name: required_name(child_node)?,
@@ -323,8 +323,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -355,8 +355,8 @@ impl ModelParser {
         namespace: self.namespace.clone(),
         model_name: self.model_name.clone(),
         id: optional_id(child_node),
-        description: optional_child_optional_content(child_node, NODE_DESCRIPTION),
-        label: optional_attribute(child_node, ATTR_LABEL),
+        description: optional_description(child_node),
+        label: optional_label(child_node),
         extension_elements: self.parse_extension_elements(child_node),
         extension_attributes: self.parse_extension_attributes(child_node),
         name: required_name(child_node)?,
@@ -371,8 +371,8 @@ impl ModelParser {
         namespace: self.namespace.clone(),
         model_name: self.model_name.clone(),
         id: optional_id(child_node),
-        description: optional_child_optional_content(child_node, NODE_DESCRIPTION),
-        label: optional_attribute(child_node, ATTR_LABEL),
+        description: optional_description(child_node),
+        label: optional_label(child_node),
         extension_elements: self.parse_extension_elements(child_node),
         extension_attributes: self.parse_extension_attributes(child_node),
         name: required_name(child_node)?,
@@ -394,8 +394,8 @@ impl ModelParser {
         namespace: required_uri(child_node, ATTR_NAMESPACE)?,
         model_name: self.model_name.clone(),
         id: optional_id(child_node),
-        description: optional_child_optional_content(child_node, NODE_DESCRIPTION),
-        label: optional_attribute(child_node, ATTR_LABEL),
+        description: optional_description(child_node),
+        label: optional_label(child_node),
         extension_elements: self.parse_extension_elements(child_node),
         extension_attributes: self.parse_extension_attributes(child_node),
         name: required_name(child_node)?,
@@ -441,8 +441,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       name: required_name(node)?,
@@ -484,8 +484,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       required_decision: optional_child_required_href(node, NODE_REQUIRED_DECISION)?,
@@ -509,8 +509,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       required_knowledge: required_child_required_href(node, NODE_REQUIRED_KNOWLEDGE)?,
@@ -533,8 +533,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       required_authority: optional_child_required_href(node, NODE_REQUIRED_AUTHORITY)?,
@@ -638,8 +638,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -772,8 +772,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -804,8 +804,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -850,8 +850,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -875,8 +875,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -914,8 +914,8 @@ impl ModelParser {
         namespace: self.namespace.clone(),
         model_name: self.model_name.clone(),
         id: optional_id(row_node),
-        description: optional_child_optional_content(row_node, NODE_DESCRIPTION),
-        label: optional_attribute(row_node, ATTR_LABEL),
+        description: optional_description(row_node),
+        label: optional_label(row_node),
         extension_elements: self.parse_extension_elements(row_node),
         extension_attributes: self.parse_extension_attributes(row_node),
         type_ref: optional_attribute(row_node, ATTR_TYPE_REF),
@@ -926,8 +926,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -951,8 +951,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -976,8 +976,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -1000,8 +1000,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -1025,8 +1025,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),
@@ -1050,8 +1050,8 @@ impl ModelParser {
       namespace: self.namespace.clone(),
       model_name: self.model_name.clone(),
       id: optional_id(node),
-      description: optional_child_optional_content(node, NODE_DESCRIPTION),
-      label: optional_attribute(node, ATTR_LABEL),
+      description: optional_description(node),
+      label: optional_label(node),
       extension_elements: self.parse_extension_elements(node),
       extension_attributes: self.parse_extension_attributes(node),
       type_ref: optional_attribute(node, ATTR_TYPE_REF),

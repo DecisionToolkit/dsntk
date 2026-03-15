@@ -1,7 +1,7 @@
 //! # XML utilities
 
 use crate::errors::*;
-use dsntk_common::Result;
+use dsntk_common::{trim_multiline, Result};
 use roxmltree::Node;
 use std::str::FromStr;
 
@@ -256,4 +256,14 @@ pub fn node_name_pos(node: &Node) -> String {
 /// Returns a closure that checks if the node's name is equal with specified value.
 pub fn name_eq(name: &str) -> impl Fn(&Node) -> bool + '_ {
   move |node: &Node| node.tag_name().name() == name
+}
+
+/// Returns the optional description.
+pub fn optional_description(node: &Node) -> Option<String> {
+  optional_child_optional_content(node, NODE_DESCRIPTION).map(trim_multiline)
+}
+
+/// Returns the optional label.
+pub fn optional_label(node: &Node) -> Option<String> {
+  optional_attribute(node, ATTR_LABEL).map(|value| value.trim().to_string())
 }

@@ -1,6 +1,7 @@
 //! # Decision models for compatibility tests level 2
 
 pub const DMN_2_0001: &str = include_str!("2_0001.dmn");
+pub const YAML_2_0001: &str = include_str!("2_0001.yml");
 pub const DMN_2_0002: &str = include_str!("2_0002.dmn");
 pub const DMN_2_0003: &str = include_str!("2_0003.dmn");
 pub const DMN_2_0004: &str = include_str!("2_0004.dmn");
