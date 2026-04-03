@@ -21,14 +21,14 @@ const TABLES_FILE_NAME: &str = "feel.tab.c";
 /// Name of the target directory.
 const TARGET_DIR: &str = "../target/feel-grammar";
 
-#[cfg(target_os = "linux")]
+#[cfg(not(target_os = "windows"))]
 fn set_file_permissions(file_name: &str) {
   use std::fs::Permissions;
   use std::os::unix::fs::PermissionsExt;
   fs::set_permissions(file_name, Permissions::from_mode(0o755)).expect("setting script permissions failed");
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(target_os = "windows")]
 fn set_file_permissions(_file_name: &str) {
   // do nothing
 }

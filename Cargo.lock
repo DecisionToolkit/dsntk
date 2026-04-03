@@ -599,7 +599,7 @@ checksum = "fdda6acc74f0bfd12b77f1f72b5dda9e4147137af9d4e5cd91fa395bf1aa91b4"
 
 [[package]]
 name = "dsntk"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "actix-web",
  "antex",
@@ -622,7 +622,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-common"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "dsntk-macros",
  "serde",
@@ -634,7 +634,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-evaluator"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "dsntk-common",
  "dsntk-feel",
@@ -646,14 +646,14 @@ dependencies = [
 
 [[package]]
 name = "dsntk-examples"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "walkdir",
 ]
 
 [[package]]
 name = "dsntk-feel"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -669,7 +669,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-feel-evaluator"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "dsntk-common",
  "dsntk-feel",
@@ -686,7 +686,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-feel-grammar"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "convert_case",
  "regex",
@@ -694,7 +694,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-feel-number"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "dfp-number-sys",
  "dsntk-common",
@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-feel-parser"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "antex",
  "difference",
@@ -715,7 +715,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-feel-regex"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "dsntk-common",
  "dsntk-macros",
@@ -725,7 +725,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-feel-temporal"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -738,7 +738,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-gendoc"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "antex",
  "domrs",
@@ -753,7 +753,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-macros"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -762,7 +762,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-model"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "dsntk-common",
  "dsntk-examples",
@@ -776,7 +776,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-model-evaluator"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "antex",
  "dsntk-common",
@@ -794,7 +794,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-recognizer"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "dsntk-common",
  "dsntk-examples",
@@ -804,7 +804,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-server"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "actix-web",
  "antex",
@@ -821,7 +821,7 @@ dependencies = [
 
 [[package]]
 name = "dsntk-workspace"
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 dependencies = [
  "antex",
  "dsntk-common",
