@@ -1,10 +1,15 @@
 use crate::data::ApplicationData;
 use crate::utils;
-use actix_web::{App, HttpResponse, HttpServer, get, post, web};
+use actix_web::{App, HttpResponse, HttpServer, web};
+#[cfg(not(feature = "tck"))]
+use actix_web::{get, post};
 use antex::{ColorMode, StyledText, Text};
+#[cfg(not(feature = "tck"))]
 use dsntk_common::Jsonify;
+#[cfg(not(feature = "tck"))]
 use dsntk_feel::FeelScope;
 use dsntk_workspace::Workspaces;
+#[cfg(not(feature = "tck"))]
 use std::borrow::Borrow;
 use std::net::IpAddr;
 use std::path::PathBuf;
@@ -20,17 +25,20 @@ const VARIABLE_DIR: &str = "DSNTK_DIR";
 const CONTENT_TYPE: &str = "application/json";
 
 /// GET handler for evaluating the invocable.
+#[cfg(not(feature = "tck"))]
 #[get("/evaluate/{path:.*}")]
 async fn evaluate_invocable_get(path: web::Path<String>, body: String, data: web::Data<ApplicationData>) -> HttpResponse {
   evaluate(path, body, data)
 }
 
 /// POST handler for evaluating the invocable.
+#[cfg(not(feature = "tck"))]
 #[post("/evaluate/{path:.*}")]
 async fn evaluate_invocable_post(path: web::Path<String>, body: String, data: web::Data<ApplicationData>) -> HttpResponse {
   evaluate(path, body, data)
 }
 
+#[cfg(not(feature = "tck"))]
 fn evaluate(path: web::Path<String>, request_body: String, data: web::Data<ApplicationData>) -> HttpResponse {
   let workspace: &Workspaces = data.workspaces.borrow();
   match dsntk_evaluator::evaluate_context(&FeelScope::default(), &request_body).and_then(|input_data| workspace.evaluate(&path, &input_data)) {
