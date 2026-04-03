@@ -6,7 +6,6 @@ use std::collections::HashMap;
 fn default_should_work() {
   let name: Name = Default::default();
   assert_eq!("", name.to_string());
-  name.assert_receiver_is_total_eq();
 }
 
 #[test]

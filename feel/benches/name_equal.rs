@@ -8,7 +8,7 @@ use test::Bencher;
 #[bench]
 fn feel_name_equal_0001(b: &mut Bencher) {
   let name: Name = "a".into();
-  b.iter(|| (name == name));
+  b.iter(|| name == name);
 }
 
 #[bench]

@@ -2,18 +2,18 @@
 
 use self::errors::*;
 use crate::Result;
-use uriparse::{URIReference, URI};
+use uriparse::{URI, URIReference};
 
 pub type Uri = String;
 
 pub fn to_uri(value: &str) -> Result<Uri> {
-  if let Ok(uri_reference) = URIReference::try_from(value) {
-    if let Ok(uri) = URI::try_from(uri_reference) {
-      if uri.has_query() || uri.has_fragment() {
-        return Err(err_invalid_uri(value));
-      }
-      return Ok(uri.to_string().trim().trim_end_matches('/').to_string());
+  if let Ok(uri_reference) = URIReference::try_from(value)
+    && let Ok(uri) = URI::try_from(uri_reference)
+  {
+    if uri.has_query() || uri.has_fragment() {
+      return Err(err_invalid_uri(value));
     }
+    return Ok(uri.to_string().trim().trim_end_matches('/').to_string());
   }
   Err(err_invalid_uri(value))
 }

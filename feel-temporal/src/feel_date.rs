@@ -1,9 +1,9 @@
 //! Implementation of FEEL date.
 
+use crate::FeelDaysAndTimeDuration;
 use crate::defs::*;
 use crate::errors::*;
 use crate::feel_ym_duration::FeelYearsAndMonthsDuration;
-use crate::FeelDaysAndTimeDuration;
 use chrono::{DateTime, Datelike, Days, FixedOffset, Local, LocalResult, Months, NaiveDate, TimeZone, Weekday};
 use dsntk_common::DsntkError;
 use dsntk_feel_number::FeelNumber;
@@ -29,22 +29,19 @@ impl FromStr for FeelDate {
   /// Converts [String] into [FeelDate].
   fn from_str(date: &str) -> Result<Self, Self::Err> {
     let captures = RE_DATE.captures(date).ok_or_else(|| err_invalid_date_literal(date))?;
-    if let Some(year_match) = captures.name("year") {
-      if let Ok(mut year) = year_match.as_str().parse::<Year>() {
-        if captures.name("sign").is_some() {
-          year = -year;
-        }
-        if let Some(month_match) = captures.name("month") {
-          if let Ok(month) = month_match.as_str().parse::<Month>() {
-            if let Some(day_match) = captures.name("day") {
-              if let Ok(day) = day_match.as_str().parse::<Day>() {
-                if is_valid_date(year, month, day) {
-                  return Ok(FeelDate(year, month, day));
-                }
-              }
-            }
-          }
-        }
+    if let Some(year_match) = captures.name("year")
+      && let Ok(mut year) = year_match.as_str().parse::<Year>()
+    {
+      if captures.name("sign").is_some() {
+        year = -year;
+      }
+      if let Some(month_match) = captures.name("month")
+        && let Ok(month) = month_match.as_str().parse::<Month>()
+        && let Some(day_match) = captures.name("day")
+        && let Ok(day) = day_match.as_str().parse::<Day>()
+        && is_valid_date(year, month, day)
+      {
+        return Ok(FeelDate(year, month, day));
       }
     }
     Err(err_invalid_date_literal(date))
@@ -161,10 +158,10 @@ impl Add<FeelDaysAndTimeDuration> for FeelDate {
     let duration_hours = rhs.get_hours() + carry_hours;
     let carry_days = duration_hours / 60;
     let days = rhs.get_days() + carry_days;
-    if let Some(date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2) {
-      if let Some(new_date) = date.checked_add_days(Days::new(days as u64)) {
-        return Some(FeelDate(new_date.year(), new_date.month(), new_date.day()));
-      }
+    if let Some(date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2)
+      && let Some(new_date) = date.checked_add_days(Days::new(days as u64))
+    {
+      return Some(FeelDate(new_date.year(), new_date.month(), new_date.day()));
     }
     None
   }
@@ -203,10 +200,10 @@ impl TryFrom<FeelDate> for DateTime<FixedOffset> {
   type Error = DsntkError;
   /// Converts [FeelDate] date into [DateTime] in UTC zone.
   fn try_from(date: FeelDate) -> Result<Self, Self::Error> {
-    if let Some(fixed_offset) = FixedOffset::east_opt(0) {
-      if let LocalResult::Single(date_time) = fixed_offset.with_ymd_and_hms(date.0, date.1, date.2, 0, 0, 0) {
-        return Ok(date_time);
-      }
+    if let Some(fixed_offset) = FixedOffset::east_opt(0)
+      && let LocalResult::Single(date_time) = fixed_offset.with_ymd_and_hms(date.0, date.1, date.2, 0, 0, 0)
+    {
+      return Ok(date_time);
     }
     Err(err_invalid_feel_date(date))
   }
@@ -223,11 +220,7 @@ impl TryFrom<FeelDate> for NaiveDate {
 impl FeelDate {
   /// Creates a [FeelDate] from provided `year`, `month` and `day` values.
   pub fn new(year: Year, month: Month, day: Day) -> Option<Self> {
-    if is_valid_date(year, month, day) {
-      Some(Self(year, month, day))
-    } else {
-      None
-    }
+    if is_valid_date(year, month, day) { Some(Self(year, month, day)) } else { None }
   }
 
   /// Returns today's date in local time.
@@ -281,37 +274,37 @@ impl FeelDate {
   }
 
   pub fn add_days(&self, days: u64) -> Option<Self> {
-    if let Some(naive_date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2) {
-      if let Some(updated_date) = naive_date.checked_add_days(Days::new(days)) {
-        return Some(Self(updated_date.year(), updated_date.month(), updated_date.day()));
-      }
+    if let Some(naive_date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2)
+      && let Some(updated_date) = naive_date.checked_add_days(Days::new(days))
+    {
+      return Some(Self(updated_date.year(), updated_date.month(), updated_date.day()));
     }
     None
   }
 
   pub fn sub_days(&self, days: u64) -> Option<Self> {
-    if let Some(naive_date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2) {
-      if let Some(updated_date) = naive_date.checked_sub_days(Days::new(days)) {
-        return Some(Self(updated_date.year(), updated_date.month(), updated_date.day()));
-      }
+    if let Some(naive_date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2)
+      && let Some(updated_date) = naive_date.checked_sub_days(Days::new(days))
+    {
+      return Some(Self(updated_date.year(), updated_date.month(), updated_date.day()));
     }
     None
   }
 
   pub fn add_months(&self, months: u32) -> Option<Self> {
-    if let Some(naive_date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2) {
-      if let Some(updated_date) = naive_date.checked_add_months(Months::new(months)) {
-        return Some(Self(updated_date.year(), updated_date.month(), updated_date.day()));
-      }
+    if let Some(naive_date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2)
+      && let Some(updated_date) = naive_date.checked_add_months(Months::new(months))
+    {
+      return Some(Self(updated_date.year(), updated_date.month(), updated_date.day()));
     }
     None
   }
 
   pub fn sub_months(&self, months: u32) -> Option<Self> {
-    if let Some(naive_date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2) {
-      if let Some(updated_date) = naive_date.checked_sub_months(Months::new(months)) {
-        return Some(Self(updated_date.year(), updated_date.month(), updated_date.day()));
-      }
+    if let Some(naive_date) = NaiveDate::from_ymd_opt(self.0, self.1, self.2)
+      && let Some(updated_date) = naive_date.checked_sub_months(Months::new(months))
+    {
+      return Some(Self(updated_date.year(), updated_date.month(), updated_date.day()));
     }
     None
   }

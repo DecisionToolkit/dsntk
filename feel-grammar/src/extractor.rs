@@ -185,18 +185,17 @@ fn extract_token_types(input: &str) -> Vec<(String, i64)> {
   let mut token_types = vec![];
   let re_token_types: Regex = Regex::new("(?m).*enum\\s+yytokentype[^{]+\\{(?P<items>[^}]+)};.*").unwrap();
   let re_token_type: Regex = Regex::new("TOKEN_(?P<name>[A-Za-z_]+)\\s+=\\s+(?P<value>-?[0-9]+)").unwrap();
-  if let Some(token_types_captures) = re_token_types.captures(input) {
-    if let Some(token_types_match) = token_types_captures.name("items") {
-      for line in token_types_match.as_str().to_string().lines() {
-        if let Some(token_type_capture) = re_token_type.captures(line.trim()) {
-          if let Some(name_match) = token_type_capture.name("name") {
-            if let Some(value_match) = token_type_capture.name("value") {
-              let value = value_match.as_str().parse::<i64>().unwrap();
-              let name = name_match.as_str().to_string().to_uppercase().replace("YY", "YY_").to_case(Case::UpperCamel);
-              token_types.push((name, value));
-            }
-          }
-        }
+  if let Some(token_types_captures) = re_token_types.captures(input)
+    && let Some(token_types_match) = token_types_captures.name("items")
+  {
+    for line in token_types_match.as_str().to_string().lines() {
+      if let Some(token_type_capture) = re_token_type.captures(line.trim())
+        && let Some(name_match) = token_type_capture.name("name")
+        && let Some(value_match) = token_type_capture.name("value")
+      {
+        let value = value_match.as_str().parse::<i64>().unwrap();
+        let name = name_match.as_str().to_string().to_uppercase().replace("YY", "YY_").to_case(Case::UpperCamel);
+        token_types.push((name, value));
       }
     }
   }
@@ -208,24 +207,23 @@ fn extract_symbol_kinds(input: &str) -> Vec<(String, i64)> {
   let mut symbol_kinds = vec![];
   let re_symbol_kinds: Regex = Regex::new("(?m).*enum\\s+yysymbol_kind_t[^{]+\\{(?P<items>[^}]+)};.*").unwrap();
   let re_symbol_kind: Regex = Regex::new("SYMBOL_(?P<name>[A-Za-z_]+)\\s+=\\s+(?P<value>-?[0-9]+)").unwrap();
-  if let Some(symbol_kinds_captures) = re_symbol_kinds.captures(input) {
-    if let Some(symbol_kinds_match) = symbol_kinds_captures.name("items") {
-      for line in symbol_kinds_match.as_str().to_string().lines() {
-        if let Some(symbol_kind_capture) = re_symbol_kind.captures(line.trim()) {
-          if let Some(name_match) = symbol_kind_capture.name("name") {
-            if let Some(value_match) = symbol_kind_capture.name("value") {
-              let value = value_match.as_str().parse::<i64>().unwrap();
-              let symbol_name = name_match.as_str().to_string();
-              let updated_name = if symbol_name.to_lowercase() == symbol_name {
-                format!("LHS_{symbol_name}").to_string()
-              } else {
-                symbol_name
-              };
-              let name = updated_name.as_str().to_string().to_uppercase().replace("YY", "YY_").to_case(Case::UpperCamel);
-              symbol_kinds.push((name, value));
-            }
-          }
-        }
+  if let Some(symbol_kinds_captures) = re_symbol_kinds.captures(input)
+    && let Some(symbol_kinds_match) = symbol_kinds_captures.name("items")
+  {
+    for line in symbol_kinds_match.as_str().to_string().lines() {
+      if let Some(symbol_kind_capture) = re_symbol_kind.captures(line.trim())
+        && let Some(name_match) = symbol_kind_capture.name("name")
+        && let Some(value_match) = symbol_kind_capture.name("value")
+      {
+        let value = value_match.as_str().parse::<i64>().unwrap();
+        let symbol_name = name_match.as_str().to_string();
+        let updated_name = if symbol_name.to_lowercase() == symbol_name {
+          format!("LHS_{symbol_name}").to_string()
+        } else {
+          symbol_name
+        };
+        let name = updated_name.as_str().to_string().to_uppercase().replace("YY", "YY_").to_case(Case::UpperCamel);
+        symbol_kinds.push((name, value));
       }
     }
   }
@@ -245,11 +243,11 @@ fn extract_define(input: &str, name: &str) -> i64 {
 
 fn extract_value(input: &str, pattern: &str) -> i64 {
   let re: Regex = Regex::new(pattern).unwrap();
-  if let Some(captures) = re.captures(input) {
-    if let Some(value_match) = captures.name("value") {
-      let value = value_match.as_str().parse::<i64>().unwrap();
-      return value;
-    }
+  if let Some(captures) = re.captures(input)
+    && let Some(value_match) = captures.name("value")
+  {
+    let value = value_match.as_str().parse::<i64>().unwrap();
+    return value;
   }
   panic!("no value found");
 }
@@ -281,19 +279,19 @@ fn extract_semantic_actions(input: &str) -> Vec<(i64, String, String)> {
   let re_actions: Regex = Regex::new("(?m).*\\s+switch\\s+\\(yyn\\)[^{]+\\{(?P<actions>[^}]+)}.*").unwrap();
   let re_action: Regex = Regex::new("(?m)case\\s+[0-9]+:\\s+/\\*[^*]+\\*/[^;]+").unwrap();
   let re: Regex = Regex::new("(?m)case\\s+(?P<num>[0-9]+):\\s+/\\*(?P<comment>[^*]+)\\*/[^#]+#(?P<rule>[^@]+)").unwrap();
-  if let Some(actions_captures) = re_actions.captures(&modified_input) {
-    if let Some(actions_match) = actions_captures.name("actions") {
-      for action_match in re_action.find_iter(actions_match.as_str()) {
-        if let Some(captures) = re.captures(action_match.as_str()) {
-          if let Some(num_match) = captures.name("num") {
-            let num = num_match.as_str().parse::<i64>().unwrap();
-            if let Some(comment_match) = captures.name("comment") {
-              let comment = comment_match.as_str().trim().to_string();
-              if let Some(rule_match) = captures.name("rule") {
-                let rule = rule_match.as_str().trim().to_string();
-                actions.push((num, comment, rule));
-              }
-            }
+  if let Some(actions_captures) = re_actions.captures(&modified_input)
+    && let Some(actions_match) = actions_captures.name("actions")
+  {
+    for action_match in re_action.find_iter(actions_match.as_str()) {
+      if let Some(captures) = re.captures(action_match.as_str())
+        && let Some(num_match) = captures.name("num")
+      {
+        let num = num_match.as_str().parse::<i64>().unwrap();
+        if let Some(comment_match) = captures.name("comment") {
+          let comment = comment_match.as_str().trim().to_string();
+          if let Some(rule_match) = captures.name("rule") {
+            let rule = rule_match.as_str().trim().to_string();
+            actions.push((num, comment, rule));
           }
         }
       }

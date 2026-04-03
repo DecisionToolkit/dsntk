@@ -8,7 +8,7 @@ use crate::variable::Variable;
 use dsntk_common::Result;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
-use dsntk_feel::{value_null, FeelScope, Name};
+use dsntk_feel::{FeelScope, Name, value_null};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -97,26 +97,26 @@ fn build_decision_evaluator(def_definitions: &DefDefinitions, def_decision: &Def
   // bring into context the variables from information requirements
   for information_requirement in def_decision.information_requirements() {
     // bring into context the variable from required decision
-    if let Some(def_href) = information_requirement.required_decision() {
-      if let Some(required_def_decision) = def_definitions.decision_by_key(def_href.namespace(), def_href.id()) {
-        let variable_name = required_def_decision.variable().name().clone();
-        let variable_namespace = required_def_decision.variable().namespace();
-        let variable_type_ref = required_def_decision.variable().type_ref();
-        let variable_type = item_definition_context_evaluator.eval(&DefKey::new(variable_namespace, variable_type_ref), &variable_name, &mut build_requirements_ctx);
-        if let Some(import_name) = def_href.import_name() {
-          build_requirements_ctx.create_entries(&[import_name.clone(), variable_name], Value::FeelType(variable_type));
-        } else {
-          build_requirements_ctx.set_entry(&variable_name, Value::FeelType(variable_type));
-        }
+    if let Some(def_href) = information_requirement.required_decision()
+      && let Some(required_def_decision) = def_definitions.decision_by_key(def_href.namespace(), def_href.id())
+    {
+      let variable_name = required_def_decision.variable().name().clone();
+      let variable_namespace = required_def_decision.variable().namespace();
+      let variable_type_ref = required_def_decision.variable().type_ref();
+      let variable_type = item_definition_context_evaluator.eval(&DefKey::new(variable_namespace, variable_type_ref), &variable_name, &mut build_requirements_ctx);
+      if let Some(import_name) = def_href.import_name() {
+        build_requirements_ctx.create_entries(&[import_name.clone(), variable_name], Value::FeelType(variable_type));
+      } else {
+        build_requirements_ctx.set_entry(&variable_name, Value::FeelType(variable_type));
       }
     }
     // bring into context the variable from required input
-    if let Some(href) = information_requirement.required_input() {
-      if let Some(required_input) = def_definitions.input_data_by_key(href.namespace(), href.id()) {
-        let variable_name = required_input.variable().name();
-        let variable_type = input_data_context_evaluator.eval(&href.into(), &mut input_requirements_ctx, item_definition_context_evaluator);
-        input_requirements_ctx.set_entry(variable_name, Value::FeelType(variable_type));
-      }
+    if let Some(href) = information_requirement.required_input()
+      && let Some(required_input) = def_definitions.input_data_by_key(href.namespace(), href.id())
+    {
+      let variable_name = required_input.variable().name();
+      let variable_type = input_data_context_evaluator.eval(&href.into(), &mut input_requirements_ctx, item_definition_context_evaluator);
+      input_requirements_ctx.set_entry(variable_name, Value::FeelType(variable_type));
     }
   }
 

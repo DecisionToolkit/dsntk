@@ -164,39 +164,37 @@ impl TryFrom<&str> for FeelDaysAndTimeDuration {
     if let Some(captures) = RE_DAYS_AND_TIME.captures(value) {
       let mut is_valid = false;
       let mut nanoseconds = 0_i64;
-      if let Some(days_match) = captures.name("days") {
-        if let Ok(days_u64) = days_match.as_str().parse::<u64>() {
-          if let Ok(days) = <u64 as TryInto<i64>>::try_into(days_u64) {
-            if let Some(a) = days.checked_mul(NANOSECONDS_IN_DAY) {
-              nanoseconds += a;
-              is_valid = true;
-            }
-          }
-        }
+      if let Some(days_match) = captures.name("days")
+        && let Ok(days_u64) = days_match.as_str().parse::<u64>()
+        && let Ok(days) = <u64 as TryInto<i64>>::try_into(days_u64)
+        && let Some(a) = days.checked_mul(NANOSECONDS_IN_DAY)
+      {
+        nanoseconds += a;
+        is_valid = true;
       }
-      if let Some(hours_match) = captures.name("hours") {
-        if let Ok(hours) = hours_match.as_str().parse::<u64>() {
-          nanoseconds += (hours as i64) * NANOSECONDS_IN_HOUR;
-          is_valid = true;
-        }
+      if let Some(hours_match) = captures.name("hours")
+        && let Ok(hours) = hours_match.as_str().parse::<u64>()
+      {
+        nanoseconds += (hours as i64) * NANOSECONDS_IN_HOUR;
+        is_valid = true;
       }
-      if let Some(minutes_match) = captures.name("minutes") {
-        if let Ok(minutes) = minutes_match.as_str().parse::<u64>() {
-          nanoseconds += (minutes as i64) * NANOSECONDS_IN_MINUTE;
-          is_valid = true;
-        }
+      if let Some(minutes_match) = captures.name("minutes")
+        && let Ok(minutes) = minutes_match.as_str().parse::<u64>()
+      {
+        nanoseconds += (minutes as i64) * NANOSECONDS_IN_MINUTE;
+        is_valid = true;
       }
-      if let Some(seconds_match) = captures.name("seconds") {
-        if let Ok(seconds) = seconds_match.as_str().parse::<u64>() {
-          nanoseconds += (seconds as i64) * NANOSECONDS_IN_SECOND;
-          is_valid = true;
-        }
+      if let Some(seconds_match) = captures.name("seconds")
+        && let Ok(seconds) = seconds_match.as_str().parse::<u64>()
+      {
+        nanoseconds += (seconds as i64) * NANOSECONDS_IN_SECOND;
+        is_valid = true;
       }
-      if let Some(fractional_match) = captures.name("fractional") {
-        if let Ok(fractional) = fractional_match.as_str().parse::<f64>() {
-          nanoseconds += (fractional * NANOSECONDS_IN_SECOND as f64).trunc() as i64;
-          is_valid = true;
-        }
+      if let Some(fractional_match) = captures.name("fractional")
+        && let Ok(fractional) = fractional_match.as_str().parse::<f64>()
+      {
+        nanoseconds += (fractional * NANOSECONDS_IN_SECOND as f64).trunc() as i64;
+        is_valid = true;
       }
       if captures.name("sign").is_some() {
         nanoseconds = -nanoseconds;
@@ -528,11 +526,5 @@ mod tests {
   fn test_large_days() {
     //TODO Maybe it is possible NOT TO convert the number of days into nanoseconds?
     FeelDaysAndTimeDuration::try_from("P3000000000000000000D").unwrap();
-  }
-
-  #[test]
-  fn test_eq_receiver() {
-    let dt_duration = FeelDaysAndTimeDuration::try_from("P1DT2H3M15S").unwrap();
-    dt_duration.assert_receiver_is_total_eq();
   }
 }

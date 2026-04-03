@@ -1,8 +1,8 @@
 //! # Model validator against XML Schema Definitions
 
+use crate::DmnVersion;
 use crate::errors::*;
 use crate::xml_utils::*;
-use crate::DmnVersion;
 use dsntk_common::Result;
 use roxmltree::{Document, Node, NodeType};
 
@@ -221,10 +221,10 @@ impl SchemaValidator {
     for child_node in node.children() {
       if child_node.node_type() == NodeType::Element {
         let child_node_name = child_node.tag_name().name();
-        if let Some(child_node_namespace) = child_node.tag_name().namespace() {
-          if !self.namespaces.is_valid(child_node_namespace) {
-            return Err(err_not_allowed_child_node(child_node_name, node));
-          }
+        if let Some(child_node_namespace) = child_node.tag_name().namespace()
+          && !self.namespaces.is_valid(child_node_namespace)
+        {
+          return Err(err_not_allowed_child_node(child_node_name, node));
         }
         if !allowed.contains(&child_node_name) {
           return Err(err_not_allowed_child_node(child_node_name, node));

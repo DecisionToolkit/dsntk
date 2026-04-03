@@ -1,9 +1,10 @@
 use crate::context::FeelContext;
 use crate::names::Name;
 use crate::qualified_names::QualifiedName;
-use crate::values::{Value, VALUE_FALSE, VALUE_TRUE};
-use crate::{value_number, ToFeelString};
+use crate::values::{VALUE_FALSE, VALUE_TRUE, Value};
+use crate::{ToFeelString, value_number};
 use dsntk_common::Jsonify;
+use std::slice;
 
 #[test]
 fn test_context_default() {
@@ -258,7 +259,7 @@ fn test_context_create_entries() {
   let mut ctx: FeelContext = Default::default();
   ctx.create_entries(&[], v_a.clone());
   assert_eq!("{}", ctx.to_string());
-  ctx.create_entries(&[name_a.clone()], v_a.clone());
+  ctx.create_entries(std::slice::from_ref(&name_a), v_a.clone());
   assert_eq!("{a: true}", ctx.to_string());
   ctx.create_entries(&[name_a.clone(), name_b.clone()], v_a.clone());
   assert_eq!("{a: {b: true}}", ctx.to_string());
@@ -282,7 +283,7 @@ fn test_context_apply_entries() {
   let mut ctx = FeelContext::new();
   ctx.apply_entries(&[], v_a.clone()).unwrap();
   assert_eq!("{}", ctx.to_string());
-  ctx.apply_entries(&[name_a.clone()], v_c.clone()).unwrap();
+  ctx.apply_entries(slice::from_ref(&name_a), v_c.clone()).unwrap();
   assert_eq!("{a: {}}", ctx.to_string());
   ctx.apply_entries(&[name_a.clone(), name_b.clone()], v_c.clone()).unwrap();
   assert_eq!("{a: {b: {}}}", ctx.to_string());

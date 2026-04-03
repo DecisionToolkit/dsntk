@@ -93,7 +93,6 @@ fn test_debug() {
   let name_c = Name::new(&["c"]);
   let qname = QualifiedName::new(&[&name_a, &name_b, &name_c]);
   assert_eq!(r#"QualifiedName([Name("a"), Name("b"), Name("c")])"#, format!("{qname:?}"));
-  qname.assert_receiver_is_total_eq();
 }
 
 #[test]

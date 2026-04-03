@@ -4,7 +4,7 @@
 //! depicted in one or more Decision Requirements Diagrams (DRD).
 
 use crate::errors::*;
-use dsntk_common::{gen_id, DsntkError, HRef, Result, Uri};
+use dsntk_common::{DsntkError, HRef, Result, Uri, gen_id};
 use dsntk_feel::{FeelType, Name};
 use std::fmt;
 use std::fmt::Display;
@@ -264,7 +264,7 @@ impl Definitions {
   }
 
   /// Returns reference to [DrgElements](DrgElement) container.
-  pub fn drg_elements(&self) -> Iter<DrgElement> {
+  pub fn drg_elements(&self) -> Iter<'_, DrgElement> {
     self.drg_elements.iter()
   }
 
@@ -355,7 +355,7 @@ impl Definitions {
       .collect()
   }
 
-  /// Returns organisation units.
+  /// Returns organization units.
   pub fn organisation_units(&self) -> Vec<&OrganizationUnit> {
     self
       .business_context_elements
@@ -370,10 +370,10 @@ impl Definitions {
   /// Returns decision with specified identifier.
   pub fn get_decision(&self, id: &str) -> Option<&Decision> {
     for drg_element in &self.drg_elements {
-      if let DrgElement::Decision(decision) = drg_element {
-        if decision.id() == id {
-          return Some(decision);
-        }
+      if let DrgElement::Decision(decision) = drg_element
+        && decision.id() == id
+      {
+        return Some(decision);
       }
     }
     None
@@ -382,10 +382,10 @@ impl Definitions {
   /// Returns input data with specified identifier.
   pub fn get_input_data(&self, id: &str) -> Option<&InputData> {
     for drg_element in &self.drg_elements {
-      if let DrgElement::InputData(input_data) = drg_element {
-        if input_data.id() == id {
-          return Some(input_data);
-        }
+      if let DrgElement::InputData(input_data) = drg_element
+        && input_data.id() == id
+      {
+        return Some(input_data);
       }
     }
     None
@@ -394,10 +394,10 @@ impl Definitions {
   /// Returns business knowledge model with specified identifier.
   pub fn get_business_knowledge_model(&self, id: &str) -> Option<&BusinessKnowledgeModel> {
     for drg_element in &self.drg_elements {
-      if let DrgElement::BusinessKnowledgeModel(business_knowledge_model) = drg_element {
-        if business_knowledge_model.id() == id {
-          return Some(business_knowledge_model);
-        }
+      if let DrgElement::BusinessKnowledgeModel(business_knowledge_model) = drg_element
+        && business_knowledge_model.id() == id
+      {
+        return Some(business_knowledge_model);
       }
     }
     None
@@ -406,10 +406,10 @@ impl Definitions {
   /// Returns knowledge source with specified identifier.
   pub fn get_knowledge_source(&self, id: &str) -> Option<&KnowledgeSource> {
     for drg_element in &self.drg_elements {
-      if let DrgElement::KnowledgeSource(knowledge_source) = drg_element {
-        if knowledge_source.id() == id {
-          return Some(knowledge_source);
-        }
+      if let DrgElement::KnowledgeSource(knowledge_source) = drg_element
+        && knowledge_source.id() == id
+      {
+        return Some(knowledge_source);
       }
     }
     None
@@ -501,7 +501,7 @@ pub struct InputData {
 }
 
 impl RequiredVariable for InputData {
-  /// Returns reference to a variable for this [BusinessKnowledgeModel].  
+  /// Returns reference to a variable for this [BusinessKnowledgeModel].
   fn variable(&self) -> &InformationItem {
     &self.variable
   }
@@ -1378,22 +1378,22 @@ impl DecisionTable {
   }
 
   /// Returns an iterator over input clauses.
-  pub fn input_clauses(&self) -> Iter<InputClause> {
+  pub fn input_clauses(&self) -> Iter<'_, InputClause> {
     self.input_clauses.iter()
   }
 
   /// Returns an iterator over output clauses.
-  pub fn output_clauses(&self) -> Iter<OutputClause> {
+  pub fn output_clauses(&self) -> Iter<'_, OutputClause> {
     self.output_clauses.iter()
   }
 
   /// Returns an iterator over annotations.
-  pub fn annotations(&self) -> Iter<RuleAnnotationClause> {
+  pub fn annotations(&self) -> Iter<'_, RuleAnnotationClause> {
     self.annotations.iter()
   }
 
   /// Returns an iterator over the rules.
-  pub fn rules(&self) -> Iter<DecisionRule> {
+  pub fn rules(&self) -> Iter<'_, DecisionRule> {
     self.rules.iter()
   }
 

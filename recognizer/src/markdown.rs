@@ -1,7 +1,7 @@
 //! # Markdown decision table recognizer
 
 use crate::errors::{err_md_invalid_decision_table, err_md_invalid_number_of_column, err_md_no_decision_table, err_md_no_hit_policy};
-use crate::utils::{get_allowed_and_default_output_values, EMPHASES};
+use crate::utils::{EMPHASES, get_allowed_and_default_output_values};
 use crate::{AnnotationClause, AnnotationEntry, DecisionRule, DecisionTable, DecisionTableOrientation, HitPolicy, InputClause, InputEntry, OutputClause, OutputEntry};
 use dsntk_common::Result;
 
@@ -144,13 +144,7 @@ pub fn from_markdown(markdown: &str, trace: bool) -> Result<DecisionTable> {
         "| {} |",
         row
           .iter()
-          .map(|column| {
-            if let Some(text) = column {
-              text.to_string()
-            } else {
-              "(none)".to_string()
-            }
-          })
+          .map(|column| { if let Some(text) = column { text.to_string() } else { "(none)".to_string() } })
           .collect::<Vec<String>>()
           .join(" | ")
       );
@@ -184,11 +178,7 @@ fn markdown_lines(text: &str) -> (Option<String>, Option<String>, Vec<String>) {
   let mut state = State::BeforeTable;
   for line in text.lines().filter_map(|line| {
     let trimmed_line = line.trim();
-    if !trimmed_line.is_empty() {
-      Some(trimmed_line)
-    } else {
-      None
-    }
+    if !trimmed_line.is_empty() { Some(trimmed_line) } else { None }
   }) {
     match state {
       State::BeforeTable => {
@@ -281,11 +271,7 @@ fn markdown_columns(line: &str) -> Vec<Option<String>> {
     .skip(1)
     .map(|text| {
       let trimmed_text = text.trim();
-      if trimmed_text.is_empty() {
-        None
-      } else {
-        Some(trimmed_text.to_string())
-      }
+      if trimmed_text.is_empty() { None } else { Some(trimmed_text.to_string()) }
     })
     .collect::<Vec<Option<String>>>();
   row.pop();
@@ -358,14 +344,8 @@ fn get_rule_numbers<'a>(columns: impl Iterator<Item = &'a Option<String>>) -> Ve
 fn monotonic_numbers(list: Vec<usize>) -> (bool, usize, usize) {
   let position = list.iter().position(|&x| x != 0);
   match position {
-    Some(index) => {
-      if list[index..].iter().enumerate().all(|(i, &value)| value == i + 1) {
-        (true, index, list[index..].len())
-      } else {
-        (false, 0, 0)
-      }
-    }
-    None => (false, 0, 0),
+    Some(index) if list[index..].iter().enumerate().all(|(i, &value)| value == i + 1) => (true, index, list[index..].len()),
+    _ => (false, 0, 0),
   }
 }
 

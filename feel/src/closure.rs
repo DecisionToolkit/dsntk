@@ -24,7 +24,7 @@ impl From<Vec<QualifiedName>> for Closure {
 
 impl Closure {
   /// Returns an iterator over closure items.
-  pub fn iter(&self) -> Iter<QualifiedName> {
+  pub fn iter(&self) -> Iter<'_, QualifiedName> {
     self.0.iter()
   }
 

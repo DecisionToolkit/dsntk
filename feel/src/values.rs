@@ -1,5 +1,6 @@
 //! # FEEL values
 
+use crate::FunctionBody;
 use crate::bif::Bif;
 use crate::closure::Closure;
 use crate::context::FeelContext;
@@ -7,7 +8,6 @@ use crate::errors::*;
 use crate::names::Name;
 use crate::strings::ToFeelString;
 use crate::types::FeelType;
-use crate::FunctionBody;
 use dsntk_common::{Jsonify, Result};
 use dsntk_feel_number::FeelNumber;
 use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelTime, FeelYearsAndMonthsDuration};
@@ -52,9 +52,7 @@ macro_rules! value_null {
 
 #[macro_export]
 macro_rules! value_number {
-  ($n:expr) => {{
-    Value::Number($n.into())
-  }};
+  ($n:expr) => {{ Value::Number($n.into()) }};
   ($n:expr, $s:expr) => {
     Value::Number(FeelNumber::new($n, $s))
   };
@@ -62,12 +60,8 @@ macro_rules! value_number {
 
 #[macro_export]
 macro_rules! value_string {
-  ($s:literal) => {{
-    Value::String($s.to_string())
-  }};
-  ($s:expr) => {{
-    Value::String($s)
-  }};
+  ($s:literal) => {{ Value::String($s.to_string()) }};
+  ($s:expr) => {{ Value::String($s) }};
 }
 
 /// Utility constant for value `true `of type `Boolean`.
@@ -448,11 +442,7 @@ impl Value {
 
   /// Returns `true` when the value is of type [Value::Null] indicating invalid coercion.
   pub fn is_invalid_coercion(&self) -> bool {
-    if let Value::Null(Some(message)) = self {
-      message == INVALID_COERCION
-    } else {
-      false
-    }
+    if let Value::Null(Some(message)) = self { message == INVALID_COERCION } else { false }
   }
 
   /// Returns the type of this [Value].
@@ -631,10 +621,10 @@ impl Value {
     if let Value::FunctionDefinition(_, _, _, _, _, _) = self {
       return self.clone();
     }
-    if let Value::BuiltInFunction(bif) = self {
-      if bif.feel_type().is_conformant(target_type) {
-        return self.clone();
-      }
+    if let Value::BuiltInFunction(bif) = self
+      && bif.feel_type().is_conformant(target_type)
+    {
+      return self.clone();
     }
     if self.is_conformant(target_type) {
       return self.clone();
@@ -651,10 +641,10 @@ impl Value {
       }
       // to singleton list
       value => {
-        if let FeelType::List(list_type) = target_type {
-          if value.is_conformant(list_type) {
-            return Value::List(vec![value.clone()]);
-          }
+        if let FeelType::List(list_type) = target_type
+          && value.is_conformant(list_type)
+        {
+          return Value::List(vec![value.clone()]);
         }
       }
     }

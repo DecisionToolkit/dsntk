@@ -1,4 +1,4 @@
-use crate::bif::{is_built_in_date_time_function_name, is_built_in_function_name, Bif};
+use crate::bif::{Bif, is_built_in_date_time_function_name, is_built_in_function_name};
 use std::str::FromStr;
 
 #[test]
@@ -8,7 +8,6 @@ fn test_clone() {
   let bif_b = bif_a.clone();
   assert_eq!(format!("{bif_a:?}"), format!("{bif_b:?}"));
   assert_eq!(bif_a, bif_b);
-  bif_a.assert_receiver_is_total_eq();
 }
 
 #[test]

@@ -309,58 +309,58 @@ impl Canvas {
     let mut cross_col = None; // column index of the main crossing
     let mut cross_horz_col = None; // column index of the annotation crossing in horizontal decision table
     for y in 0..self.content.len() {
-      if let Some(cross_point) = self.cross {
-        if y == cross_point.y {
-          for i in 0..width {
-            if let Some(index) = cross_col {
-              if index == i {
-                plane.add_cell(row, Cell::MainDoubleCrossing);
-                continue;
-              }
-            }
-            if let Some(index) = cross_horz_col {
-              if index == i {
-                plane.add_cell(row, Cell::HorizontalDoubleCrossing);
-                continue;
-              }
-            }
-            plane.add_cell(row, Cell::HorizontalOutputDoubleLine);
+      if let Some(cross_point) = self.cross
+        && y == cross_point.y
+      {
+        for i in 0..width {
+          if let Some(index) = cross_col
+            && index == i
+          {
+            plane.add_cell(row, Cell::MainDoubleCrossing);
+            continue;
           }
-          row += 1;
+          if let Some(index) = cross_horz_col
+            && index == i
+          {
+            plane.add_cell(row, Cell::HorizontalDoubleCrossing);
+            continue;
+          }
+          plane.add_cell(row, Cell::HorizontalOutputDoubleLine);
         }
+        row += 1;
       }
-      if let Some(cross_vert_point) = self.cross_vert {
-        if y == cross_vert_point.y {
-          for i in 0..width {
-            if let Some(index) = cross_col {
-              if index == i {
-                plane.add_cell(row, Cell::VerticalDoubleCrossing);
-                continue;
-              }
-            }
-            plane.add_cell(row, Cell::HorizontalAnnotationsDoubleLine);
+      if let Some(cross_vert_point) = self.cross_vert
+        && y == cross_vert_point.y
+      {
+        for i in 0..width {
+          if let Some(index) = cross_col
+            && index == i
+          {
+            plane.add_cell(row, Cell::VerticalDoubleCrossing);
+            continue;
           }
-          row += 1;
+          plane.add_cell(row, Cell::HorizontalAnnotationsDoubleLine);
         }
+        row += 1;
       }
       col = 0;
       let mut matched = false;
       for x in 0..self.content[y].len() {
         if CORNERS_TOP_LEFT.contains(&self.content[y][x][LAYER_GRID]) {
           matched = true;
-          if let Some(point) = self.cross {
-            if x == point.x {
-              cross_col = Some(col);
-              plane.add_cell(row, Cell::VerticalOutputDoubleLine);
-              col += 1;
-            }
+          if let Some(point) = self.cross
+            && x == point.x
+          {
+            cross_col = Some(col);
+            plane.add_cell(row, Cell::VerticalOutputDoubleLine);
+            col += 1;
           }
-          if let Some(point) = self.cross_horz {
-            if x == point.x {
-              cross_horz_col = Some(col);
-              plane.add_cell(row, Cell::VerticalAnnotationDoubleLine);
-              col += 1;
-            }
+          if let Some(point) = self.cross_horz
+            && x == point.x
+          {
+            cross_horz_col = Some(col);
+            plane.add_cell(row, Cell::VerticalAnnotationDoubleLine);
+            col += 1;
           }
           let rect = self.recognize_rectangle(LAYER_GRID, Point::new(x, y))?;
           let mut found = false;

@@ -110,22 +110,21 @@ impl TryFrom<&str> for FeelYearsAndMonthsDuration {
       let mut valid_months = false;
       if let Some(years_match) = captures.name("years") {
         contains_years = true;
-        if let Ok(years) = years_match.as_str().parse::<i64>() {
-          if let Some(months) = years.checked_mul(MONTHS_IN_YEAR) {
-            if let Some(total) = total_months.checked_add(months) {
-              total_months = total;
-              valid_years = true;
-            }
-          }
+        if let Ok(years) = years_match.as_str().parse::<i64>()
+          && let Some(months) = years.checked_mul(MONTHS_IN_YEAR)
+          && let Some(total) = total_months.checked_add(months)
+        {
+          total_months = total;
+          valid_years = true;
         }
       }
       if let Some(months_match) = captures.name("months") {
         contains_months = true;
-        if let Ok(months) = months_match.as_str().parse::<i64>() {
-          if let Some(total) = total_months.checked_add(months) {
-            total_months = total;
-            valid_months = true;
-          }
+        if let Ok(months) = months_match.as_str().parse::<i64>()
+          && let Some(total) = total_months.checked_add(months)
+        {
+          total_months = total;
+          valid_months = true;
         }
       }
       if (contains_years && valid_years) || (contains_months && valid_months) {
@@ -301,11 +300,5 @@ mod tests {
     assert_eq!(2, ym_duration.years());
     assert_eq!(3, ym_duration.months());
     assert_eq!(27, ym_duration.as_months());
-  }
-
-  #[test]
-  fn test_eq_receiver() {
-    let ym_duration = FeelYearsAndMonthsDuration::try_from("P2Y3M").unwrap();
-    ym_duration.assert_receiver_is_total_eq();
   }
 }

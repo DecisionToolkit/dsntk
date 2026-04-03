@@ -1,9 +1,9 @@
 //! # Plane
 
+use crate::HitPolicy;
 use crate::errors::*;
 use crate::point::Point;
 use crate::rect::Rect;
-use crate::HitPolicy;
 use dsntk_common::Result;
 use std::collections::HashSet;
 use std::fmt;
@@ -271,11 +271,7 @@ impl Plane {
 
   /// Returns the number of columns in plane (the width of the plane).
   pub fn width(&self) -> usize {
-    if self.content.is_empty() {
-      0
-    } else {
-      self.content[0].len()
-    }
+    if self.content.is_empty() { 0 } else { self.content[0].len() }
   }
 
   /// Returns the number of rows in plane (the height of the plane).
@@ -405,18 +401,18 @@ impl Plane {
       return Err(err_plane_is_empty());
     }
     // check if the hit policy is placed in the top-left corner of the plane
-    if let Cell::Region(_, _, text) = &self.content.first().unwrap().first().unwrap() {
-      if let Ok(hit_policy) = HitPolicy::try_from(text.as_str()) {
-        // hit policy is placed in top-left corner
-        return Ok(HitPolicyPlacement::TopLeft(hit_policy));
-      }
+    if let Cell::Region(_, _, text) = &self.content.first().unwrap().first().unwrap()
+      && let Ok(hit_policy) = HitPolicy::try_from(text.as_str())
+    {
+      // hit policy is placed in top-left corner
+      return Ok(HitPolicyPlacement::TopLeft(hit_policy));
     }
     // check if the hit policy is placed in the bottom-left corner of the plane
-    if let Cell::Region(_, _, text) = &self.content.last().unwrap().first().unwrap() {
-      if let Ok(hit_policy) = HitPolicy::try_from(text.as_str()) {
-        // hit policy is placed in bottom-left corner
-        return Ok(HitPolicyPlacement::BottomLeft(hit_policy));
-      }
+    if let Cell::Region(_, _, text) = &self.content.last().unwrap().first().unwrap()
+      && let Ok(hit_policy) = HitPolicy::try_from(text.as_str())
+    {
+      // hit policy is placed in bottom-left corner
+      return Ok(HitPolicyPlacement::BottomLeft(hit_policy));
     }
     // hit policy was not found in the top-left or bottom-right corner of the plane
     Ok(HitPolicyPlacement::NotPresent)

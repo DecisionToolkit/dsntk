@@ -29,7 +29,6 @@ fn test_point_compare() {
   let p3 = Point::new(2, 1);
   assert!(p1.eq(&p2));
   assert!(p1.ne(&p3));
-  p1.assert_receiver_is_total_eq();
 }
 
 #[test]

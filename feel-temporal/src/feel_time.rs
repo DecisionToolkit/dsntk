@@ -32,34 +32,29 @@ impl FromStr for FeelTime {
   type Err = DsntkError;
   /// Converts [String] into [FeelTime].
   fn from_str(s: &str) -> Result<Self, Self::Err> {
-    if let Some(captures) = RE_TIME.captures(s) {
-      if let Some(hour_match) = captures.name("hours") {
-        if let Ok(mut hour) = hour_match.as_str().parse::<u8>() {
-          if let Some(min_match) = captures.name("minutes") {
-            if let Ok(min) = min_match.as_str().parse::<u8>() {
-              if let Some(sec_match) = captures.name("seconds") {
-                if let Ok(sec) = sec_match.as_str().parse::<u8>() {
-                  let mut fractional = 0.0;
-                  if let Some(frac_match) = captures.name("fractional") {
-                    if let Ok(frac) = frac_match.as_str().parse::<f64>() {
-                      fractional = frac;
-                    }
-                  }
-                  let nanos = (fractional * 1e9).trunc() as u64;
-                  if let Some(zone) = FeelZone::from_captures(&captures) {
-                    if is_valid_time(hour, min, sec) {
-                      if hour == 24 {
-                        hour = 0;
-                      }
-                      let time = FeelTime(hour, min, sec, nanos, zone);
-                      return Ok(time);
-                    }
-                  }
-                }
-              }
-            }
-          }
+    if let Some(captures) = RE_TIME.captures(s)
+      && let Some(hour_match) = captures.name("hours")
+      && let Ok(mut hour) = hour_match.as_str().parse::<u8>()
+      && let Some(min_match) = captures.name("minutes")
+      && let Ok(min) = min_match.as_str().parse::<u8>()
+      && let Some(sec_match) = captures.name("seconds")
+      && let Ok(sec) = sec_match.as_str().parse::<u8>()
+    {
+      let mut fractional = 0.0;
+      if let Some(frac_match) = captures.name("fractional")
+        && let Ok(frac) = frac_match.as_str().parse::<f64>()
+      {
+        fractional = frac;
+      }
+      let nanos = (fractional * 1e9).trunc() as u64;
+      if let Some(zone) = FeelZone::from_captures(&captures)
+        && is_valid_time(hour, min, sec)
+      {
+        if hour == 24 {
+          hour = 0;
         }
+        let time = FeelTime(hour, min, sec, nanos, zone);
+        return Ok(time);
       }
     }
     Err(err_invalid_time_literal(s))
@@ -136,10 +131,10 @@ impl Sub<FeelTime> for FeelTime {
     if let Some((me_offset, other_offset)) = me_offset_opt.zip(other_offset_opt) {
       let me_date_opt = date_time_offset_t(me_time_tuple, me_offset);
       let other_date_opt = date_time_offset_t(other_time_tuple, other_offset);
-      if let Some((me_date, other_date)) = me_date_opt.zip(other_date_opt) {
-        if let Some(nanos) = me_date.sub(other_date).num_nanoseconds() {
-          return Some(FeelDaysAndTimeDuration::from_n(nanos));
-        }
+      if let Some((me_date, other_date)) = me_date_opt.zip(other_date_opt)
+        && let Some(nanos) = me_date.sub(other_date).num_nanoseconds()
+      {
+        return Some(FeelDaysAndTimeDuration::from_n(nanos));
       }
     }
     None
@@ -234,10 +229,10 @@ impl FeelTime {
   }
 
   pub fn offset_opt(hour: u8, minute: u8, second: u8, nano: u64, offset: i32) -> Option<Self> {
-    if is_valid_time(hour, minute, second) {
-      if let Ok(zone) = FeelZone::try_from(offset) {
-        return Some(Self(if hour == 24 { 0 } else { hour }, minute, second, nano, zone));
-      }
+    if is_valid_time(hour, minute, second)
+      && let Ok(zone) = FeelZone::try_from(offset)
+    {
+      return Some(Self(if hour == 24 { 0 } else { hour }, minute, second, nano, zone));
     }
     None
   }

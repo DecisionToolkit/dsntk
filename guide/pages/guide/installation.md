@@ -1,12 +1,12 @@
 # Installation
 
 #DSNTK executable is a standalone file without additional dependencies and can be obtained by
-downloading from [GitHub releases](https://github.com/dsntk/dsntk-rs/releases),
+downloading from [GitHub releases](https://github.com/dsntk/dsntk/releases),
 or built from source using [Rust and Cargo](https://www.rust-lang.org/tools/install).
 
 ## Download binary
 
-- Head to [GitHub releases](https://github.com/dsntk/dsntk-rs/releases).
+- Head to [GitHub releases](https://github.com/dsntk/dsntk/releases).
 - Expand the **Assets** section in the newly released version.
 - Download the binary of your choice, according to the operating system you use.
 

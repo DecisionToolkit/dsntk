@@ -1,7 +1,7 @@
 use crate::bifs::core;
 use dsntk_feel::bif::Bif;
 use dsntk_feel::values::Value;
-use dsntk_feel::{value_null, FeelNumber, Name};
+use dsntk_feel::{FeelNumber, Name, value_null};
 use std::sync::LazyLock;
 
 static NAME_CONTEXT: LazyLock<Name> = LazyLock::new(|| Name::from("context"));
@@ -55,18 +55,12 @@ static NAME_YEAR: LazyLock<Name> = LazyLock::new(|| Name::from("year"));
 type NamedParameters = Value;
 
 macro_rules! invalid_number_of_parameters {
-  ($expected:expr, $actual:expr) => {{
-    value_null!("expected {} parameters, actual number of parameters is {}", $expected, $actual)
-  }};
+  ($expected:expr, $actual:expr) => {{ value_null!("expected {} parameters, actual number of parameters is {}", $expected, $actual) }};
 }
 
 macro_rules! parameter_not_found {
-  ($p1:expr, $p2:expr) => {{
-    value_null!(r"parameter '{}' or '{}' not found", *$p1, *$p2)
-  }};
-  ($p:expr) => {{
-    value_null!(r"parameter '{}' not found", *$p)
-  }};
+  ($p1:expr, $p2:expr) => {{ value_null!(r"parameter '{}' or '{}' not found", *$p1, *$p2) }};
+  ($p:expr) => {{ value_null!(r"parameter '{}' not found", *$p) }};
 }
 
 pub fn evaluate_bif(bif: Bif, parameters: &NamedParameters) -> Value {
@@ -172,11 +166,7 @@ fn bif_after(parameters: &NamedParameters) -> Value {
   if let Some(((value1, _), (value2, _))) = get_param(parameters, &NAME_POINT_1).zip(get_param(parameters, &NAME_POINT_2)) {
     core::after(value1, value2)
   } else if let Some(((value1, pos1), (value2, pos2))) = get_param(parameters, &NAME_POINT).zip(get_param(parameters, &NAME_RANGE)) {
-    if pos1 > pos2 {
-      core::after(value2, value1)
-    } else {
-      core::after(value1, value2)
-    }
+    if pos1 > pos2 { core::after(value2, value1) } else { core::after(value1, value2) }
   } else if let Some(((value1, _), (value2, _))) = get_param(parameters, &NAME_RANGE_1).zip(get_param(parameters, &NAME_RANGE_2)) {
     core::after(value1, value2)
   } else {
@@ -209,11 +199,7 @@ fn bif_before(parameters: &NamedParameters) -> Value {
   if let Some(((value1, _), (value2, _))) = get_param(parameters, &NAME_POINT_1).zip(get_param(parameters, &NAME_POINT_2)) {
     core::before(value1, value2)
   } else if let Some(((value1, pos1), (value2, pos2))) = get_param(parameters, &NAME_POINT).zip(get_param(parameters, &NAME_RANGE)) {
-    if pos1 > pos2 {
-      core::before(value2, value1)
-    } else {
-      core::before(value1, value2)
-    }
+    if pos1 > pos2 { core::before(value2, value1) } else { core::before(value1, value2) }
   } else if let Some(((value1, _), (value2, _))) = get_param(parameters, &NAME_RANGE_1).zip(get_param(parameters, &NAME_RANGE_2)) {
     core::before(value1, value2)
   } else {
@@ -327,12 +313,11 @@ fn bif_date(parameters: &NamedParameters) -> Value {
   if let Some((from, _)) = get_param(parameters, &NAME_FROM) {
     return core::date_1(from);
   }
-  if let Some((year, _)) = get_param(parameters, &NAME_YEAR) {
-    if let Some((month, _)) = get_param(parameters, &NAME_MONTH) {
-      if let Some((day, _)) = get_param(parameters, &NAME_DAY) {
-        return core::date_3(year, month, day);
-      }
-    }
+  if let Some((year, _)) = get_param(parameters, &NAME_YEAR)
+    && let Some((month, _)) = get_param(parameters, &NAME_MONTH)
+    && let Some((day, _)) = get_param(parameters, &NAME_DAY)
+  {
+    return core::date_3(year, month, day);
   }
   value_null!("invalid parameters in named::bif_date")
 }
@@ -341,10 +326,10 @@ fn bif_date_and_time(parameters: &NamedParameters) -> Value {
   if let Some((from_value, _)) = get_param(parameters, &NAME_FROM) {
     return core::date_and_time_1(from_value);
   }
-  if let Some((date_value, _)) = get_param(parameters, &NAME_DATE) {
-    if let Some((time_value, _)) = get_param(parameters, &NAME_TIME) {
-      return core::date_and_time_2(date_value, time_value);
-    }
+  if let Some((date_value, _)) = get_param(parameters, &NAME_DATE)
+    && let Some((time_value, _)) = get_param(parameters, &NAME_TIME)
+  {
+    return core::date_and_time_2(date_value, time_value);
   }
   value_null!("invalid parameters in named::bif_date_and_time")
 }
@@ -1129,16 +1114,15 @@ fn bif_time(parameters: &NamedParameters) -> Value {
   if let Some((from_value, _)) = get_param(parameters, &NAME_FROM) {
     return core::time_1(from_value);
   }
-  if let Some((hour_value, _)) = get_param(parameters, &NAME_HOUR) {
-    if let Some((minute_value, _)) = get_param(parameters, &NAME_MINUTE) {
-      if let Some((second_value, _)) = get_param(parameters, &NAME_SECOND) {
-        return if let Some((offset_value, _)) = get_param(parameters, &NAME_OFFSET) {
-          core::time_4(hour_value, minute_value, second_value, offset_value)
-        } else {
-          core::time_3(hour_value, minute_value, second_value)
-        };
-      }
-    }
+  if let Some((hour_value, _)) = get_param(parameters, &NAME_HOUR)
+    && let Some((minute_value, _)) = get_param(parameters, &NAME_MINUTE)
+    && let Some((second_value, _)) = get_param(parameters, &NAME_SECOND)
+  {
+    return if let Some((offset_value, _)) = get_param(parameters, &NAME_OFFSET) {
+      core::time_4(hour_value, minute_value, second_value, offset_value)
+    } else {
+      core::time_3(hour_value, minute_value, second_value)
+    };
   }
   value_null!("invalid parameters in bif time")
 }
@@ -1183,21 +1167,17 @@ fn bif_years_and_months_duration(parameters: &NamedParameters) -> Value {
 /// The position of the named parameter is counted from 1.
 /// Additionally, the total number of parameters is returned.
 fn get_param<'a>(parameters: &'a NamedParameters, name: &'a Name) -> Option<(&'a Value, &'a usize)> {
-  if let Value::NamedParameters(map) = parameters {
-    if let Some((value, position)) = map.get(name) {
-      return Some((value, position));
-    }
+  if let Value::NamedParameters(map) = parameters
+    && let Some((value, position)) = map.get(name)
+  {
+    return Some((value, position));
   }
   None
 }
 
 /// Returns the number of named parameters.
 fn get_param_count(parameters: &NamedParameters) -> usize {
-  if let Value::NamedParameters(map) = parameters {
-    map.len()
-  } else {
-    0
-  }
+  if let Value::NamedParameters(map) = parameters { map.len() } else { 0 }
 }
 
 #[cfg(test)]

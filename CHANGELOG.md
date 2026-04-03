@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.2.0](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.2.0) (2025-03-14)
+## [v0.2.0](https://github.com/DecisionToolkit/dsntk/tree/v0.2.0) (2025-03-14)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.1.0...v0.2.0)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.1.0...v0.2.0)
 
 ### What's new
 
@@ -10,23 +10,23 @@
 
 ### Closed issues
 
-- Markdown decision tables [\#88](https://github.com/DecisionToolkit/dsntk-rs/issues/88)
-- Handle multiple default output values [\#90](https://github.com/DecisionToolkit/dsntk-rs/issues/90)
-- Minor rebranding [\#91](https://github.com/DecisionToolkit/dsntk-rs/issues/91)
-- Remove `rdt` command [\#92](https://github.com/DecisionToolkit/dsntk-rs/issues/92)
+- Markdown decision tables [\#88](https://github.com/DecisionToolkit/dsntk/issues/88)
+- Handle multiple default output values [\#90](https://github.com/DecisionToolkit/dsntk/issues/90)
+- Minor rebranding [\#91](https://github.com/DecisionToolkit/dsntk/issues/91)
+- Remove `rdt` command [\#92](https://github.com/DecisionToolkit/dsntk/issues/92)
 
 ### Merged pull requests
 
-- Recognizing Markdown decision tables [\#89](https://github.com/DecisionToolkit/dsntk-rs/pull/89)
-- Minor rebranding [\#93](https://github.com/DecisionToolkit/dsntk-rs/pull/93)
-- Automated code formatting [\#94](https://github.com/DecisionToolkit/dsntk-rs/pull/94)
-- Removed `rdt` command [\#95](https://github.com/DecisionToolkit/dsntk-rs/pull/95)
-- Composed default output values [\#96](https://github.com/DecisionToolkit/dsntk-rs/pull/96)
-- Tests for Markdown decision tables [\#97](https://github.com/DecisionToolkit/dsntk-rs/pull/97)
+- Recognizing Markdown decision tables [\#89](https://github.com/DecisionToolkit/dsntk/pull/89)
+- Minor rebranding [\#93](https://github.com/DecisionToolkit/dsntk/pull/93)
+- Automated code formatting [\#94](https://github.com/DecisionToolkit/dsntk/pull/94)
+- Removed `rdt` command [\#95](https://github.com/DecisionToolkit/dsntk/pull/95)
+- Composed default output values [\#96](https://github.com/DecisionToolkit/dsntk/pull/96)
+- Tests for Markdown decision tables [\#97](https://github.com/DecisionToolkit/dsntk/pull/97)
 
-## [v0.1.0](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.1.0) (2025-02-20)
+## [v0.1.0](https://github.com/DecisionToolkit/dsntk/tree/v0.1.0) (2025-02-20)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.9...v0.1.0)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.9...v0.1.0)
 
 ### What's new
 
@@ -42,24 +42,24 @@
 
 ### Closed issues
 
-- Handle `q` flag in regular expressions [\#23](https://github.com/DecisionToolkit/dsntk-rs/issues/23)
-- Add `-w` option to `curl` examples [\#70](https://github.com/DecisionToolkit/dsntk-rs/issues/70)
-- Implement `list replace` function [\#71](https://github.com/DecisionToolkit/dsntk-rs/issues/71)
-- Implement `range` function [\#72](https://github.com/DecisionToolkit/dsntk-rs/issues/72)
-- Extend `for` loop with `date` type [\#73](https://github.com/DecisionToolkit/dsntk-rs/issues/73)
+- Handle `q` flag in regular expressions [\#23](https://github.com/DecisionToolkit/dsntk/issues/23)
+- Add `-w` option to `curl` examples [\#70](https://github.com/DecisionToolkit/dsntk/issues/70)
+- Implement `list replace` function [\#71](https://github.com/DecisionToolkit/dsntk/issues/71)
+- Implement `range` function [\#72](https://github.com/DecisionToolkit/dsntk/issues/72)
+- Extend `for` loop with `date` type [\#73](https://github.com/DecisionToolkit/dsntk/issues/73)
 
 ### Merged pull requests
 
-- Extended `for` loop with `date` type [\#74](https://github.com/DecisionToolkit/dsntk-rs/pull/74)
-- Implemented `list replace` function [\#75](https://github.com/DecisionToolkit/dsntk-rs/pull/75)
-- Implemented `range` function [\#76](https://github.com/DecisionToolkit/dsntk-rs/pull/76)
-- Date and time handling improvements [\#77](https://github.com/DecisionToolkit/dsntk-rs/pull/77)
-- Do not support onig crate [\#78](https://github.com/DecisionToolkit/dsntk-rs/pull/78)
-- Refactoring temporal [\#79](https://github.com/DecisionToolkit/dsntk-rs/pull/79)
+- Extended `for` loop with `date` type [\#74](https://github.com/DecisionToolkit/dsntk/pull/74)
+- Implemented `list replace` function [\#75](https://github.com/DecisionToolkit/dsntk/pull/75)
+- Implemented `range` function [\#76](https://github.com/DecisionToolkit/dsntk/pull/76)
+- Date and time handling improvements [\#77](https://github.com/DecisionToolkit/dsntk/pull/77)
+- Do not support onig crate [\#78](https://github.com/DecisionToolkit/dsntk/pull/78)
+- Refactoring temporal [\#79](https://github.com/DecisionToolkit/dsntk/pull/79)
 
-## [v0.0.9](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.9) (2024-11-13)
+## [v0.0.9](https://github.com/DecisionToolkit/dsntk/tree/v0.0.9) (2024-11-13)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.8...v0.0.9)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.8...v0.0.9)
 
 ### What's new
 
@@ -70,87 +70,87 @@
 
 ### Closed issues
 
-- Support multiple input directories for the server [\#62](https://github.com/DecisionToolkit/dsntk-rs/issues/62)
-- Enable GET method [\#64](https://github.com/DecisionToolkit/dsntk-rs/issues/64)
-- Remove the long option `--dir` [\#67](https://github.com/DecisionToolkit/dsntk-rs/issues/67)
+- Support multiple input directories for the server [\#62](https://github.com/DecisionToolkit/dsntk/issues/62)
+- Enable GET method [\#64](https://github.com/DecisionToolkit/dsntk/issues/64)
+- Remove the long option `--dir` [\#67](https://github.com/DecisionToolkit/dsntk/issues/67)
 
 ### Merged pull requests
 
-- Supported multiple -D arguments [\#63](https://github.com/DecisionToolkit/dsntk-rs/pull/63)
-- Enabled GET method [\##65](https://github.com/DecisionToolkit/dsntk-rs/pull/65)
-- Colouring [\#66](https://github.com/DecisionToolkit/dsntk-rs/pull/66)
-- Removed `--dir` option variant [\##68](https://github.com/DecisionToolkit/dsntk-rs/pull/68)
+- Supported multiple -D arguments [\#63](https://github.com/DecisionToolkit/dsntk/pull/63)
+- Enabled GET method [\##65](https://github.com/DecisionToolkit/dsntk/pull/65)
+- Colouring [\#66](https://github.com/DecisionToolkit/dsntk/pull/66)
+- Removed `--dir` option variant [\##68](https://github.com/DecisionToolkit/dsntk/pull/68)
 
-## [v0.0.8](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.8) (2024-09-18)
+## [v0.0.8](https://github.com/DecisionToolkit/dsntk/tree/v0.0.8) (2024-09-18)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.7...v0.0.8)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.7...v0.0.8)
 
 ### What's new
 
 Validation of the DMN model was too strict, rejecting DMN 1.3 conformant models,
 especially the ones generated by [Camunda](https://bpmn.io/) tools. This is fixed
 and now executing Camunda models should work properly. If you find any other cases
-that do not work, please [file an issue](https://github.com/DecisionToolkit/dsntk-rs/issues).
+that do not work, please [file an issue](https://github.com/DecisionToolkit/dsntk/issues).
 
 ### Closed issues
 
-- Set `Any` type for item component when variable is not provided [\#58](https://github.com/DecisionToolkit/dsntk-rs/issues/58)
-- Loosen validations not required by the DMN standard [\#56](https://github.com/DecisionToolkit/dsntk-rs/issues/56)
-- Fix the colouring flags [\#51](https://github.com/DecisionToolkit/dsntk-rs/issues/51)
-- Change the order of built-in examples [\#37](https://github.com/DecisionToolkit/dsntk-rs/issues/37)
-- Separator color [\#34](https://github.com/DecisionToolkit/dsntk-rs/issues/34)
-- Replace the default version message [\#32](https://github.com/DecisionToolkit/dsntk-rs/issues/32)
+- Set `Any` type for item component when variable is not provided [\#58](https://github.com/DecisionToolkit/dsntk/issues/58)
+- Loosen validations not required by the DMN standard [\#56](https://github.com/DecisionToolkit/dsntk/issues/56)
+- Fix the coloring flags [\#51](https://github.com/DecisionToolkit/dsntk/issues/51)
+- Change the order of built-in examples [\#37](https://github.com/DecisionToolkit/dsntk/issues/37)
+- Separator color [\#34](https://github.com/DecisionToolkit/dsntk/issues/34)
+- Replace the default version message [\#32](https://github.com/DecisionToolkit/dsntk/issues/32)
 
 ### Merged pull requests
 
-- Refactor built in examples [\#61](https://github.com/DecisionToolkit/dsntk-rs/pull/61)
-- Established separator and segments colors [\#60](https://github.com/DecisionToolkit/dsntk-rs/pull/60)
-- Assign `Any` type for item component [\#59](https://github.com/DecisionToolkit/dsntk-rs/pull/59)
-- Loosen validations not required by the DMN standard [\#57](https://github.com/DecisionToolkit/dsntk-rs/pull/57)
-- Add model validator against XML schema [\#55](https://github.com/DecisionToolkit/dsntk-rs/pull/55)
-- Fixed TTY colouring [\#52](https://github.com/DecisionToolkit/dsntk-rs/pull/52)
-- Replaced default version flag handler [\#33](https://github.com/DecisionToolkit/dsntk-rs/pull/33)
-- Improve decision table recognizer [\#30](https://github.com/DecisionToolkit/dsntk-rs/pull/30)
+- Refactor built in examples [\#61](https://github.com/DecisionToolkit/dsntk/pull/61)
+- Established separator and segments colors [\#60](https://github.com/DecisionToolkit/dsntk/pull/60)
+- Assign `Any` type for item component [\#59](https://github.com/DecisionToolkit/dsntk/pull/59)
+- Loosen validations not required by the DMN standard [\#57](https://github.com/DecisionToolkit/dsntk/pull/57)
+- Add model validator against XML schema [\#55](https://github.com/DecisionToolkit/dsntk/pull/55)
+- Fixed TTY colouring [\#52](https://github.com/DecisionToolkit/dsntk/pull/52)
+- Replaced default version flag handler [\#33](https://github.com/DecisionToolkit/dsntk/pull/33)
+- Improve decision table recognizer [\#30](https://github.com/DecisionToolkit/dsntk/pull/30)
 
-## [v0.0.7](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.7) (2024-09-02)
+## [v0.0.7](https://github.com/DecisionToolkit/dsntk/tree/v0.0.7) (2024-09-02)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.6...v0.0.7)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.6...v0.0.7)
 
 - [x] Fixed documentation links.
 
-## [v0.0.6](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.6) (2024-09-01)
+## [v0.0.6](https://github.com/DecisionToolkit/dsntk/tree/v0.0.6) (2024-09-01)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.5...v0.0.6)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.5...v0.0.6)
 
 - [x] Improved documentation.
 - [x] Upgraded dependencies.
 - [x] Removed unused feature flags in `dsntk-feel-number` crate.
 
-## [v0.0.5](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.5) (2024-04-19)
+## [v0.0.5](https://github.com/DecisionToolkit/dsntk/tree/v0.0.5) (2024-04-19)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.4...v0.0.5)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.4...v0.0.5)
 
 - [x] Refactoring.
 
-## [v0.0.4](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.4) (2024-02-04)
+## [v0.0.4](https://github.com/DecisionToolkit/dsntk/tree/v0.0.4) (2024-02-04)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.3...v0.0.4)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.3...v0.0.4)
 
 - [x] Added DMN 1.5 functionalities.
 
-## [v0.0.3](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.3) (2023-12-31)
+## [v0.0.3](https://github.com/DecisionToolkit/dsntk/tree/v0.0.3) (2023-12-31)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.2...v0.0.3)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.2...v0.0.3)
 
 - [x] Added DMN 1.4 functionalities.
 
-## [v0.0.2](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.2) (2023-11-14)
+## [v0.0.2](https://github.com/DecisionToolkit/dsntk/tree/v0.0.2) (2023-11-14)
 
-[Full Changelog](https://github.com/DecisionToolkit/dsntk-rs/compare/v0.0.1...v0.0.2)
+[Full Changelog](https://github.com/DecisionToolkit/dsntk/compare/v0.0.1...v0.0.2)
 
 - [x] Fixed building on macOS ARM64 processors.
 
-## [v0.0.1](https://github.com/DecisionToolkit/dsntk-rs/tree/v0.0.1) (2023-11-11)
+## [v0.0.1](https://github.com/DecisionToolkit/dsntk/tree/v0.0.1) (2023-11-11)
 
 - [x] Some edge cases (like models generated from Camunda) do not work yet.
 - [x] **DecisionToolkit** is the successor of the [DMNTK](https://github.com/dmntk) project.
