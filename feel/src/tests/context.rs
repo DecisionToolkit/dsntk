@@ -258,7 +258,7 @@ fn test_context_create_entries() {
   let mut ctx: FeelContext = Default::default();
   ctx.create_entries(&[], v_a.clone());
   assert_eq!("{}", ctx.to_string());
-  ctx.create_entries(&[name_a.clone()], v_a.clone());
+  ctx.create_entries(std::slice::from_ref(&name_a), v_a.clone());
   assert_eq!("{a: true}", ctx.to_string());
   ctx.create_entries(&[name_a.clone(), name_b.clone()], v_a.clone());
   assert_eq!("{a: {b: true}}", ctx.to_string());

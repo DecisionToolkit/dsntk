@@ -140,7 +140,7 @@ impl FeelContext {
   }
 
   /// Returns an iterator over all entries in [FeelContext].
-  pub fn iter(&self) -> Iter<Name, Value> {
+  pub fn iter(&self) -> Iter<'_, Name, Value> {
     self.0.iter()
   }
 

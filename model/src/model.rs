@@ -264,7 +264,7 @@ impl Definitions {
   }
 
   /// Returns reference to [DrgElements](DrgElement) container.
-  pub fn drg_elements(&self) -> Iter<DrgElement> {
+  pub fn drg_elements(&self) -> Iter<'_, DrgElement> {
     self.drg_elements.iter()
   }
 
@@ -355,7 +355,7 @@ impl Definitions {
       .collect()
   }
 
-  /// Returns organisation units.
+  /// Returns organization units.
   pub fn organisation_units(&self) -> Vec<&OrganizationUnit> {
     self
       .business_context_elements
@@ -501,7 +501,7 @@ pub struct InputData {
 }
 
 impl RequiredVariable for InputData {
-  /// Returns reference to a variable for this [BusinessKnowledgeModel].  
+  /// Returns reference to a variable for this [BusinessKnowledgeModel].
   fn variable(&self) -> &InformationItem {
     &self.variable
   }
@@ -1378,22 +1378,22 @@ impl DecisionTable {
   }
 
   /// Returns an iterator over input clauses.
-  pub fn input_clauses(&self) -> Iter<InputClause> {
+  pub fn input_clauses(&self) -> Iter<'_, InputClause> {
     self.input_clauses.iter()
   }
 
   /// Returns an iterator over output clauses.
-  pub fn output_clauses(&self) -> Iter<OutputClause> {
+  pub fn output_clauses(&self) -> Iter<'_, OutputClause> {
     self.output_clauses.iter()
   }
 
   /// Returns an iterator over annotations.
-  pub fn annotations(&self) -> Iter<RuleAnnotationClause> {
+  pub fn annotations(&self) -> Iter<'_, RuleAnnotationClause> {
     self.annotations.iter()
   }
 
   /// Returns an iterator over the rules.
-  pub fn rules(&self) -> Iter<DecisionRule> {
+  pub fn rules(&self) -> Iter<'_, DecisionRule> {
     self.rules.iter()
   }
 

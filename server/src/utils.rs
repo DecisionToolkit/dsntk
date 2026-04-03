@@ -65,7 +65,7 @@ mod tests {
 
   #[test]
   fn getting_current_dir_should_work() {
-    assert!(current_dir().first().unwrap().to_string_lossy().ends_with("/dsntk-rs/server"));
+    assert!(current_dir().first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
   }
 
   fn getting_paths_from_variable_01() {
@@ -79,7 +79,7 @@ mod tests {
 
   fn getting_paths_from_variable_03() {
     env::set_var(DSNTK_DIR_TEST, current_dir().first().unwrap());
-    assert!(paths_from_variable(DSNTK_DIR_TEST).first().unwrap().to_string_lossy().ends_with("/dsntk-rs/server"));
+    assert!(paths_from_variable(DSNTK_DIR_TEST).first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
   }
 
   fn getting_paths_from_variable_04() {
@@ -94,15 +94,15 @@ mod tests {
     );
     let paths = paths_from_variable(DSNTK_DIR_TEST);
     assert_eq!(2, paths.len());
-    assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk-rs/server"));
-    assert!(paths.get(1).unwrap().to_string_lossy().ends_with("/dsntk-rs/server"));
+    assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
+    assert!(paths.get(1).unwrap().to_string_lossy().ends_with("/dsntk/server"));
   }
 
   fn getting_paths_from_variable_05() {
     env::set_var(DSNTK_DIR_TEST, format!("{}{}{}", current_dir().first().unwrap().to_string_lossy(), list_separator(), ""));
     let paths = paths_from_variable(DSNTK_DIR_TEST);
     assert_eq!(1, paths.len());
-    assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk-rs/server"));
+    assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
   }
 
   /// All these test cases have to be run sequentially
@@ -128,7 +128,7 @@ mod tests {
     let args = vec![current_dir().first().unwrap().to_string_lossy().to_string()];
     let paths = paths_from_arguments(args);
     assert_eq!(1, paths.len());
-    assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk-rs/server"));
+    assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
   }
 
   #[test]
@@ -139,7 +139,7 @@ mod tests {
     ];
     let paths = paths_from_arguments(args);
     assert_eq!(2, paths.len());
-    assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk-rs/server"));
-    assert!(paths.get(1).unwrap().to_string_lossy().ends_with("/dsntk-rs/server"));
+    assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
+    assert!(paths.get(1).unwrap().to_string_lossy().ends_with("/dsntk/server"));
   }
 }

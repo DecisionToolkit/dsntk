@@ -9,6 +9,7 @@ mod types;
 mod values;
 
 use crate::{FeelType, Name};
+use std::slice;
 use std::sync::LazyLock;
 
 const T_ANY: &FeelType = &FeelType::Any;
@@ -41,6 +42,6 @@ static T_FUNCTION_C: LazyLock<FeelType> = LazyLock::new(|| FeelType::function(&[
 static T_FUNCTION_D: LazyLock<FeelType> = LazyLock::new(|| FeelType::function(&[], T_ANY));
 static T_FUNCTION_E: LazyLock<FeelType> = LazyLock::new(|| FeelType::function(&[], T_STRING));
 static T_FUNCTION_F: LazyLock<FeelType> = LazyLock::new(|| FeelType::function(&[T_ANY.clone()], T_STRING));
-static T_FUNCTION_G: LazyLock<FeelType> = LazyLock::new(|| FeelType::function(&[T_STRING.clone()], T_STRING));
+static T_FUNCTION_G: LazyLock<FeelType> = LazyLock::new(|| FeelType::function(slice::from_ref(T_STRING), T_STRING));
 static T_RANGE_A: LazyLock<FeelType> = LazyLock::new(|| FeelType::range(T_NUMBER));
 static T_RANGE_B: LazyLock<FeelType> = LazyLock::new(|| FeelType::range(T_DATE));
