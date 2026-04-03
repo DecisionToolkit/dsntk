@@ -23,8 +23,3 @@ fn test_not_equal() {
   let err2 = DsntkError::new("TestError", "unexpected");
   assert!((err1 != err2));
 }
-
-#[test]
-fn test_total_eq() {
-  DsntkError::new("TestError", "unexpected").assert_receiver_is_total_eq();
-}

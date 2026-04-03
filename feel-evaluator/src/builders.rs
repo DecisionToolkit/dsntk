@@ -4,11 +4,11 @@ use crate::evaluator_java::evaluate_external_java_function;
 use crate::evaluator_pmml::evaluate_external_pmml_function;
 use crate::iterations::{EveryExpressionEvaluator, ForExpressionEvaluator, SomeExpressionEvaluator};
 use crate::macros::invalid_argument_type;
-use crate::{bifs, FilterExpressionEvaluator};
+use crate::{FilterExpressionEvaluator, bifs};
 use dsntk_feel::bif::Bif;
 use dsntk_feel::context::FeelContext;
-use dsntk_feel::values::{Value, VALUE_FALSE, VALUE_TRUE};
-use dsntk_feel::{value_null, Evaluator, FeelNumber, FeelScope, FeelType, FunctionBody, Name};
+use dsntk_feel::values::{VALUE_FALSE, VALUE_TRUE, Value};
+use dsntk_feel::{Evaluator, FeelNumber, FeelScope, FeelType, FunctionBody, Name, value_null};
 use dsntk_feel_parser::{AstNode, ClosureBuilder};
 use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelTime, FeelYearsAndMonthsDuration};
 use std::borrow::Borrow;
@@ -55,11 +55,7 @@ impl<'b> EvaluatorBuilder<'b> {
   /// Returns an optional reference to parent node if any.
   fn parent_node(&self) -> Option<&AstNode> {
     let stack_height = self.node_stack.len();
-    if stack_height > 1 {
-      self.node_stack.get(stack_height - 2).cloned()
-    } else {
-      None
-    }
+    if stack_height > 1 { self.node_stack.get(stack_height - 2).cloned() } else { None }
   }
 
   /// Builds and evaluator based on provided AST node.
@@ -657,12 +653,12 @@ impl<'b> EvaluatorBuilder<'b> {
           }
           AstNode::IterationContextSingle(variable_name, expr_node) => {
             if let AstNode::Name(name) = variable_name.borrow() {
-              if let AstNode::Name(variable_name) = expr_node.borrow() {
-                if binding_variables.contains(variable_name) {
-                  evaluators.push(IteratorType::Variable((name.clone(), variable_name.clone())));
-                  binding_variables.insert(name.clone());
-                  continue; // JUMP TO THE NEXT ITERATION, DO NOT MISS THIS LINE WHEN ANALYZING THE CODE!
-                }
+              if let AstNode::Name(variable_name) = expr_node.borrow()
+                && binding_variables.contains(variable_name)
+              {
+                evaluators.push(IteratorType::Variable((name.clone(), variable_name.clone())));
+                binding_variables.insert(name.clone());
+                continue; // JUMP TO THE NEXT ITERATION, DO NOT MISS THIS LINE WHEN ANALYZING THE CODE!
               }
               if let AstNode::Range(range_start_node, range_end_node) = expr_node.borrow() {
                 let range_start_evaluator = self.build(range_start_node);
@@ -853,11 +849,11 @@ impl<'b> EvaluatorBuilder<'b> {
       return build_err_msg(err_msg_expected_node("QuantifiedContexts", lhs));
     };
     for item in items {
-      if let AstNode::QuantifiedContext(variable_name, expr_node) = item {
-        if let AstNode::Name(name) = variable_name.borrow() {
-          let evaluator_single = self.build(expr_node);
-          expr_evaluators.push((name.clone(), evaluator_single));
-        }
+      if let AstNode::QuantifiedContext(variable_name, expr_node) = item
+        && let AstNode::Name(name) = variable_name.borrow()
+      {
+        let evaluator_single = self.build(expr_node);
+        expr_evaluators.push((name.clone(), evaluator_single));
       }
     }
     let AstNode::Satisfies(satisfies) = rhs else {
@@ -1427,11 +1423,11 @@ impl<'b> EvaluatorBuilder<'b> {
       let mut parameters = BTreeMap::new();
       let mut position = 1_usize;
       for evaluator in &evaluators {
-        if let Value::NamedParameter(name, value) = evaluator(scope) {
-          if let Value::ParameterName(name) = *name {
-            parameters.insert(name, (*value, position));
-            position += 1;
-          }
+        if let Value::NamedParameter(name, value) = evaluator(scope)
+          && let Value::ParameterName(name) = *name
+        {
+          parameters.insert(name, (*value, position));
+          position += 1;
         }
       }
       Value::NamedParameters(parameters)
@@ -1681,11 +1677,11 @@ impl<'b> EvaluatorBuilder<'b> {
       return build_err_msg(err_msg_expected_node("QuantifiedContexts", lhs));
     };
     for item in items {
-      if let AstNode::QuantifiedContext(variable_name, expr_node) = item {
-        if let AstNode::Name(name) = variable_name.borrow() {
-          let evaluator_single = self.build(expr_node);
-          expr_evaluators.push((name.clone(), evaluator_single));
-        }
+      if let AstNode::QuantifiedContext(variable_name, expr_node) = item
+        && let AstNode::Name(name) = variable_name.borrow()
+      {
+        let evaluator_single = self.build(expr_node);
+        expr_evaluators.push((name.clone(), evaluator_single));
       }
     }
     let AstNode::Satisfies(satisfies) = rhs else {
@@ -1851,11 +1847,7 @@ impl<'b> EvaluatorBuilder<'b> {
 }
 
 fn adjust(value: Value, adjusted: bool) -> Value {
-  if adjusted {
-    Value::Transparent(value.into())
-  } else {
-    value
-  }
+  if adjusted { Value::Transparent(value.into()) } else { value }
 }
 
 fn get_property_from_value(value: Value, adjusted: bool, name: &Name) -> Value {
@@ -2122,10 +2114,11 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
     },
     Value::Range(r1s, c1s, r1e, c1e) => match rhs {
       Value::Range(r2s, c2s, r2e, c2e) => {
-        if *c1s == *c2s && *c1e == *c2e {
-          if let Some(true) = eval_ternary_equality(r1s, r2s) {
-            return eval_ternary_equality(r1e, r2e);
-          }
+        if *c1s == *c2s
+          && *c1e == *c2e
+          && let Some(true) = eval_ternary_equality(r1s, r2s)
+        {
+          return eval_ternary_equality(r1e, r2e);
         }
         Some(false)
       }
@@ -2197,12 +2190,12 @@ fn eval_in_list_in_list(l_items: &[Value], r_items: &[Value]) -> Value {
       for l in l_items {
         let mut found = false;
         for (index, r) in rhs.iter().enumerate() {
-          if available.contains(&index) {
-            if let Value::Boolean(true) = eval_in_equal(l, r) {
-              available.remove(&index);
-              found = true;
-              break;
-            }
+          if available.contains(&index)
+            && let Value::Boolean(true) = eval_in_equal(l, r)
+          {
+            available.remove(&index);
+            found = true;
+            break;
           }
         }
         if !found {
@@ -2386,11 +2379,7 @@ fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, en
 }
 
 fn eval_in_equal(left: &Value, right: &Value) -> Value {
-  if let Some(true) = eval_ternary_equality(left, right) {
-    VALUE_TRUE
-  } else {
-    VALUE_FALSE
-  }
+  if let Some(true) = eval_ternary_equality(left, right) { VALUE_TRUE } else { VALUE_FALSE }
 }
 
 fn eval_in_unary_less(left: &Value, right: &Value) -> Value {

@@ -16,7 +16,6 @@ fn test_rect_new() {
   assert_eq!(r.top, 0);
   assert_eq!(r.right, 50);
   assert_eq!(r.bottom, 100);
-  r.assert_receiver_is_total_eq();
 }
 
 #[test]

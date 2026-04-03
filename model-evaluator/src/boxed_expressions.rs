@@ -8,9 +8,9 @@ use dsntk_common::Result;
 use dsntk_feel::closure::Closure;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
-use dsntk_feel::{value_null, Evaluator, FeelScope, FeelType, FunctionBody};
+use dsntk_feel::{Evaluator, FeelScope, FeelType, FunctionBody, value_null};
 use dsntk_feel_evaluator::{EveryExpressionEvaluator, FilterExpressionEvaluator, ForExpressionEvaluator, SomeExpressionEvaluator};
-use dsntk_feel_parser::{parse_name, ClosureBuilder};
+use dsntk_feel_parser::{ClosureBuilder, parse_name};
 use dsntk_model::*;
 use std::sync::Arc;
 
@@ -335,11 +335,7 @@ pub fn build_conditional_evaluator(scope: &FeelScope, conditional: &Conditional,
     let Value::Boolean(condition) = if_evaluator(scope) else {
       return value_null!("condition is not a boolean expression");
     };
-    if condition {
-      then_evaluator(scope)
-    } else {
-      else_evaluator(scope)
-    }
+    if condition { then_evaluator(scope) } else { else_evaluator(scope) }
   });
   Ok((
     build_coerced_result_evaluator(conditional_evaluator, conditional, conditional.namespace(), model_builder),
@@ -436,11 +432,11 @@ pub fn build_some_evaluator(scope: &FeelScope, some: &Some, model_builder: &Mode
 
 /// Builds an evaluator that provides coercion for output type of the expression.
 fn build_coerced_result_evaluator(evaluator: Evaluator, expression: &dyn Expression, namespace: &str, model_builder: &ModelBuilder) -> Evaluator {
-  if let Some(type_ref) = expression.type_ref() {
-    if let Some(feel_type) = model_builder.item_definition_type_evaluator().information_item_type(namespace, type_ref) {
-      let coerced_result_evaluator = Box::new(move |scope: &FeelScope| evaluator(scope).coerced(&feel_type));
-      return coerced_result_evaluator;
-    }
+  if let Some(type_ref) = expression.type_ref()
+    && let Some(feel_type) = model_builder.item_definition_type_evaluator().information_item_type(namespace, type_ref)
+  {
+    let coerced_result_evaluator = Box::new(move |scope: &FeelScope| evaluator(scope).coerced(&feel_type));
+    return coerced_result_evaluator;
   }
   evaluator
 }

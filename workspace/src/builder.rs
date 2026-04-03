@@ -112,12 +112,12 @@ impl WorkspaceBuilder {
 
   /// Checks if namespaces are duplicated in the workspace.
   fn check_namespace_duplicates(&self, file: &Path, workspace_name: &str, namespace: &str) -> bool {
-    if let Some(namespaces) = self.workspace_namespaces.get(workspace_name) {
-      if namespaces.contains(namespace) {
-        let file_name = self.workspace_models.get(workspace_name).unwrap().get(namespace).unwrap();
-        self.err_duplicated_namespace(workspace_name, file, namespace, file_name);
-        return false;
-      }
+    if let Some(namespaces) = self.workspace_namespaces.get(workspace_name)
+      && namespaces.contains(namespace)
+    {
+      let file_name = self.workspace_models.get(workspace_name).unwrap().get(namespace).unwrap();
+      self.err_duplicated_namespace(workspace_name, file, namespace, file_name);
+      return false;
     }
     true
   }

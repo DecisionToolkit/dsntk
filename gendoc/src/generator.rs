@@ -4,7 +4,7 @@ use crate::auto_size::AutoSize;
 use crate::defs::*;
 use crate::horizontal_decision_table::create_horizontal_decision_table_elements;
 use crate::styles::{create_decision_table_style, create_document_style, create_model_style};
-use domrs::{h1, HtmlBodyElement, HtmlDocument, HtmlElement, HtmlHeadElement, HtmlStyleElement};
+use domrs::{HtmlBodyElement, HtmlDocument, HtmlElement, HtmlHeadElement, HtmlStyleElement, h1};
 use dsntk_model::*;
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -254,10 +254,10 @@ impl HTMLGenerator {
       for diagram in &dmndi.diagrams {
         let mut size = AutoSize::new();
         let mut diagram_style = Style::new();
-        if let Some(diagram_shared_style_id) = &diagram.shared_style {
-          if let Some(diagram_shared_style) = self.diagram_shared_styles.get(diagram_shared_style_id) {
-            diagram_style.apply(diagram_shared_style);
-          }
+        if let Some(diagram_shared_style_id) = &diagram.shared_style
+          && let Some(diagram_shared_style) = self.diagram_shared_styles.get(diagram_shared_style_id)
+        {
+          diagram_style.apply(diagram_shared_style);
         }
         if let Some(diagram_local_style) = &diagram.local_style {
           diagram_style.apply(diagram_local_style);
@@ -281,18 +281,18 @@ impl HTMLGenerator {
             }
             DmnDiagramElement::DmnEdge(edge) => {
               size.discover_from_edge(edge);
-              if let Some(id) = &edge.dmn_element_ref {
-                if let Some(requirement) = definitions.get_requirement(id) {
-                  match requirement {
-                    Requirement::Information(_) => {
-                      html_svg_content.push(create_svg_edge_solid_with_black_arrow(&edge.way_points));
-                    }
-                    Requirement::Knowledge(_) => {
-                      html_svg_content.push(create_svg_edge_dashed_with_thin_arrow(&edge.way_points));
-                    }
-                    Requirement::Authority(_) => {
-                      html_svg_content.push(create_svg_edge_dashed_with_end_point(&edge.way_points));
-                    }
+              if let Some(id) = &edge.dmn_element_ref
+                && let Some(requirement) = definitions.get_requirement(id)
+              {
+                match requirement {
+                  Requirement::Information(_) => {
+                    html_svg_content.push(create_svg_edge_solid_with_black_arrow(&edge.way_points));
+                  }
+                  Requirement::Knowledge(_) => {
+                    html_svg_content.push(create_svg_edge_dashed_with_thin_arrow(&edge.way_points));
+                  }
+                  Requirement::Authority(_) => {
+                    html_svg_content.push(create_svg_edge_dashed_with_end_point(&edge.way_points));
                   }
                 }
               }
@@ -377,10 +377,10 @@ impl HTMLGenerator {
 
   /// Applies style attributes from [DmnShape].
   fn apply_shape_style(&self, style: &mut Style, shape: &DmnShape) {
-    if let Some(shape_shared_style_id) = &shape.shared_style {
-      if let Some(shape_shared_style) = self.diagram_shared_styles.get(shape_shared_style_id) {
-        style.apply(shape_shared_style);
-      }
+    if let Some(shape_shared_style_id) = &shape.shared_style
+      && let Some(shape_shared_style) = self.diagram_shared_styles.get(shape_shared_style_id)
+    {
+      style.apply(shape_shared_style);
     }
     if let Some(shape_local_style) = &shape.local_style {
       style.apply(shape_local_style);
@@ -613,7 +613,7 @@ fn create_description(optional_description: &Option<String>) -> HtmlElement {
   }
 }
 
-/// Creates SVG solid edge line with black-filled arrow at the end.  
+/// Creates SVG solid edge line with black-filled arrow at the end.
 fn create_svg_edge_solid_with_black_arrow(way_points: &[DcPoint]) -> HtmlElement {
   // prepare line
   let points = way_points.iter().fold("".to_string(), |acc, w| format!("{}{},{} ", acc, w.x, w.y));
@@ -643,7 +643,7 @@ fn create_svg_edge_solid_with_black_arrow(way_points: &[DcPoint]) -> HtmlElement
   create_svg_group(vec![svg_edge, svg_arrow])
 }
 
-/// Creates SVG dashed edge line with thin arrow at the end.  
+/// Creates SVG dashed edge line with thin arrow at the end.
 fn create_svg_edge_dashed_with_thin_arrow(way_points: &[DcPoint]) -> HtmlElement {
   // prepare line
   let points = way_points.iter().fold("".to_string(), |acc, w| format!("{}{},{} ", acc, w.x, w.y));
@@ -668,7 +668,7 @@ fn create_svg_edge_dashed_with_thin_arrow(way_points: &[DcPoint]) -> HtmlElement
   create_svg_group(vec![svg_edge, svg_arrow])
 }
 
-/// Creates SVG dashed edge line with black end-point at the end.  
+/// Creates SVG dashed edge line with black end-point at the end.
 fn create_svg_edge_dashed_with_end_point(way_points: &[DcPoint]) -> HtmlElement {
   // prepare line
   let points = way_points.iter().fold("".to_string(), |acc, w| format!("{}{},{} ", acc, w.x, w.y));
@@ -723,10 +723,10 @@ fn create_svg_text(bounds: &DcBounds, style: &Style, text: &str) -> HtmlElement 
 /// Returns the text of the label associated with the shape,
 /// when no label is present then the specified name is returned.
 fn get_label_text(shape: &DmnShape, name: &str) -> String {
-  if let Some(label) = &shape.label {
-    if let Some(label_text) = &label.text {
-      return label_text.to_string();
-    }
+  if let Some(label) = &shape.label
+    && let Some(label_text) = &label.text
+  {
+    return label_text.to_string();
   }
   name.to_string()
 }
@@ -739,15 +739,7 @@ fn get_angle(start: &DcPoint, end: &DcPoint) -> f64 {
     return if y >= 0.0 { -90.0 } else { 90.0 };
   }
   let angle = ((y / x).atan() * 360.0) / PI_2;
-  if x > 0.0 {
-    if y >= 0.0 {
-      angle - 180.0
-    } else {
-      angle + 180.0
-    }
-  } else {
-    angle
-  }
+  if x > 0.0 { if y >= 0.0 { angle - 180.0 } else { angle + 180.0 } } else { angle }
 }
 
 /// Returns the path for drawing knowledge source symbol.

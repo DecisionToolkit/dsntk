@@ -332,18 +332,18 @@ impl FeelType {
         return false;
       }
       FeelType::Function(parameters_other, result_other) => {
-        if let FeelType::Function(parameters_self, result_self) = self {
-          if parameters_self.len() == parameters_other.len() {
-            for (i, parameter_other) in parameters_other.iter().enumerate() {
-              if !parameter_other.is_conformant(&parameters_self[i]) {
-                return false;
-              }
-              if !result_self.is_conformant(result_other) {
-                return false;
-              }
+        if let FeelType::Function(parameters_self, result_self) = self
+          && parameters_self.len() == parameters_other.len()
+        {
+          for (i, parameter_other) in parameters_other.iter().enumerate() {
+            if !parameter_other.is_conformant(&parameters_self[i]) {
+              return false;
             }
-            return true;
+            if !result_self.is_conformant(result_other) {
+              return false;
+            }
           }
+          return true;
         }
         return false;
       }
@@ -354,28 +354,28 @@ impl FeelType {
   /// Checks if this type is an instance of the other type.
   pub fn instance_of(&self, other: &FeelType) -> bool {
     // list
-    if let FeelType::List(self_inner_type) = self {
-      if let FeelType::List(other_inner_type) = other {
-        return self_inner_type == other_inner_type || **other_inner_type == FeelType::Any;
-      }
+    if let FeelType::List(self_inner_type) = self
+      && let FeelType::List(other_inner_type) = other
+    {
+      return self_inner_type == other_inner_type || **other_inner_type == FeelType::Any;
     }
     // context
-    if let FeelType::Context(self_inner_type) = self {
-      if let FeelType::Context(other_inner_type) = other {
-        if self_inner_type == other_inner_type {
-          return true;
-        }
-        for (name, other_inner_feel_type) in other_inner_type {
-          if let Some(self_inner_feel_type) = self_inner_type.get(name) {
-            if !self_inner_feel_type.is_null() && self_inner_feel_type != other_inner_feel_type {
-              return false;
-            }
-          } else {
-            return false;
-          }
-        }
+    if let FeelType::Context(self_inner_type) = self
+      && let FeelType::Context(other_inner_type) = other
+    {
+      if self_inner_type == other_inner_type {
         return true;
       }
+      for (name, other_inner_feel_type) in other_inner_type {
+        if let Some(self_inner_feel_type) = self_inner_type.get(name) {
+          if !self_inner_feel_type.is_null() && self_inner_feel_type != other_inner_feel_type {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+      return true;
     }
     false
   }

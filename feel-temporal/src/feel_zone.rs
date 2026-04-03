@@ -73,11 +73,7 @@ impl TryFrom<i32> for FeelZone {
   /// Creates [FeelZone] based on the offset from UTC given in seconds.
   fn try_from(offset: i32) -> Result<Self, Self::Error> {
     if (-43140..=43200).contains(&offset) {
-      if offset != 0 {
-        Ok(Self::Offset(offset))
-      } else {
-        Ok(Self::Utc)
-      }
+      if offset != 0 { Ok(Self::Offset(offset)) } else { Ok(Self::Utc) }
     } else {
       Err(err_invalid_time_zone_offset(offset))
     }
@@ -90,28 +86,25 @@ impl FeelZone {
     if captures.name("zulu").is_some() {
       return Some(FeelZone::Utc);
     }
-    if let Some(sign_match) = captures.name("offSign") {
-      if let Some(hours_match) = captures.name("offHours") {
-        if let Ok(hours) = hours_match.as_str().parse::<i32>() {
-          if let Some(minutes_match) = captures.name("offMinutes") {
-            if let Ok(minutes) = minutes_match.as_str().parse::<i32>() {
-              let mut offset = 3600 * hours + 60 * minutes;
-              if let Some(seconds_match) = captures.name("offSeconds") {
-                if let Ok(seconds) = seconds_match.as_str().parse::<i32>() {
-                  offset += seconds;
-                }
-              }
-              if offset > 50_400 {
-                return None;
-              }
-              if sign_match.as_str() == "-" {
-                offset = -offset;
-              }
-              return Some(if offset != 0 { Self::Offset(offset) } else { Self::Utc });
-            }
-          }
-        }
+    if let Some(sign_match) = captures.name("offSign")
+      && let Some(hours_match) = captures.name("offHours")
+      && let Ok(hours) = hours_match.as_str().parse::<i32>()
+      && let Some(minutes_match) = captures.name("offMinutes")
+      && let Ok(minutes) = minutes_match.as_str().parse::<i32>()
+    {
+      let mut offset = 3600 * hours + 60 * minutes;
+      if let Some(seconds_match) = captures.name("offSeconds")
+        && let Ok(seconds) = seconds_match.as_str().parse::<i32>()
+      {
+        offset += seconds;
       }
+      if offset > 50_400 {
+        return None;
+      }
+      if sign_match.as_str() == "-" {
+        offset = -offset;
+      }
+      return Some(if offset != 0 { Self::Offset(offset) } else { Self::Utc });
     }
     if let Some(zone_match) = captures.name("zone") {
       return if zone_match.as_str().parse::<chrono_tz::Tz>().is_ok() {

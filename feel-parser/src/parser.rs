@@ -1,10 +1,10 @@
 //! Implementation of the `LALR` parser for `FEEL` grammar.
 
+use crate::AstNode;
 use crate::errors::*;
 use crate::lalr::*;
 use crate::lexer::*;
 use crate::scope::ParsingScope;
-use crate::AstNode;
 use dsntk_common::Result;
 use dsntk_feel::{FeelType, Name};
 
@@ -967,11 +967,11 @@ impl ReduceActions for Parser<'_> {
 
   fn action_qualified_name_tail(&mut self) -> Result<()> {
     trace_action!(self, "action_qualified_name_tail");
-    if let TokenValue::Name(name) = &self.yy_value_stack[self.yy_value_stack.len() - 3] {
-      if let Some(AstNode::QualifiedName(mut parts)) = self.yy_node_stack.pop() {
-        parts.insert(0, AstNode::QualifiedNameSegment(name.clone()));
-        self.yy_node_stack.push(AstNode::QualifiedName(parts));
-      }
+    if let TokenValue::Name(name) = &self.yy_value_stack[self.yy_value_stack.len() - 3]
+      && let Some(AstNode::QualifiedName(mut parts)) = self.yy_node_stack.pop()
+    {
+      parts.insert(0, AstNode::QualifiedNameSegment(name.clone()));
+      self.yy_node_stack.push(AstNode::QualifiedName(parts));
     }
     Ok(())
   }

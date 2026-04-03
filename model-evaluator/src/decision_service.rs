@@ -8,7 +8,7 @@ use dsntk_common::Result;
 use dsntk_feel::closure::Closure;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
-use dsntk_feel::{value_null, Evaluator, FeelScope, FeelType, Name};
+use dsntk_feel::{Evaluator, FeelScope, FeelType, Name, value_null};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
@@ -59,10 +59,10 @@ impl DecisionServiceEvaluator {
             let mut output_data = FeelContext::default();
             let decision_service_evaluator = evaluator.decision_service_evaluator();
             let opt_out_variable_name = decision_service_evaluator.evaluate(&decision_service_id, &global_context, &input_data, &evaluator, &mut output_data);
-            if let Some(out_variable_name) = opt_out_variable_name {
-              if let Some(result_value) = output_data.get_entry(&out_variable_name) {
-                return result_value.clone();
-              }
+            if let Some(out_variable_name) = opt_out_variable_name
+              && let Some(result_value) = output_data.get_entry(&out_variable_name)
+            {
+              return result_value.clone();
             }
             value_null!()
           });
@@ -94,14 +94,14 @@ impl DecisionServiceEvaluator {
 
   /// Returns a decision service as function definition with specified identifier.
   pub fn evaluate_fd(&self, def_key: &DefKey, input_data: &FeelContext, output_data: &mut FeelContext) -> Option<Name> {
-    if let Ok(evaluators) = self.evaluators.read() {
-      if let Some((variable, _, _, Some(evaluator))) = evaluators.get(def_key) {
-        let scope: FeelScope = input_data.clone().into();
-        let function_definition = evaluator(&scope) as Value;
-        let output_variable_name = variable.name().clone();
-        output_data.set_entry(&output_variable_name, function_definition);
-        return Some(output_variable_name);
-      }
+    if let Ok(evaluators) = self.evaluators.read()
+      && let Some((variable, _, _, Some(evaluator))) = evaluators.get(def_key)
+    {
+      let scope: FeelScope = input_data.clone().into();
+      let function_definition = evaluator(&scope) as Value;
+      let output_variable_name = variable.name().clone();
+      output_data.set_entry(&output_variable_name, function_definition);
+      return Some(output_variable_name);
     }
     None
   }

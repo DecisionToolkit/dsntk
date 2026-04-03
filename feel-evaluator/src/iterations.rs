@@ -3,8 +3,8 @@
 use crate::errors::*;
 use dsntk_common::Result;
 use dsntk_feel::context::FeelContext;
-use dsntk_feel::values::{Value, Values, VALUE_FALSE, VALUE_TRUE};
-use dsntk_feel::{value_null, Evaluator, FeelNumber, FeelScope, Name, FEEL_TYPE_NAME_DATE, FEEL_TYPE_NAME_NUMBER};
+use dsntk_feel::values::{VALUE_FALSE, VALUE_TRUE, Value, Values};
+use dsntk_feel::{Evaluator, FEEL_TYPE_NAME_DATE, FEEL_TYPE_NAME_NUMBER, FeelNumber, FeelScope, Name, value_null};
 use dsntk_feel_temporal::FeelDate;
 
 /// Common interface for all iteration state types.
@@ -252,15 +252,15 @@ impl VariableState {
 
 impl IterationState for VariableState {
   fn bind_value(&mut self, ctx: &FeelContext) {
-    if self.list_state.current == 0 {
-      if let Some(value) = ctx.get(&self.bound_variable) {
-        self.list_state.values = match value {
-          Value::List(values) => values.clone(),
-          single => vec![single.clone()],
-        };
-        self.list_state.step = 1;
-        self.list_state.current = 0;
-      }
+    if self.list_state.current == 0
+      && let Some(value) = ctx.get(&self.bound_variable)
+    {
+      self.list_state.values = match value {
+        Value::List(values) => values.clone(),
+        single => vec![single.clone()],
+      };
+      self.list_state.step = 1;
+      self.list_state.current = 0;
     }
   }
 
