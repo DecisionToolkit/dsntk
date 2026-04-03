@@ -10,9 +10,7 @@ use std::fmt;
 /// This macro creates a default scope.
 #[macro_export]
 macro_rules! scope {
-  () => {{
-    FeelScope::default()
-  }};
+  () => {{ FeelScope::default() }};
 }
 
 /// The `FEEL` scope.

@@ -2,11 +2,11 @@
 
 #![doc = include_str!("../docs/algorithm.md")]
 
+use crate::HitPolicy;
 use crate::canvas::Canvas;
 use crate::errors::*;
 use crate::model::DecisionTableOrientation;
 use crate::plane::{HitPolicyPlacement, Plane, RuleNumbersPlacement};
-use crate::HitPolicy;
 use dsntk_common::Result;
 
 /// Decision table recognizer.
@@ -287,11 +287,7 @@ impl Recognizer {
   /// Returns text when not empty, otherwise returns [None].
   fn opt_text(&self, text: String) -> Option<String> {
     let s = text.trim().to_string();
-    if s.is_empty() {
-      None
-    } else {
-      Some(s)
-    }
+    if s.is_empty() { None } else { Some(s) }
   }
 
   /// Recognizes decision table components from crosstab oriented plane.

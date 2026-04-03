@@ -1,4 +1,4 @@
-use dsntk_recognizer::{from_markdown, DecisionTableOrientation, HitPolicy};
+use dsntk_recognizer::{DecisionTableOrientation, HitPolicy, from_markdown};
 
 /// There is some additional text after decision table.
 #[test]

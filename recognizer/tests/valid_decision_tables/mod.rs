@@ -2,8 +2,8 @@ mod horizontal;
 mod vertical;
 
 use dsntk_recognizer::{
-  from_markdown, from_unicode, AnnotationClause, AnnotationEntry, BuiltinAggregator, DecisionRule, DecisionTable, DecisionTableOrientation, HitPolicy, InputClause, InputEntry,
-  OutputClause, OutputEntry,
+  AnnotationClause, AnnotationEntry, BuiltinAggregator, DecisionRule, DecisionTable, DecisionTableOrientation, HitPolicy, InputClause, InputEntry, OutputClause, OutputEntry,
+  from_markdown, from_unicode,
 };
 
 use dsntk_examples::decision_tables::*;

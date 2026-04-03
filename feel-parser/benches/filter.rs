@@ -2,7 +2,7 @@
 
 extern crate test;
 
-use dsntk_feel::{scope, FeelScope};
+use dsntk_feel::{FeelScope, scope};
 use dsntk_feel_parser::parse_expression;
 use test::Bencher;
 

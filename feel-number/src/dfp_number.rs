@@ -83,11 +83,7 @@ impl FeelNumber {
     Ok(Self(
       if scale == 0 {
         let rounded = bid128_round_integral_positive(self.0, flags!());
-        if bid128_is_zero(rounded) {
-          BID128_ZERO
-        } else {
-          rounded
-        }
+        if bid128_is_zero(rounded) { BID128_ZERO } else { rounded }
       } else {
         self.validate_scale(scale)?;
         self.unscale(bid128_round_integral_positive(bid128_scalbn(self.0, scale), flags!()), scale)
@@ -102,11 +98,7 @@ impl FeelNumber {
 
   pub fn exp(&self) -> Option<Self> {
     let n = bid128_exp(self.0, round!(), flags!());
-    if bid128_is_finite(n) {
-      Some(Self(n, true))
-    } else {
-      None
-    }
+    if bid128_is_finite(n) { Some(Self(n, true)) } else { None }
   }
 
   /// Returns a nearest integer less or equal to this [FeelNumber].
@@ -148,11 +140,7 @@ impl FeelNumber {
 
   pub fn ln(&self) -> Option<Self> {
     let n = bid128_log(self.0, round!(), flags!());
-    if bid128_is_finite(n) {
-      Some(Self(n, true))
-    } else {
-      None
-    }
+    if bid128_is_finite(n) { Some(Self(n, true)) } else { None }
   }
 
   pub fn odd(&self) -> bool {
@@ -165,11 +153,7 @@ impl FeelNumber {
 
   pub fn pow(&self, rhs: &FeelNumber) -> Option<Self> {
     let n = bid128_pow(self.0, rhs.0, round!(), flags!());
-    if bid128_is_finite(n) {
-      Some(Self(n, true))
-    } else {
-      None
-    }
+    if bid128_is_finite(n) { Some(Self(n, true)) } else { None }
   }
 
   pub fn round(&self, rhs: &FeelNumber) -> Self {
@@ -201,11 +185,7 @@ impl FeelNumber {
     };
     Ok(Self(
       if scale == 0 {
-        if bid128_is_signed(self.0) {
-          negative(self.0)
-        } else {
-          positive(self.0)
-        }
+        if bid128_is_signed(self.0) { negative(self.0) } else { positive(self.0) }
       } else {
         self.validate_scale(scale)?;
         let scaled = bid128_scalbn(self.0, scale);
@@ -252,20 +232,12 @@ impl FeelNumber {
 
   pub fn sqrt(&self) -> Option<Self> {
     let n = bid128_sqrt(self.0, round!(), flags!());
-    if bid128_is_finite(n) {
-      Some(Self(n, true))
-    } else {
-      None
-    }
+    if bid128_is_finite(n) { Some(Self(n, true)) } else { None }
   }
 
   pub fn square(&self) -> Option<Self> {
     let n = bid128_pow(self.0, BID128_TWO, round!(), flags!());
-    if bid128_is_finite(n) {
-      Some(Self(n, true))
-    } else {
-      None
-    }
+    if bid128_is_finite(n) { Some(Self(n, true)) } else { None }
   }
 
   pub fn trunc(&self) -> Self {
@@ -520,11 +492,7 @@ impl FromStr for FeelNumber {
   type Err = DsntkError;
   fn from_str(s: &str) -> Result<Self, Self::Err> {
     let n = bid128_from_string(s, round!(), flags!());
-    if bid128_is_finite(n) {
-      Ok(Self(n, false))
-    } else {
-      Err(err_invalid_number_literal(s))
-    }
+    if bid128_is_finite(n) { Ok(Self(n, false)) } else { Err(err_invalid_number_literal(s)) }
   }
 }
 

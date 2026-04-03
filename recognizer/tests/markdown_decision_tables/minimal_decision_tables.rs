@@ -1,4 +1,4 @@
-use dsntk_recognizer::{from_markdown, HitPolicy};
+use dsntk_recognizer::{HitPolicy, from_markdown};
 
 /// Minimal horizontal decision table defined in Markdown:
 /// - hit policy,

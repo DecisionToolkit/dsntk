@@ -1,4 +1,4 @@
-use dsntk_feel::{scope, FeelScope};
+use dsntk_feel::{FeelScope, scope};
 
 #[test]
 fn _0001() {

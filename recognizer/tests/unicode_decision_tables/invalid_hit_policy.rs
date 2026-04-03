@@ -1,4 +1,4 @@
-use dsntk_recognizer::{from_unicode, BuiltinAggregator, HitPolicy};
+use dsntk_recognizer::{BuiltinAggregator, HitPolicy, from_unicode};
 
 #[test]
 fn _0001() {

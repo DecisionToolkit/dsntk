@@ -2,7 +2,7 @@
 
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::{Value, Values};
-use dsntk_feel::{value_null, Evaluator, FeelScope, Name};
+use dsntk_feel::{Evaluator, FeelScope, Name, value_null};
 
 pub struct FilterExpressionEvaluator {}
 
@@ -26,11 +26,7 @@ impl FilterExpressionEvaluator {
         for value in &values {
           let (added_local_context, has_item_entry) = if let Value::Context(local_context) = value {
             scope.push(local_context.clone());
-            if local_context.contains_entry(&name_item) {
-              (true, true)
-            } else {
-              (true, false)
-            }
+            if local_context.contains_entry(&name_item) { (true, true) } else { (true, false) }
           } else {
             (false, false)
           };

@@ -1,5 +1,5 @@
 use crate::values::Value;
-use crate::{value_number, FeelScope, FunctionBody};
+use crate::{FeelScope, FunctionBody, value_number};
 use std::sync::Arc;
 
 #[test]

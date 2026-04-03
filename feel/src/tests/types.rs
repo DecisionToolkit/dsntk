@@ -3,7 +3,7 @@ use crate::closure::Closure;
 use crate::context::FeelContext;
 use crate::types::is_built_in_type_name;
 use crate::values::Value;
-use crate::{value_null, value_number, FeelScope, FunctionBody};
+use crate::{FeelScope, FunctionBody, value_null, value_number};
 use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelTime, FeelYearsAndMonthsDuration};
 use std::str::FromStr;
 use std::sync::Arc;

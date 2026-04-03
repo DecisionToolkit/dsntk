@@ -1,6 +1,6 @@
 //! # ASCII report of the DMN model
 
-use antex::{leaf, node, Color, ColorMode, NodeBuilder, StyledText, Text, TreeNode};
+use antex::{Color, ColorMode, NodeBuilder, StyledText, Text, TreeNode, leaf, node};
 use dsntk_common::HRef;
 use dsntk_feel::Name;
 use dsntk_model::*;

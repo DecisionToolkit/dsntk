@@ -4,8 +4,8 @@ use crate::errors::*;
 use crate::model::*;
 use crate::validators::{validate_model, validate_schema};
 use crate::xml_utils::*;
-use dsntk_common::{gen_id, to_uri, HRef, Result, Uri};
-use dsntk_feel::{Name, FEEL_TYPE_NAME_ANY};
+use dsntk_common::{HRef, Result, Uri, gen_id, to_uri};
+use dsntk_feel::{FEEL_TYPE_NAME_ANY, Name};
 use roxmltree::{Node, NodeType};
 
 /// Parses the XML input document containing DMN model into [Definitions].
