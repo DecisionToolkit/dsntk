@@ -108,7 +108,7 @@ that do not work, please [file an issue](https://github.com/DecisionToolkit/dsnt
 - Assign `Any` type for item component [\#59](https://github.com/DecisionToolkit/dsntk/pull/59)
 - Loosen validations not required by the DMN standard [\#57](https://github.com/DecisionToolkit/dsntk/pull/57)
 - Add model validator against XML schema [\#55](https://github.com/DecisionToolkit/dsntk/pull/55)
-- Fixed TTY colouring [\#52](https://github.com/DecisionToolkit/dsntk/pull/52)
+- Fixed TTY coloring [\#52](https://github.com/DecisionToolkit/dsntk/pull/52)
 - Replaced default version flag handler [\#33](https://github.com/DecisionToolkit/dsntk/pull/33)
 - Improve decision table recognizer [\#30](https://github.com/DecisionToolkit/dsntk/pull/30)
 
