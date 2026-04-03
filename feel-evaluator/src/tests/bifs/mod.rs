@@ -36,6 +36,7 @@ mod bif_index_of;
 mod bif_insert_before;
 mod bif_is;
 mod bif_list_contains;
+mod bif_list_replace;
 mod bif_log;
 mod bif_lower_case;
 mod bif_matches;

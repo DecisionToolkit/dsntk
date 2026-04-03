@@ -181,7 +181,7 @@ pub fn te_context<Actual: ToString, Expected: ToString>(trace: bool, scope: &Fee
 
 /// Utility function that tests evaluation to specified value.
 pub fn te_value(trace: bool, scope: &FeelScope, actual: &str, expected: &str) {
-  match dsntk_feel_parser::parse_textual_expression(scope, expected, trace) {
+  match dsntk_feel_parser::parse_expression(scope, expected, trace) {
     Ok(node) => {
       let evaluator = build_evaluator(&node);
       textual_expression(trace, scope, actual, evaluator(scope));
