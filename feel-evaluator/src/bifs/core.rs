@@ -23,123 +23,146 @@ pub fn abs(value: &Value) -> Value {
   }
 }
 
-/// Returns `true` when value2 `>>` value1.
+/// Returns `true` when value1 **is after** value2.
 pub fn after(value1: &Value, value2: &Value) -> Value {
   match value1 {
     Value::Number(point1) => match value2 {
       Value::Number(point2) => return Value::Boolean(point1 > point2),
       Value::Range(_, _, range_end, closed_end) => {
         if let Value::Number(point2) = range_end.borrow() {
-          return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end));
+          Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end))
+        } else {
+          invalid_argument_type!("after", "range of numbers", value2.type_of())
         }
       }
-      _ => {}
+      _ => invalid_argument_type!("after", "number or range of numbers", value2.type_of()),
     },
     Value::Date(point1) => match value2 {
       Value::Date(point2) => return Value::Boolean(point1 > point2),
       Value::Range(_, _, range_end, closed_end) => {
         if let Value::Date(point2) = range_end.borrow() {
-          return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end));
+          Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end))
+        } else {
+          invalid_argument_type!("after", "range of dates", value2.type_of())
         }
       }
-      _ => {}
+      _ => invalid_argument_type!("after", "date or range of dates", value2.type_of()),
     },
     Value::Time(point1) => match value2 {
       Value::Time(point2) => return Value::Boolean(point1 > point2),
       Value::Range(_, _, range_end, closed_end) => {
         if let Value::Time(point2) = range_end.borrow() {
-          return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end));
+          Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end))
+        } else {
+          invalid_argument_type!("after", "range of times", value2.type_of())
         }
       }
-      _ => {}
+      _ => invalid_argument_type!("after", "time or range of times", value2.type_of()),
     },
     Value::DateTime(point1) => match value2 {
       Value::DateTime(point2) => return Value::Boolean(point1 > point2),
       Value::Range(_, _, range_end, closed_end) => {
         if let Value::DateTime(point2) = range_end.borrow() {
-          return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end));
+          Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end))
+        } else {
+          invalid_argument_type!("after", "range of date and times", value2.type_of())
         }
       }
-      _ => {}
+      _ => invalid_argument_type!("after", "date and time or range of date and times", value2.type_of()),
     },
     Value::DaysAndTimeDuration(point1) => match value2 {
       Value::DaysAndTimeDuration(point2) => return Value::Boolean(point1 > point2),
       Value::Range(_, _, range_end, closed_end) => {
         if let Value::DaysAndTimeDuration(point2) = range_end.borrow() {
-          return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end));
+          Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end))
+        } else {
+          invalid_argument_type!("after", "range of date and time durations", value2.type_of())
         }
       }
-      _ => {}
+      _ => invalid_argument_type!("after", "date and time duration or range of date and time durations", value2.type_of()),
     },
     Value::YearsAndMonthsDuration(point1) => match value2 {
       Value::YearsAndMonthsDuration(point2) => return Value::Boolean(point1 > point2),
       Value::Range(_, _, range_end, closed_end) => {
         if let Value::YearsAndMonthsDuration(point2) = range_end.borrow() {
-          return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end));
+          Value::Boolean(point1 > point2 || (point1 == point2 && !*closed_end))
+        } else {
+          invalid_argument_type!("after", "range of years and months durations", value2.type_of())
         }
       }
-      _ => {}
+      _ => invalid_argument_type!("after", "years and months duration or range of years and months durations", value2.type_of()),
     },
     Value::Range(range1_start, closed1_start, _, _) => match range1_start.borrow() {
       Value::Number(point1) => match value2 {
         Value::Number(point2) => return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed1_start)),
         Value::Range(_, _, range2_end, closed2_end) => {
           if let Value::Number(point2) = range2_end.borrow() {
-            return Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)));
+            Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)))
+          } else {
+            invalid_argument_type!("after", "range of numbers", value2.type_of())
           }
         }
-        _ => {}
+        _ => invalid_argument_type!("after", "number or range of numbers", value2.type_of()),
       },
       Value::Date(point1) => match value2 {
         Value::Date(point2) => return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed1_start)),
         Value::Range(_, _, range2_end, closed2_end) => {
           if let Value::Date(point2) = range2_end.borrow() {
-            return Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)));
+            Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)))
+          } else {
+            invalid_argument_type!("after", "range of dates", value2.type_of())
           }
         }
-        _ => {}
+        _ => invalid_argument_type!("after", "date or range of dates", value2.type_of()),
       },
       Value::Time(point1) => match value2 {
         Value::Time(point2) => return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed1_start)),
         Value::Range(_, _, range2_end, closed2_end) => {
           if let Value::Time(point2) = range2_end.borrow() {
-            return Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)));
+            Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)))
+          } else {
+            invalid_argument_type!("after", "range of times", value2.type_of())
           }
         }
-        _ => {}
+        _ => invalid_argument_type!("after", "time or range of times", value2.type_of()),
       },
       Value::DateTime(point1) => match value2 {
         Value::DateTime(point2) => return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed1_start)),
         Value::Range(_, _, range2_end, closed2_end) => {
           if let Value::DateTime(point2) = range2_end.borrow() {
-            return Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)));
+            Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)))
+          } else {
+            invalid_argument_type!("after", "range of date and times", value2.type_of())
           }
         }
-        _ => {}
+        _ => invalid_argument_type!("after", "date and time or range of date and times", value2.type_of()),
       },
       Value::DaysAndTimeDuration(point1) => match value2 {
         Value::DaysAndTimeDuration(point2) => return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed1_start)),
         Value::Range(_, _, range2_end, closed2_end) => {
           if let Value::DaysAndTimeDuration(point2) = range2_end.borrow() {
-            return Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)));
+            Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)))
+          } else {
+            invalid_argument_type!("after", "range of days and time durations", value2.type_of())
           }
         }
-        _ => {}
+        _ => invalid_argument_type!("after", "days and time duration or range of days and time durations", value2.type_of()),
       },
       Value::YearsAndMonthsDuration(point1) => match value2 {
         Value::YearsAndMonthsDuration(point2) => return Value::Boolean(point1 > point2 || (point1 == point2 && !*closed1_start)),
         Value::Range(_, _, range2_end, closed2_end) => {
           if let Value::YearsAndMonthsDuration(point2) = range2_end.borrow() {
-            return Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)));
+            Value::Boolean(point1 > point2 || (point1 == point2 && (!*closed1_start || !*closed2_end)))
+          } else {
+            invalid_argument_type!("after", "range of years and months durations", value2.type_of())
           }
         }
-        _ => {}
+        _ => invalid_argument_type!("after", "years and months duration or range of years and months durations", value2.type_of()),
       },
-      _ => {}
+      _ => invalid_argument_type!("after", "scalar or range of scalars", value2.type_of()),
     },
-    _ => {}
+    _ => invalid_argument_type!("after", "scalar or range of scalars", value1.type_of()),
   }
-  invalid_argument_type!("after", "scalar or range of scalars", value1.type_of())
 }
 
 /// Returns `false` if any item is `false`, `true` if empty or all items are true, else `null`.
@@ -200,7 +223,7 @@ pub fn append(list: &Value, values: &[Value]) -> Value {
   }
 }
 
-/// TBD
+/// Returns `true` when value1 **is before** value2.
 pub fn before(value1: &Value, value2: &Value) -> Value {
   match value1 {
     Value::Number(point1) => match value2 {
@@ -1265,23 +1288,29 @@ pub fn list_replace(list: &Value, position_or_match: &Value, new_item: &Value) -
             let index = index as usize;
             if index <= len {
               items[index - 1] = new_item.clone();
-              return Value::List(items);
+              Value::List(items)
+            } else {
+              value_null!("position exceeds list bounds")
             }
           }
           Ordering::Less => {
             let index = index.unsigned_abs();
             if index <= len {
               items[len - index] = new_item.clone();
-              return Value::List(items);
+              Value::List(items)
+            } else {
+              value_null!("position exceeds list bounds")
             }
           }
-          _ => {}
+          _ => value_null!("position must not be zero"),
         }
+      } else {
+        value_null!("position exceeds integer range")
       }
     }
     Value::FunctionDefinition(parameters, body, false, _, closure_ctx, _) => {
       if parameters.len() != 2 {
-        return value_null!("list replace: matching function must accept exactly two arguments");
+        return value_null!("list replace: matching function must have exactly two arguments");
       }
       let mut elements = vec![];
       for item in items {
@@ -1299,11 +1328,10 @@ pub fn list_replace(list: &Value, position_or_match: &Value, new_item: &Value) -
           return value_null!("list replace: matching function must return boolean value");
         }
       }
-      return Value::List(elements);
+      Value::List(elements)
     }
-    _ => {}
+    _ => value_null!("position must be number or function"),
   }
-  value_null!()
 }
 
 /// Returns the natural logarithm (base `e`) of the number parameter.

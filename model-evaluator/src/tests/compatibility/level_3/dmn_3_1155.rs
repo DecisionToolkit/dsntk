@@ -20,17 +20,17 @@ fn _0002() {
 
 #[test]
 fn _0003() {
-  eq("decision003", "null");
+  eq("decision003", "null(position must not be zero)");
 }
 
 #[test]
 fn _0004() {
-  eq("decision004", "null");
+  eq("decision004", "null(position exceeds list bounds)");
 }
 
 #[test]
 fn _0005() {
-  eq("decision005", "null");
+  eq("decision005", "null(position exceeds list bounds)");
 }
 
 #[test]
@@ -40,7 +40,7 @@ fn _0006() {
 
 #[test]
 fn _0007() {
-  eq("decision007", "null");
+  eq("decision007", "null(position must be number or function)");
 }
 
 #[test]
@@ -55,7 +55,7 @@ fn _0009() {
 
 #[test]
 fn _0010() {
-  eq("decision010", "null");
+  eq("decision010", "null(position must be number or function)");
 }
 
 #[test]
@@ -95,12 +95,12 @@ fn _0017() {
 
 #[test]
 fn _0018() {
-  eq("decision017", "null(list replace: matching function must accept exactly two arguments)");
+  eq("decision017", "null(list replace: matching function must have exactly two arguments)");
 }
 
 #[test]
 fn _0019() {
-  eq("decision018", "null(list replace: matching function must accept exactly two arguments)");
+  eq("decision018", "null(list replace: matching function must have exactly two arguments)");
 }
 
 #[test]

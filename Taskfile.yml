@@ -101,6 +101,7 @@ tasks:
     desc: Runs code coverage for dsntk-feel-evaluator
     cmds:
       - cmd: ./Coverage-crate.sh dsntk-feel-evaluator
+      - task: fmt
 
   cov-feel-grammar:
     desc: Runs code coverage dsntk-feel-grammar

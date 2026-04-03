@@ -73,25 +73,31 @@ mod tests {
   }
 
   fn getting_paths_from_variable_02() {
-    env::set_var(DSNTK_DIR_TEST, "");
+    unsafe {
+      env::set_var(DSNTK_DIR_TEST, "");
+    }
     assert_eq!(Vec::<PathBuf>::new(), paths_from_variable(DSNTK_DIR_TEST));
   }
 
   fn getting_paths_from_variable_03() {
-    env::set_var(DSNTK_DIR_TEST, current_dir().first().unwrap());
+    unsafe {
+      env::set_var(DSNTK_DIR_TEST, current_dir().first().unwrap());
+    }
     assert!(paths_from_variable(DSNTK_DIR_TEST).first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
   }
 
   fn getting_paths_from_variable_04() {
-    env::set_var(
-      DSNTK_DIR_TEST,
-      format!(
-        "{}{}{}",
-        current_dir().first().unwrap().to_string_lossy(),
-        list_separator(),
-        current_dir().first().unwrap().to_string_lossy()
-      ),
-    );
+    unsafe {
+      env::set_var(
+        DSNTK_DIR_TEST,
+        format!(
+          "{}{}{}",
+          current_dir().first().unwrap().to_string_lossy(),
+          list_separator(),
+          current_dir().first().unwrap().to_string_lossy()
+        ),
+      );
+    }
     let paths = paths_from_variable(DSNTK_DIR_TEST);
     assert_eq!(2, paths.len());
     assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
@@ -99,7 +105,9 @@ mod tests {
   }
 
   fn getting_paths_from_variable_05() {
-    env::set_var(DSNTK_DIR_TEST, format!("{}{}{}", current_dir().first().unwrap().to_string_lossy(), list_separator(), ""));
+    unsafe {
+      env::set_var(DSNTK_DIR_TEST, format!("{}{}{}", current_dir().first().unwrap().to_string_lossy(), list_separator(), ""));
+    }
     let paths = paths_from_variable(DSNTK_DIR_TEST);
     assert_eq!(1, paths.len());
     assert!(paths.first().unwrap().to_string_lossy().ends_with("/dsntk/server"));
