@@ -1,6 +1,6 @@
 use super::*;
-use crate::{parse_context, parse_textual_expression, parse_unary_tests, AstNode, ClosureBuilder};
-use dsntk_feel::{scope, FeelScope};
+use crate::{AstNode, ClosureBuilder, parse_context, parse_textual_expression, parse_unary_tests};
+use dsntk_feel::{FeelScope, scope};
 
 #[test]
 fn _0001() {

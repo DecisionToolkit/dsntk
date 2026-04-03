@@ -4,7 +4,7 @@ use crate::errors::*;
 use crate::model_definitions::{DefDefinitions, DefItemDefinition, DefKey};
 use crate::type_ref::type_ref_to_feel_type;
 use dsntk_common::Result;
-use dsntk_feel::{FeelType, Name, FEEL_TYPE_NAME_ANY};
+use dsntk_feel::{FEEL_TYPE_NAME_ANY, FeelType, Name};
 use dsntk_model::ItemDefinitionType;
 use std::collections::{BTreeMap, HashMap};
 
@@ -59,11 +59,7 @@ impl ItemDefinitionTypeEvaluator {
 
   /// Evaluates a type of the item definition with specified key.
   fn eval(&self, def_key: &DefKey) -> Option<FeelType> {
-    if let Some(evaluator) = self.evaluators.get(def_key) {
-      evaluator(self)
-    } else {
-      None
-    }
+    if let Some(evaluator) = self.evaluators.get(def_key) { evaluator(self) } else { None }
   }
 }
 

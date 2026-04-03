@@ -1,6 +1,6 @@
 use crate::context::FeelContext;
 use crate::values::Value;
-use crate::{scope, value_number, FeelNumber, FeelScope, Name};
+use crate::{FeelNumber, FeelScope, Name, scope, value_number};
 use dsntk_common::Jsonify;
 
 #[test]

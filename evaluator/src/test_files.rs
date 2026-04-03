@@ -36,9 +36,9 @@
 
 use crate::errors::{err_expected_expression_list, err_expected_two_elements_in_expression_list};
 use dsntk_common::Result;
+use dsntk_feel::FeelScope;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
-use dsntk_feel::FeelScope;
 use dsntk_feel_parser::AstNode;
 
 /// Prepares test cases loaded from the specified input.
@@ -77,11 +77,7 @@ fn split_test_cases<'a>(input: &'a str, separator: &'a str) -> Vec<&'a str> {
   split
     .filter_map(|s| {
       let trimmed = s.trim();
-      if !trimmed.is_empty() {
-        Some(trimmed)
-      } else {
-        None
-      }
+      if !trimmed.is_empty() { Some(trimmed) } else { None }
     })
     .collect()
 }
@@ -111,11 +107,7 @@ fn detect_separator(input: &str) -> Option<String> {
       }
     }
   }
-  if separator.is_empty() {
-    None
-  } else {
-    Some(separator)
-  }
+  if separator.is_empty() { None } else { Some(separator) }
 }
 
 #[cfg(test)]

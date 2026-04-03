@@ -1,5 +1,5 @@
 use dsntk_feel::values::Value;
-use dsntk_feel::{scope, FeelNumber, FeelScope};
+use dsntk_feel::{FeelNumber, FeelScope, scope};
 use dsntk_feel_evaluator::*;
 use dsntk_feel_parser::AstNode;
 

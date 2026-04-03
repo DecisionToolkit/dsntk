@@ -1,6 +1,6 @@
 //! Implementation of a node in Abstract Syntax Tree for `FEEL` grammar.
 
-use antex::{leaf, node, Color, ColorMode, StyledText, TreeNode};
+use antex::{Color, ColorMode, StyledText, TreeNode, leaf, node};
 use dsntk_feel::{FeelType, Name};
 use std::fmt;
 use std::fmt::{Display, Write};

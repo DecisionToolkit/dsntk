@@ -4,7 +4,7 @@ use crate::closure::Closure;
 use crate::context::FeelContext;
 use crate::function::FunctionBody;
 use crate::values::{Value, Values};
-use crate::{value_null, value_number, FeelNumber, FeelScope, ToFeelString};
+use crate::{FeelNumber, FeelScope, ToFeelString, value_null, value_number};
 use dsntk_common::Jsonify;
 use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelTime, FeelYearsAndMonthsDuration};
 use std::collections::BTreeMap;

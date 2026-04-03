@@ -3,7 +3,7 @@
 use crate::context::FeelContext;
 use crate::errors::*;
 use crate::values::Value;
-use crate::{value_null, Name};
+use crate::{Name, value_null};
 use dsntk_common::DsntkError;
 use serde::{Deserialize, Serialize};
 

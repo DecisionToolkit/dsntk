@@ -1,8 +1,8 @@
 //! # Unit tests for data transfer objects for values
 
+use crate::FeelType;
 use crate::dto::ValueDto;
 use crate::values::Value;
-use crate::FeelType;
 
 fn eq(expected: &str, actual: String) {
   let s = expected

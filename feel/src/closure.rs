@@ -1,8 +1,8 @@
 //! # Closure
 
 use crate::{Name, QualifiedName};
-use std::collections::btree_set::Iter;
 use std::collections::BTreeSet;
+use std::collections::btree_set::Iter;
 use std::fmt;
 
 #[derive(Debug, Default, Clone, PartialEq)]

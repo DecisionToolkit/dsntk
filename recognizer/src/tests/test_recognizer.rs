@@ -1,7 +1,7 @@
 use super::*;
+use crate::HitPolicy;
 use crate::model::{BuiltinAggregator, DecisionTableOrientation};
 use crate::recognizer::Recognizer;
-use crate::HitPolicy;
 use dsntk_examples::decision_tables::H_110010;
 
 const EMPTY_VECTOR: &[&str] = &[];

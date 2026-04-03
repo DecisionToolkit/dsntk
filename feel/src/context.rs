@@ -7,8 +7,8 @@ use crate::strings::ToFeelString;
 use crate::value_null;
 use crate::values::Value;
 use dsntk_common::{DsntkError, Jsonify, Result};
-use std::collections::btree_map::Iter;
 use std::collections::BTreeMap;
+use std::collections::btree_map::Iter;
 use std::fmt;
 use std::ops::Deref;
 

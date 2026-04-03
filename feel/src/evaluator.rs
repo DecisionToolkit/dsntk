@@ -1,7 +1,7 @@
 //! `FEEL` and `DMN` evaluator.
 
-use crate::values::Value;
 use crate::FeelScope;
+use crate::values::Value;
 
 /// Type alias of the function that evaluates `FEEL` expression or `DMN` model into [Value].
 pub type Evaluator = Box<dyn Fn(&FeelScope) -> Value + Send + Sync>;
@@ -9,7 +9,7 @@ pub type Evaluator = Box<dyn Fn(&FeelScope) -> Value + Send + Sync>;
 #[cfg(test)]
 mod tests {
   use crate::values::Value;
-  use crate::{value_number, Evaluator, FeelNumber, FeelScope};
+  use crate::{Evaluator, FeelNumber, FeelScope, value_number};
 
   #[test]
   fn _0001() {

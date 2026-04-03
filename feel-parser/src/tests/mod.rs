@@ -67,9 +67,16 @@ use crate::lalr::TokenType;
 use crate::lalr::TokenType::StartExpression;
 use crate::parser::Parser;
 use crate::{AstNode, ParsingScope};
+pub(crate) use __name;
+pub(crate) use _name;
+pub(crate) use _num;
+pub(crate) use b_bool;
+pub(crate) use b_name;
+pub(crate) use b_num;
 use difference::Changeset;
 use dsntk_feel::Name;
-pub(crate) use {__name, _name, _num, b_bool, b_name, b_num, s, scope};
+pub(crate) use s;
+pub(crate) use scope;
 
 /// Parses the input text and compared the result with expected value.
 fn accept(scope: &ParsingScope, start_token_type: TokenType, input: &str, expected: &str, trace: bool) {

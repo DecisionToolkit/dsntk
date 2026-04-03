@@ -1,7 +1,7 @@
 use crate::utils::add_field;
 use proc_macro2::TokenStream;
 use syn::fold::Fold;
-use syn::{parse2, FieldsNamed, ItemStruct};
+use syn::{FieldsNamed, ItemStruct, parse2};
 
 struct Processor;
 

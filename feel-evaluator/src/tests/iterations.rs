@@ -1,7 +1,7 @@
 use crate::iterations::{FeelIterator, ForExpressionEvaluator};
 use crate::tests::te_scope;
 use dsntk_feel::value_number;
-use dsntk_feel::values::{values_to_string, Value, Values};
+use dsntk_feel::values::{Value, Values, values_to_string};
 
 #[test]
 fn _0001() {

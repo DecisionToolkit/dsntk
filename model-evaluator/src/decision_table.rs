@@ -3,7 +3,7 @@
 use dsntk_common::Result;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
-use dsntk_feel::{value_null, Evaluator, FeelScope, Name};
+use dsntk_feel::{Evaluator, FeelScope, Name, value_null};
 use dsntk_feel_parser::AstNode;
 use dsntk_model::{BuiltinAggregator, DecisionTable, HitPolicy};
 use std::cmp::Ordering;
@@ -393,7 +393,7 @@ mod tests {
   use crate::tests::context;
   use dsntk_examples::decision_tables::H_000210;
   use dsntk_feel::values::Value;
-  use dsntk_feel::{value_number, FeelNumber};
+  use dsntk_feel::{FeelNumber, value_number};
   use dsntk_model::DecisionTable;
 
   #[test]

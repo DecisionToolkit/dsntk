@@ -1,7 +1,7 @@
 //! Builder for HTML representation of the horizontal decision table.
 
 use crate::defs::*;
-use domrs::{div, HtmlElement};
+use domrs::{HtmlElement, div};
 use dsntk_model::*;
 
 pub fn create_horizontal_decision_table_elements(decision_table: &DecisionTable) -> HtmlElement {

@@ -3,10 +3,10 @@
 use crate::built_in_examples::*;
 use crate::errors::{err_create_directory, err_save_file};
 use antex::{ColorMode, StyledText, Text};
-use clap::{arg, command, crate_version, Arg, ArgAction, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command, arg, command, crate_version};
 use dsntk_common::{Jsonify, Result};
-use dsntk_feel::values::Value;
 use dsntk_feel::FeelScope;
+use dsntk_feel::values::Value;
 use dsntk_model::{DecisionTable, DmnElement, NamedElement};
 use std::fs;
 use std::path::Path;
