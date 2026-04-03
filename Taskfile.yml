@@ -67,80 +67,10 @@ tasks:
       - cmd: cargo +nightly clippy --workspace --all-targets --features=tck
 
   cov:
-    desc: Generates code coverage report
+    desc: Generates code coverage report in text format
     cmds:
-      - cmd: ./Coverage.sh
-
-  cov-pdf:
-    desc: Generates code coverage report also as PDF document
-    cmds:
-      - cmd: PDF_REPORT=yes ./Coverage.sh
-
-  cov-macros:
-    desc: Runs code coverage for dsntk-macros
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-macros
-
-  cov-common:
-    desc: Runs code coverage for dsntk-common
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-common
-
-  cov-feel:
-    desc: Runs code coverage for dsntk-feel
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-feel
-
-  cov-evaluator:
-    desc: Runs code coverage for dsntk-evaluator
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-evaluator
-
-  cov-feel-evaluator:
-    desc: Runs code coverage for dsntk-feel-evaluator
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-feel-evaluator
-      - task: fmt
-
-  cov-feel-grammar:
-    desc: Runs code coverage dsntk-feel-grammar
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-feel-grammar
-
-  cov-feel-number:
-    desc: Runs code coverage dsntk-feel-number
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-feel-number
-
-  cov-feel-parser:
-    desc: Runs code coverage dsntk-feel-parser
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-feel-parser
-
-  cov-feel-temporal:
-    desc: Runs code coverage dsntk-feel-temporal
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-feel-temporal
-
-  cov-gendoc:
-    desc: Runs code coverage dsntk-gendoc
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-gendoc
-
-  cov-model:
-    desc: Runs code coverage dsntk-model
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-model
-
-  cov-recognizer:
-    desc: Runs code coverage dsntk-recognizer
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-recognizer
-
-  cov-server:
-    desc: Runs code coverage dsntk-server
-    cmds:
-      - cmd: ./Coverage-crate.sh dsntk-server
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov --no-cfg-coverage --workspace
 
   doc:
     desc: Generates documentation
@@ -166,21 +96,6 @@ tasks:
     desc: Runs the code formatter
     cmds:
       - cmd: cargo +nightly fmt --all
-
-  guide:
-    desc: Synchronizes documentation files with VitePress project
-    cmds:
-      - cmd: ./guide.sh
-
-  help:
-    desc: Displays short help
-    cmds:
-      - cmd: cargo +stable run -- -h
-
-  help-long:
-    desc: Displays long help
-    cmds:
-      - cmd: cargo +stable run -- --help
 
   install:
     desc: Builds and installs release version from local sources
@@ -228,30 +143,10 @@ tasks:
     cmds:
       - cmd: cargo +stable test --workspace
 
-  test-feel-evaluator:
-    desc: Runs tests in debug mode
-    cmds:
-      - cmd: cargo +stable test -p dsntk-feel-evaluator
-
-  test-feel-parser:
-    desc: Runs tests in debug mode
-    cmds:
-      - cmd: cargo +stable test -p dsntk-feel-parser
-
-  test-recognizer:
-    desc: Runs tests in debug mode
-    cmds:
-      - cmd: cargo +stable test -p dsntk-recognizer
-
   testn:
     desc: Runs tests in debug mode using nextest
     cmds:
       - cmd: cargo +stable nextest run --workspace --no-fail-fast
-
-  testq:
-    desc: Runs tests in debug and quiet mode
-    cmds:
-      - cmd: cargo +stable test --workspace -q
 
   validate13:
     desc: Validates specified DMN model against XSD schema in version 1.3
