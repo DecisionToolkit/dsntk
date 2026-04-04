@@ -80,9 +80,18 @@ fn _0008() {
   assert!(msg.contains("knowledge-source"), "expected 'knowledge-source' in error: {msg}");
 }
 
-/// The loan_pricing fixture builds a valid DRG with multiple node types and edge kinds.
+/// supported-by pointing to a knowledge-source (not bkm) fails.
 #[test]
 fn _0009() {
+  let result = build_drg(&fixture_path("graph_bad_supported_by"));
+  assert!(result.is_err());
+  let msg = result.unwrap_err().to_string();
+  assert!(msg.contains("bkm"), "expected 'bkm' in error: {msg}");
+}
+
+/// The loan_pricing fixture builds a valid DRG with multiple node types and edge kinds.
+#[test]
+fn _0010() {
   let drg = build_drg(&fixture_path("loan_pricing")).unwrap();
   assert!(drg.node_count() >= 3, "expected at least 3 nodes, got {}", drg.node_count());
   let order = drg.topological_order().unwrap();

@@ -7,7 +7,7 @@
 use crate::errors::*;
 use crate::front_matter::{parse_front_matter, DmnNode};
 use dsntk_common::Result;
-use petgraph::algo::{is_cyclic_directed, toposort};
+use petgraph::algo::toposort;
 use petgraph::graph::{DiGraph, NodeIndex};
 use std::collections::HashMap;
 use std::path::Path;
@@ -153,12 +153,10 @@ pub fn build_drg(project_dir: &Path) -> Result<Drg> {
     }
   }
 
-  // Phase 5: validate acyclicity
-  if is_cyclic_directed(&graph) {
-    if let Err(cycle) = toposort(&graph, None) {
-      let node_id = &graph[cycle.node_id()];
-      return Err(err_drg_cycle(node_id));
-    }
+  // Phase 5: validate acyclicity (toposort returns Err if a cycle exists)
+  if let Err(cycle) = toposort(&graph, None) {
+    let node_id = &graph[cycle.node_id()];
+    return Err(err_drg_cycle(node_id));
   }
 
   Ok(Drg { graph, node_index, nodes })
@@ -170,7 +168,7 @@ fn scan_md_files(dir: &Path) -> Result<Vec<DrgNode>> {
   for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
     let path = entry.path();
     if path.is_file() && path.extension().and_then(|e| e.to_str()) == Some("md") {
-      let content = std::fs::read_to_string(path).map_err(|e| err_drg_no_md_files(&format!("{}: {e}", path.display())))?;
+      let content = std::fs::read_to_string(path).map_err(|e| err_drg_file_read(&path.to_string_lossy(), &e.to_string()))?;
       // Skip .md files without front matter (e.g., README.md)
       if !content.trim_start().starts_with("---") {
         continue;

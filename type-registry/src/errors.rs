@@ -70,6 +70,10 @@ pub fn err_drg_no_md_files(dir: &str) -> DsntkError {
   TypeRegistryError(format!("no markdown DMN files found in '{dir}'")).into()
 }
 
+pub fn err_drg_file_read(path: &str, message: &str) -> DsntkError {
+  TypeRegistryError(format!("failed to read '{path}': {message}")).into()
+}
+
 pub fn err_drg_invalid_edge_type(source_id: &str, link_key: &str, target_id: &str, expected_type: &str, actual_type: &str) -> DsntkError {
   TypeRegistryError(format!(
     "node '{source_id}' has '{link_key}' link to '{target_id}' which is type '{actual_type}', expected '{expected_type}'"
