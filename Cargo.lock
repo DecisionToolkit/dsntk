@@ -883,6 +883,7 @@ dependencies = [
  "oxc_ast",
  "oxc_parser",
  "oxc_span",
+ "petgraph",
  "serde",
  "serde_json",
  "serde_yml",
