@@ -40,11 +40,7 @@ struct FieldDescriptor {
 #[serde(tag = "type")]
 enum ProjectNode {
   #[serde(rename = "input_data")]
-  InputData {
-    id: String,
-    name: String,
-    fields: Vec<FieldDescriptor>,
-  },
+  InputData { id: String, name: String, fields: Vec<FieldDescriptor> },
   #[serde(rename = "decision")]
   Decision {
     id: String,
@@ -64,6 +60,8 @@ enum ProjectNode {
     output_columns: Vec<String>,
     rules: Vec<ProjectRule>,
     parameters: Vec<ProjectParam>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    feel_expression: Option<String>,
   },
   #[serde(rename = "knowledge_source")]
   KnowledgeSource {
@@ -180,7 +178,16 @@ async fn load_project(query: web::Query<std::collections::HashMap<String, String
         let parameters = dmn
           .signature
           .as_ref()
-          .map(|sig| sig.parameters.iter().map(|p| ProjectParam { name: p.name.clone(), param_type: p.param_type.clone() }).collect())
+          .map(|sig| {
+            sig
+              .parameters
+              .iter()
+              .map(|p| ProjectParam {
+                name: p.name.clone(),
+                param_type: p.param_type.clone(),
+              })
+              .collect()
+          })
           .unwrap_or_default();
         nodes.push(ProjectNode::Bkm {
           id: dmn.id.clone(),
@@ -190,6 +197,7 @@ async fn load_project(query: web::Query<std::collections::HashMap<String, String
           output_columns: oc,
           rules,
           parameters,
+          feel_expression: dmn.feel_expression.clone(),
         });
       }
       "knowledge-source" => {
@@ -241,7 +249,12 @@ async fn load_project(query: web::Query<std::collections::HashMap<String, String
   // Load scenarios from scenarios.json if present.
   let scenarios = load_scenarios(project_dir);
 
-  let response = ProjectResponse { nodes, edges, evaluation_order, scenarios };
+  let response = ProjectResponse {
+    nodes,
+    edges,
+    evaluation_order,
+    scenarios,
+  };
   HttpResponse::Ok()
     .content_type(CONTENT_TYPE)
     .body(serde_json::to_string(&response).unwrap_or_else(|_| r#"{"error":"serialization failed"}"#.to_string()))
@@ -304,7 +317,11 @@ fn flatten_feel_type(feel_type: &FeelType, prefix: &str, entry: &dsntk_type_regi
       }
     }
     _ => {
-      let field_name = if prefix.is_empty() { "value".to_string() } else { prefix.rsplit('.').next().unwrap_or(prefix).to_string() };
+      let field_name = if prefix.is_empty() {
+        "value".to_string()
+      } else {
+        prefix.rsplit('.').next().unwrap_or(prefix).to_string()
+      };
       fields.push(FieldDescriptor {
         path: prefix.to_string(),
         name: field_name,
@@ -466,53 +483,75 @@ async fn evaluate_project(body: web::Json<EvaluateProjectRequest>) -> HttpRespon
 
     match drg_node.dmn.node_type.as_str() {
       "decision" | "bkm" => {
-        // Read the file and extract the body for recognition.
         let Ok(content) = std::fs::read_to_string(&drg_node.file_path) else {
           continue;
         };
-        let Some(md_body) = extract_body(&content) else {
-          continue;
-        };
-        let Ok(recognized_dt) = dsntk_recognizer::from_markdown(md_body, false) else {
-          continue;
-        };
 
-        let model_dt: dsntk_model::DecisionTable = recognized_dt.into();
-
-        let (eval_value, matched_rules, cell_evals) = match evaluate_decision_table_with_trace(&scope, &model_dt) {
-          Ok(r) => {
-            let ce: Vec<serde_json::Value> = r.cell_evaluations.iter().map(|ce| serde_json::to_value(ce).unwrap_or_default()).collect();
-            (r.value, r.matched_rules, ce)
+        // Check if this node has a FEEL expression (expression-only BKM).
+        let (eval_value, matched_rules, cell_evals) = if let Some(ref feel_expr) = drg_node.dmn.feel_expression {
+          match dsntk_feel_parser::parse_expression(&scope, feel_expr, false) {
+            Ok(ast_node) => {
+              let evaluator = dsntk_feel_evaluator::prepare(&ast_node);
+              let value = evaluator(&scope);
+              (value, vec![], vec![])
+            }
+            Err(e) => (Value::Null(Some(format!("{}", e))), vec![], vec![]),
           }
-          Err(e) => (Value::Null(Some(format!("{}", e))), vec![], vec![]),
+        } else {
+          // Decision table evaluation (existing logic).
+          let Some(md_body) = extract_body(&content) else {
+            continue;
+          };
+          let Ok(recognized_dt) = dsntk_recognizer::from_markdown(md_body, false) else {
+            continue;
+          };
+          let model_dt: dsntk_model::DecisionTable = recognized_dt.into();
+          match evaluate_decision_table_with_trace(&scope, &model_dt) {
+            Ok(r) => {
+              let ce: Vec<serde_json::Value> = r.cell_evaluations.iter().map(|ce| serde_json::to_value(ce).unwrap_or_default()).collect();
+              (r.value, r.matched_rules, ce)
+            }
+            Err(e) => (Value::Null(Some(format!("{}", e))), vec![], vec![]),
+          }
         };
 
         // Store the result in scope so downstream decisions can use it.
-        // Store under the decision name (e.g., "Sector Risk Assessment").
         let name = Name::new(&[&drg_node.dmn.name]);
         if let Some(mut top_ctx) = scope.pop() {
           top_ctx.set_entry(&name, eval_value.clone());
-          // Also store under each output column name for single-output tables.
-          // Downstream tables reference the output component name, not the decision name.
-          let output_clauses: Vec<_> = model_dt.output_clauses().collect();
-          if output_clauses.len() == 1 {
-            if let Some(ref output_name) = output_clauses[0].name {
-              let out_name = Name::new(&[output_name]);
-              top_ctx.set_entry(&out_name, eval_value.clone());
-            }
-          } else {
-            // For compound outputs, store each component.
-            if let Value::Context(ref out_ctx) = eval_value {
-              for (entry_name, entry_value) in out_ctx.iter() {
-                top_ctx.set_entry(entry_name, entry_value.clone());
+
+          // Store under output-name if specified (for expression BKMs like "LTV", "DSCR").
+          if let Some(ref out_name) = drg_node.dmn.output_name {
+            let output_key = Name::new(&[out_name]);
+            top_ctx.set_entry(&output_key, eval_value.clone());
+          }
+
+          // For decision tables, also store under output column names.
+          if drg_node.dmn.feel_expression.is_none() {
+            if let Some(md_body) = extract_body(&content) {
+              if let Ok(recognized_dt) = dsntk_recognizer::from_markdown(md_body, false) {
+                let model_dt: dsntk_model::DecisionTable = recognized_dt.into();
+                let output_clauses: Vec<_> = model_dt.output_clauses().collect();
+                if output_clauses.len() == 1 {
+                  if let Some(ref output_name) = output_clauses[0].name {
+                    let out_name = Name::new(&[output_name]);
+                    top_ctx.set_entry(&out_name, eval_value.clone());
+                  }
+                } else {
+                  if let Value::Context(ref out_ctx) = eval_value {
+                    for (entry_name, entry_value) in out_ctx.iter() {
+                      top_ctx.set_entry(entry_name, entry_value.clone());
+                    }
+                  }
+                }
               }
             }
           }
+
           scope.push(top_ctx);
         }
 
         let output_json = serde_json::to_value(eval_value.jsonify()).unwrap_or(serde_json::Value::Null);
-
         results.push(NodeEvalResult {
           node_id: node_id.clone(),
           node_name: drg_node.dmn.name.clone(),
