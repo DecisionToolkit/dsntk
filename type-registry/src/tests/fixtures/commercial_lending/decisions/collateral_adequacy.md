@@ -25,7 +25,7 @@ support higher leverage than a high-risk industrial unit.
 > # Collateral Adequacy
 > Collateral Grade
 
-| U  | LTV          | Property Risk    | Purpose            | Collateral Grade                                 |
+| F  | LTV          | Property Risk    | Purpose            | Collateral Grade                                 |
 |:--:|:------------:|:----------------:|:------------------:|:------------------------------------------------:|
 |    |              |                  |                    | "Strong","Adequate","Marginal","Weak","Decline"  |
 |    | `in`         | `in`             | `in`               | `out`                                            |
