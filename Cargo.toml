@@ -32,6 +32,7 @@ license = "MIT OR Apache-2.0"
 edition = "2021"
 
 [workspace.dependencies]
+actix-cors = "0.7.0"
 actix-web = "4.10.2"
 antex = "0.0.8"
 atty = "0.2.14"

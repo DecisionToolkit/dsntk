@@ -15,6 +15,7 @@ default = []
 tck = []
 
 [dependencies]
+actix-cors = { workspace = true }
 actix-web = { workspace = true }
 antex = { workspace = true }
 base64 = { workspace = true }
@@ -23,6 +24,8 @@ serde_json = { workspace = true }
 dsntk-common = { workspace = true }
 dsntk-evaluator = { workspace = true }
 dsntk-feel = { workspace = true }
+dsntk-feel-number = { workspace = true }
 dsntk-macros = { workspace = true }
 dsntk-model = { workspace = true }
+dsntk-model-evaluator = { workspace = true }
 dsntk-workspace = { workspace = true }

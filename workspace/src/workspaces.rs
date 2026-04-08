@@ -6,6 +6,7 @@ use antex::ColorMode;
 use dsntk_common::Result;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
+use dsntk_model_evaluator::trace::EvaluationTrace;
 use dsntk_model_evaluator::ModelEvaluator;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -37,5 +38,20 @@ impl Workspaces {
       }
     }
     Err(err_invocable_not_found(invocable_path))
+  }
+
+  /// Evaluates invocable with full trace capture.
+  pub fn evaluate_traced(&self, invocable_path: &str, input_data: &FeelContext) -> Result<(Value, Option<EvaluationTrace>)> {
+    if let Some((workspace_name, model_namespace, model_name, invocable_name)) = self.invocables.get(invocable_path) {
+      if let Some(evaluator) = self.evaluators.get(workspace_name) {
+        return Ok(evaluator.evaluate_invocable_traced(model_namespace, model_name, invocable_name, input_data));
+      }
+    }
+    Err(err_invocable_not_found(invocable_path))
+  }
+
+  /// Returns an iterator over all invocable paths and their metadata.
+  pub fn list_invocables(&self) -> impl Iterator<Item = (&String, &(String, String, String, String))> {
+    self.invocables.iter()
   }
 }

@@ -1,5 +1,6 @@
 use crate::data::ApplicationData;
 use crate::utils;
+use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use antex::{ColorMode, StyledText, Text};
 use dsntk_common::Jsonify;
@@ -53,6 +54,8 @@ fn config(cfg: &mut web::ServiceConfig) {
 fn config(cfg: &mut web::ServiceConfig) {
   cfg.service(evaluate_invocable_get);
   cfg.service(evaluate_invocable_post);
+  cfg.service(crate::trace_handlers::list_models);
+  cfg.service(crate::trace_handlers::evaluate_trace);
 }
 
 /// Starts the server.
@@ -64,6 +67,7 @@ pub async fn start_server(opt_host: Option<String>, opt_port: Option<String>, di
   Text::new(cm).blue().s("dsntk").clear().space().yellow().s(&address).clear().println();
   HttpServer::new(move || {
     App::new()
+      .wrap(Cors::permissive())
       .app_data(application_data.clone())
       .app_data(web::PayloadConfig::new(4 * 1024 * 1024))
       .configure(config)
