@@ -28,7 +28,8 @@
         "Total Assets": 2800000,
         "Accounts Type": "Audited",
         "Accounts Age": 4,
-        "Leverage Ratio": 0.089
+        "Leverage Ratio": 0.089,
+        "Annual Debt Service": 70000
       },
       "loan_request": {
         "Requested Amount": 350000,
@@ -75,7 +76,8 @@
         "Total Assets": 1400000,
         "Accounts Type": "Audited",
         "Accounts Age": 8,
-        "Leverage Ratio": 0.443
+        "Leverage Ratio": 0.443,
+        "Annual Debt Service": 50000
       },
       "loan_request": {
         "Requested Amount": 750000,
@@ -123,7 +125,8 @@
         "Total Assets": 95000,
         "Accounts Type": "Self-Certified",
         "Accounts Age": 14,
-        "Leverage Ratio": 1.895
+        "Leverage Ratio": 1.895,
+        "Annual Debt Service": 50000
       },
       "loan_request": {
         "Requested Amount": 500000,
@@ -170,7 +173,8 @@
         "Total Assets": 45000000,
         "Accounts Type": "Audited",
         "Accounts Age": 2,
-        "Leverage Ratio": 0.189
+        "Leverage Ratio": 0.189,
+        "Annual Debt Service": 200000
       },
       "loan_request": {
         "Requested Amount": 5000000,
@@ -218,7 +222,8 @@
         "Total Assets": 85000,
         "Accounts Type": "Management",
         "Accounts Age": 5,
-        "Leverage Ratio": 0.212
+        "Leverage Ratio": 0.212,
+        "Annual Debt Service": 8333
       },
       "loan_request": {
         "Requested Amount": 25000,
