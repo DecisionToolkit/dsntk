@@ -1,5 +1,6 @@
 //! Builder for decision table evaluators.
 
+use crate::trace::{trace_is_active, CellEvaluation};
 use dsntk_common::Result;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
@@ -90,6 +91,7 @@ struct EvaluatedDecisionTable {
   output_values: Vec<Value>,
   default_output_values: Vec<Value>,
   evaluated_rules: Vec<EvaluatedRule>,
+  cell_evaluations: Vec<CellEvaluation>,
 }
 
 impl EvaluatedDecisionTable {
@@ -397,11 +399,13 @@ fn evaluate_parsed_decision_table(scope: &FeelScope, parsed_decision_table: &Par
     }
   }
   // evaluate all rules
+  let tracing = trace_is_active();
+  let mut cell_evaluations = vec![];
   let mut evaluated_rules = vec![];
-  for parsed_rule in parsed_decision_table.rules.iter() {
+  for (rule_index, parsed_rule) in parsed_decision_table.rules.iter().enumerate() {
     let mut input_entry_values = vec![];
     let mut matches = true;
-    for evaluator in parsed_rule.input_entries_evaluators.iter() {
+    for (col_index, evaluator) in parsed_rule.input_entries_evaluators.iter().enumerate() {
       let input_value: Value = evaluator(scope);
 
       // Handle expression lists containing comparison results
@@ -412,6 +416,16 @@ fn evaluate_parsed_decision_table(scope: &FeelScope, parsed_decision_table: &Par
         }
         _ => input_value.is_true(),
       };
+
+      if tracing {
+        cell_evaluations.push(CellEvaluation {
+          rule_index,
+          column_index: col_index,
+          expression: String::new(),
+          input_value: serde_json::json!(format!("{}", input_value)),
+          result: is_true,
+        });
+      }
 
       if !is_true {
         matches = false;
@@ -429,6 +443,7 @@ fn evaluate_parsed_decision_table(scope: &FeelScope, parsed_decision_table: &Par
     output_values,
     default_output_values,
     evaluated_rules,
+    cell_evaluations,
   }
 }
 
