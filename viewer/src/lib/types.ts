@@ -90,7 +90,7 @@ export interface ProjectParam {
 export type ProjectNode =
   | { type: 'input_data'; id: string; name: string; fields: FieldDescriptor[] }
   | { type: 'decision'; id: string; name: string; hit_policy: string; input_columns: string[]; output_columns: string[]; rules: ProjectRule[]; annotation_columns: string[] }
-  | { type: 'bkm'; id: string; name: string; hit_policy: string; input_columns: string[]; output_columns: string[]; rules: ProjectRule[]; parameters: ProjectParam[] }
+  | { type: 'bkm'; id: string; name: string; hit_policy: string; input_columns: string[]; output_columns: string[]; rules: ProjectRule[]; parameters: ProjectParam[]; feel_expression?: string }
   | { type: 'knowledge_source'; id: string; name: string; owner?: string };
 
 export interface ProjectEdge {

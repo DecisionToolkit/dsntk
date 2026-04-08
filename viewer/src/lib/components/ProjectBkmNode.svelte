@@ -12,6 +12,7 @@
       output_columns: string[];
       rules: ProjectRule[];
       parameters: ProjectParam[];
+      feel_expression?: string;
     };
   } = $props();
 
@@ -37,7 +38,12 @@
     </div>
   {/if}
 
-  {#if data.rules.length > 0}
+  {#if data.feel_expression}
+    <div class="expression">
+      <span class="expr-label">FEEL</span>
+      <code class="expr-text">{data.feel_expression}</code>
+    </div>
+  {:else if data.rules.length > 0}
     <div class="columns">
       {#each data.input_columns as col}
         <span class="col">{col}</span>
@@ -88,6 +94,10 @@
   .name { color: #c9d1d9; font-weight: bold; font-size: 12px; }
   .evaluated .name { color: #3fb950; }
   .badge { background: #21262d; color: #8b949e; padding: 2px 6px; border-radius: 4px; font-size: 9px; }
+  .expression { padding: 8px 12px; border-bottom: 1px solid #30363d; }
+  .expr-label { color: #8b949e; font-size: 9px; margin-right: 6px; }
+  .expr-text { color: #d2a8ff; font-size: 11px; }
+  .evaluated .expr-text { color: #3fb950; }
   .params { padding: 4px 12px; display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid #30363d; }
   .param { color: #8b949e; font-size: 9px; background: #161b22; padding: 1px 5px; border-radius: 3px; }
   .columns {
