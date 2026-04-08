@@ -1,38 +1,50 @@
 <script lang="ts">
-  import { BaseEdge, getBezierPath, type EdgeProps } from '@xyflow/svelte';
+  import { BaseEdge, getBezierPath } from '@xyflow/svelte';
   import { evaluatedNodeIds, evaluatingNodeId } from '$lib/stores';
 
-  type $$Props = EdgeProps & {
-    data?: { label?: string } | undefined;
-  };
-
-  export let id: string;
-  export let sourceX: number;
-  export let sourceY: number;
-  export let targetX: number;
-  export let targetY: number;
-  export let sourcePosition: any;
-  export let targetPosition: any;
-  export let data: { label?: string } | undefined = undefined;
-  export let target: string = '';
-
-  $: [path, labelX, labelY] = getBezierPath({
+  let {
+    id,
     sourceX,
     sourceY,
     targetX,
     targetY,
     sourcePosition,
     targetPosition,
-  });
+    data = undefined,
+    target = '',
+  }: {
+    id: string;
+    sourceX: number;
+    sourceY: number;
+    targetX: number;
+    targetY: number;
+    sourcePosition: any;
+    targetPosition: any;
+    data?: { label?: string } | undefined;
+    target?: string;
+  } = $props();
 
-  $: isCompleted = $evaluatedNodeIds.has(target);
-  $: isAnimating = $evaluatingNodeId === target;
+  let pathResult = $derived(getBezierPath({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+  }));
 
-  $: style = isCompleted
+  let path = $derived(pathResult[0]);
+  let labelX = $derived(pathResult[1]);
+  let labelY = $derived(pathResult[2]);
+
+  let isCompleted = $derived($evaluatedNodeIds.has(target));
+  let isAnimating = $derived($evaluatingNodeId === target);
+
+  let style = $derived(isCompleted
     ? 'stroke: #3fb950; stroke-width: 2;'
     : isAnimating
       ? 'stroke: #d29922; stroke-width: 2;'
-      : 'stroke: #30363d; stroke-width: 1.5; stroke-dasharray: 5 5;';
+      : 'stroke: #30363d; stroke-width: 1.5; stroke-dasharray: 5 5;');
 </script>
 
 <BaseEdge {id} {path} {style} />

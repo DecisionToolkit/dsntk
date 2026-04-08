@@ -2,10 +2,9 @@
   import { Handle, Position } from '@xyflow/svelte';
   import { evaluatedNodeIds } from '$lib/stores';
 
-  export let id: string;
-  export let data: { name: string; value?: unknown };
+  let { id, data }: { id: string; data: { name: string; value?: unknown } } = $props();
 
-  $: isEvaluated = $evaluatedNodeIds.has(id);
+  let isEvaluated = $derived($evaluatedNodeIds.has(id));
 </script>
 
 <div class="input-node" class:evaluated={isEvaluated}>

@@ -11,14 +11,9 @@
   const nodeTypes = { inputData: InputDataNode, decisionTable: DecisionTableNode };
   const edgeTypes = { animated: AnimatedEdge };
 
-  let nodes: any[] = [];
-  let edges: any[] = [];
-
-  $: if ($traceData) {
-    const layout = computeLayout($traceData.graph);
-    nodes = layout.nodes;
-    edges = layout.edges;
-  }
+  let layoutResult = $derived($traceData ? computeLayout($traceData.graph) : null);
+  let nodes = $derived(layoutResult ? layoutResult.nodes : []);
+  let edges = $derived(layoutResult ? layoutResult.edges : []);
 </script>
 
 <div class="canvas">

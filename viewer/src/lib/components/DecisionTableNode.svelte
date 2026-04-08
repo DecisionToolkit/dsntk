@@ -3,19 +3,21 @@
   import { evaluatedNodeIds, evaluatingNodeId, stepByNodeId } from '$lib/stores';
   import type { TraceRule } from '$lib/types';
 
-  export let id: string;
-  export let data: {
-    name: string;
-    hit_policy: string;
-    input_columns: string[];
-    output_columns: string[];
-    rules: TraceRule[];
-  };
+  let { id, data }: {
+    id: string;
+    data: {
+      name: string;
+      hit_policy: string;
+      input_columns: string[];
+      output_columns: string[];
+      rules: TraceRule[];
+    };
+  } = $props();
 
-  $: isEvaluated = $evaluatedNodeIds.has(id);
-  $: isEvaluating = $evaluatingNodeId === id;
-  $: step = $stepByNodeId.get(id);
-  $: matchedRules = step ? new Set(step.matched_rules) : new Set<number>();
+  let isEvaluated = $derived($evaluatedNodeIds.has(id));
+  let isEvaluating = $derived($evaluatingNodeId === id);
+  let step = $derived($stepByNodeId.get(id));
+  let matchedRules = $derived(step ? new Set(step.matched_rules) : new Set<number>());
 </script>
 
 <div class="dt-node" class:evaluated={isEvaluated} class:evaluating={isEvaluating}>

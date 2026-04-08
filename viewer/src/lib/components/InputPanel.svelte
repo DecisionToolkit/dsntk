@@ -4,10 +4,10 @@
   import { fetchModels, evaluateTrace } from '$lib/api';
   import type { ModelInfo } from '$lib/types';
 
-  let models: ModelInfo[] = [];
-  let loading = false;
-  let error = '';
-  let rawJson = '{}';
+  let models: ModelInfo[] = $state([]);
+  let loading = $state(false);
+  let error = $state('');
+  let rawJson = $state('{}');
 
   onMount(async () => {
     try {
@@ -43,7 +43,6 @@
         return;
       }
 
-      // Use the path field if available, otherwise construct from parts
       const path =
         ($selectedModel as any).path ||
         `${$selectedModel.namespace}/${$selectedModel.name}/${$selectedModel.invocables[0]}`;
@@ -62,7 +61,7 @@
   <div class="section">
     <label class="label">Model</label>
     {#if models.length > 0}
-      <select class="select" on:change={onModelChange}>
+      <select class="select" onchange={onModelChange}>
         {#each models as model}
           <option value={(model as any).path || model.name}>
             {model.invocables[0] || model.name}
@@ -88,7 +87,7 @@
   {/if}
 
   <div class="section footer">
-    <button class="evaluate-btn" on:click={evaluate} disabled={loading}>
+    <button class="evaluate-btn" onclick={evaluate} disabled={loading}>
       {loading ? 'Evaluating...' : 'Evaluate'}
     </button>
   </div>

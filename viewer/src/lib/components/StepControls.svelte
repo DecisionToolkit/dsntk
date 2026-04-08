@@ -2,9 +2,9 @@
   import { onDestroy } from 'svelte';
   import { currentStep, totalSteps } from '$lib/stores';
 
-  let playing = false;
-  let speed = 1000;
-  let interval: ReturnType<typeof setInterval> | null = null;
+  let playing = $state(false);
+  let speed = $state(1000);
+  let interval: ReturnType<typeof setInterval> | null = $state(null);
 
   function stepForward() { currentStep.update((n) => Math.min(n + 1, $totalSteps)); }
   function stepBack() { currentStep.update((n) => Math.max(n - 1, 0)); }
@@ -34,13 +34,13 @@
 </script>
 
 <div class="controls">
-  <button on:click={skipToStart} title="Skip to start">⏮</button>
-  <button on:click={stepBack} title="Step back">◀</button>
-  <button on:click={togglePlay} class:playing title={playing ? 'Pause' : 'Play'}>
+  <button onclick={skipToStart} title="Skip to start">⏮</button>
+  <button onclick={stepBack} title="Step back">◀</button>
+  <button onclick={togglePlay} class:playing title={playing ? 'Pause' : 'Play'}>
     {playing ? '⏸' : '▶'}
   </button>
-  <button on:click={stepForward} title="Step forward">▶</button>
-  <button on:click={skipToEnd} title="Skip to end">⏭</button>
+  <button onclick={stepForward} title="Step forward">▶</button>
+  <button onclick={skipToEnd} title="Skip to end">⏭</button>
   <span class="counter">Step {$currentStep} / {$totalSteps}</span>
   <label class="speed">
     <input type="range" min="200" max="3000" step="100" bind:value={speed} />
