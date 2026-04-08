@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { selectedModel, inputValues, traceData, currentStep } from '$lib/stores';
+  import { get } from 'svelte/store';
+  import { selectedModel, traceData, currentStep } from '$lib/stores';
   import { fetchModels, evaluateTrace } from '$lib/api';
   import type { ModelInfo } from '$lib/types';
 
@@ -11,8 +12,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetchModels();
-      models = res.models;
+      models = await fetchModels();
       if (models.length > 0) {
         selectedModel.set(models[0]);
       }
@@ -23,14 +23,13 @@
 
   function onModelChange(event: Event) {
     const target = event.target as HTMLSelectElement;
-    const model = models.find(
-      (m) => (m as any).path === target.value || m.name === target.value
-    );
+    const model = models.find((m) => m.path === target.value);
     if (model) selectedModel.set(model);
   }
 
   async function evaluate() {
-    if (!$selectedModel) return;
+    const current = get(selectedModel);
+    if (!current) return;
     loading = true;
     error = '';
     try {
@@ -43,12 +42,9 @@
         return;
       }
 
-      const path =
-        ($selectedModel as any).path ||
-        `${$selectedModel.namespace}/${$selectedModel.name}/${$selectedModel.invocables[0]}`;
-      const res = await evaluateTrace(path, inputs);
+      const res = await evaluateTrace(current.path, inputs);
       traceData.set(res.trace ?? null);
-      currentStep.set(0);
+      currentStep.set(res.trace?.steps.length ?? 0);
     } catch (e) {
       error = `Evaluation failed: ${e}`;
     } finally {
@@ -63,8 +59,8 @@
     {#if models.length > 0}
       <select class="select" onchange={onModelChange}>
         {#each models as model}
-          <option value={(model as any).path || model.name}>
-            {model.invocables[0] || model.name}
+          <option value={model.path}>
+            {model.invocable_name}
           </option>
         {/each}
       </select>

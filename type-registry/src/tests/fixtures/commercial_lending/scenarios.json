@@ -1,0 +1,235 @@
+[
+  {
+    "name": "Strong Applicant — Auto Approve",
+    "description": "Established tech company, clean credit, prime office, low risk across the board",
+    "inputs": {
+      "applicant_data": {
+        "Business Name": "Nexus Solutions Ltd",
+        "Business Type": "Ltd Company",
+        "Years Trading": 12,
+        "Sector": "Technology",
+        "Annual Turnover": 4500000,
+        "Director Count": 3,
+        "Has Guarantee": true
+      },
+      "bureau_report": {
+        "Bureau Score": 92,
+        "CCJ Count": 0,
+        "CCJ Total Value": 0,
+        "Payment Days Average": 18,
+        "Filing Status": "Current",
+        "Director Defaults": 0
+      },
+      "financial_statements": {
+        "Net Profit": 680000,
+        "Depreciation": 45000,
+        "Interest Expense": 32000,
+        "Total Debt": 250000,
+        "Total Assets": 2800000,
+        "Accounts Type": "Audited",
+        "Accounts Age": 4
+      },
+      "loan_request": {
+        "Requested Amount": 350000,
+        "Term Months": 60,
+        "Purpose": "Purchase",
+        "Repayment Type": "Capital and Interest"
+      },
+      "property_data": {
+        "Property Type": "Office",
+        "Valuation Amount": 750000,
+        "Location": "Prime",
+        "Tenure": "Freehold",
+        "Environmental Risk": "None",
+        "Flood Zone": "Zone 1"
+      }
+    }
+  },
+  {
+    "name": "Marginal — Referred to Senior Manager",
+    "description": "Mid-tier hospitality business, moderate credit, secondary retail unit, higher leverage",
+    "inputs": {
+      "applicant_data": {
+        "Business Name": "Harbour View Hotel Ltd",
+        "Business Type": "Ltd Company",
+        "Years Trading": 6,
+        "Sector": "Hospitality",
+        "Annual Turnover": 1800000,
+        "Director Count": 2,
+        "Has Guarantee": false
+      },
+      "bureau_report": {
+        "Bureau Score": 58,
+        "CCJ Count": 1,
+        "CCJ Total Value": 3200,
+        "Payment Days Average": 42,
+        "Filing Status": "Current",
+        "Director Defaults": 0
+      },
+      "financial_statements": {
+        "Net Profit": 185000,
+        "Depreciation": 62000,
+        "Interest Expense": 48000,
+        "Total Debt": 620000,
+        "Total Assets": 1400000,
+        "Accounts Type": "Audited",
+        "Accounts Age": 8
+      },
+      "loan_request": {
+        "Requested Amount": 750000,
+        "Term Months": 180,
+        "Purpose": "Refinance",
+        "Repayment Type": "Capital and Interest"
+      },
+      "property_data": {
+        "Property Type": "Retail Unit",
+        "Valuation Amount": 1050000,
+        "Location": "Secondary",
+        "Tenure": "Leasehold",
+        "Lease Remaining": 18,
+        "Environmental Risk": "Low",
+        "Flood Zone": "Zone 2"
+      }
+    }
+  },
+  {
+    "name": "Decline — Poor Credit History",
+    "description": "New construction firm, very low bureau score, multiple CCJs, dormant filing",
+    "inputs": {
+      "applicant_data": {
+        "Business Name": "QuickBuild Contractors",
+        "Business Type": "Partnership",
+        "Years Trading": 1,
+        "Sector": "Construction",
+        "Annual Turnover": 320000,
+        "Director Count": 2,
+        "Has Guarantee": false
+      },
+      "bureau_report": {
+        "Bureau Score": 22,
+        "CCJ Count": 4,
+        "CCJ Total Value": 65000,
+        "Payment Days Average": 78,
+        "Filing Status": "Dormant",
+        "Director Defaults": 2
+      },
+      "financial_statements": {
+        "Net Profit": -15000,
+        "Depreciation": 8000,
+        "Interest Expense": 12000,
+        "Total Debt": 180000,
+        "Total Assets": 95000,
+        "Accounts Type": "Self-Certified",
+        "Accounts Age": 14
+      },
+      "loan_request": {
+        "Requested Amount": 500000,
+        "Term Months": 120,
+        "Purpose": "Development",
+        "Repayment Type": "Interest Only"
+      },
+      "property_data": {
+        "Property Type": "Development Site",
+        "Valuation Amount": 420000,
+        "Location": "Tertiary",
+        "Tenure": "Freehold",
+        "Environmental Risk": "High",
+        "Flood Zone": "Zone 3a"
+      }
+    }
+  },
+  {
+    "name": "Edge Case — High Value Development",
+    "description": "Established healthcare PLC, strong credit, large development loan, mixed risk signals",
+    "inputs": {
+      "applicant_data": {
+        "Business Name": "MedPark Group PLC",
+        "Business Type": "PLC",
+        "Years Trading": 25,
+        "Sector": "Healthcare",
+        "Annual Turnover": 28000000,
+        "Director Count": 7,
+        "Has Guarantee": true
+      },
+      "bureau_report": {
+        "Bureau Score": 85,
+        "CCJ Count": 0,
+        "CCJ Total Value": 0,
+        "Payment Days Average": 25,
+        "Filing Status": "Current",
+        "Director Defaults": 0
+      },
+      "financial_statements": {
+        "Net Profit": 3200000,
+        "Depreciation": 850000,
+        "Interest Expense": 420000,
+        "Total Debt": 8500000,
+        "Total Assets": 45000000,
+        "Accounts Type": "Audited",
+        "Accounts Age": 2
+      },
+      "loan_request": {
+        "Requested Amount": 5000000,
+        "Term Months": 300,
+        "Purpose": "Development",
+        "Repayment Type": "Capital and Interest"
+      },
+      "property_data": {
+        "Property Type": "Mixed Use",
+        "Valuation Amount": 8200000,
+        "Location": "Prime",
+        "Tenure": "Leasehold",
+        "Lease Remaining": 99,
+        "Environmental Risk": "Medium",
+        "Flood Zone": "Zone 2"
+      }
+    }
+  },
+  {
+    "name": "Sole Trader — Working Capital",
+    "description": "Small retail sole trader, decent credit, modest loan, short term",
+    "inputs": {
+      "applicant_data": {
+        "Business Name": "Sarah's Florist",
+        "Business Type": "Sole Trader",
+        "Years Trading": 4,
+        "Sector": "Retail",
+        "Annual Turnover": 165000,
+        "Director Count": 1,
+        "Has Guarantee": true
+      },
+      "bureau_report": {
+        "Bureau Score": 68,
+        "CCJ Count": 0,
+        "CCJ Total Value": 0,
+        "Payment Days Average": 30,
+        "Filing Status": "Current",
+        "Director Defaults": 0
+      },
+      "financial_statements": {
+        "Net Profit": 42000,
+        "Depreciation": 5000,
+        "Interest Expense": 2400,
+        "Total Debt": 18000,
+        "Total Assets": 85000,
+        "Accounts Type": "Management",
+        "Accounts Age": 5
+      },
+      "loan_request": {
+        "Requested Amount": 25000,
+        "Term Months": 36,
+        "Purpose": "Working Capital",
+        "Repayment Type": "Capital and Interest"
+      },
+      "property_data": {
+        "Property Type": "Retail Unit",
+        "Valuation Amount": 120000,
+        "Location": "Secondary",
+        "Tenure": "Leasehold",
+        "Lease Remaining": 8,
+        "Environmental Risk": "None",
+        "Flood Zone": "Zone 1"
+      }
+    }
+  }
+]

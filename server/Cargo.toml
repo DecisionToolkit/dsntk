@@ -28,4 +28,7 @@ dsntk-feel-number = { workspace = true }
 dsntk-macros = { workspace = true }
 dsntk-model = { workspace = true }
 dsntk-model-evaluator = { workspace = true }
+dsntk-recognizer = { workspace = true }
+dsntk-type-registry = { workspace = true }
 dsntk-workspace = { workspace = true }
+walkdir = { workspace = true }

@@ -887,9 +887,12 @@ dependencies = [
  "dsntk-macros",
  "dsntk-model",
  "dsntk-model-evaluator",
+ "dsntk-recognizer",
+ "dsntk-type-registry",
  "dsntk-workspace",
  "serde",
  "serde_json",
+ "walkdir",
 ]
 
 [[package]]

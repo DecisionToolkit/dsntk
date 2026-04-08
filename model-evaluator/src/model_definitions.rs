@@ -739,26 +739,57 @@ impl DefDefinitions {
         value: None,
       });
     }
+    // Helper: extract decision table details from an ExpressionInstance.
+    let extract_dt = |expr: &ExpressionInstance| -> Option<(String, Vec<String>, Vec<String>, Vec<crate::trace::TraceRule>)> {
+      if let ExpressionInstance::DecisionTable(dt) = expr {
+        let hp = format!("{}", dt.hit_policy());
+        let inputs: Vec<String> = dt.input_clauses().map(|ic| ic.input_expression.clone()).collect();
+        let outputs: Vec<String> = dt.output_clauses().map(|oc| oc.name.clone().unwrap_or_default()).collect();
+        let rs: Vec<crate::trace::TraceRule> = dt
+          .rules()
+          .enumerate()
+          .map(|(i, rule)| crate::trace::TraceRule {
+            index: i,
+            input_entries: rule.input_entries.iter().map(|ie| ie.text.clone()).collect(),
+            output_entries: rule.output_entries.iter().map(|oe| oe.text.clone()).collect(),
+          })
+          .collect();
+        Some((hp, inputs, outputs, rs))
+      } else {
+        None
+      }
+    };
+
+    // Helper: find a decision table inside a BKM's encapsulated logic.
+    let extract_dt_from_bkm = |bkm: &DefBusinessKnowledgeModel| -> Option<(String, Vec<String>, Vec<String>, Vec<crate::trace::TraceRule>)> {
+      bkm.encapsulated_logic().as_ref().and_then(|fd| fd.body().as_ref()).and_then(|body| extract_dt(body))
+    };
+
     // Create DecisionTable nodes and edges from information requirements.
     for (key, decision) in &self.decisions {
-      let (hit_policy, input_columns, output_columns, rules) = match decision.decision_logic() {
-        Some(ExpressionInstance::DecisionTable(dt)) => {
-          let hp = format!("{}", dt.hit_policy());
-          let inputs: Vec<String> = dt.input_clauses().map(|ic| ic.input_expression.clone()).collect();
-          let outputs: Vec<String> = dt.output_clauses().map(|oc| oc.name.clone().unwrap_or_default()).collect();
-          let rs: Vec<crate::trace::TraceRule> = dt
-            .rules()
-            .enumerate()
-            .map(|(i, rule)| crate::trace::TraceRule {
-              index: i,
-              input_entries: rule.input_entries.iter().map(|ie| ie.text.clone()).collect(),
-              output_entries: rule.output_entries.iter().map(|oe| oe.text.clone()).collect(),
-            })
-            .collect();
-          (hp, inputs, outputs, rs)
-        }
-        _ => (String::new(), vec![], vec![], vec![]),
-      };
+      // Try direct decision table first, then resolve BKM invocations.
+      let (hit_policy, input_columns, output_columns, rules) = decision
+        .decision_logic()
+        .as_ref()
+        .and_then(|expr| {
+          // Direct decision table.
+          extract_dt(expr).or_else(|| {
+            // Invocation — look up the called BKM's decision table.
+            if let ExpressionInstance::Invocation(inv) = expr {
+              if let ExpressionInstance::LiteralExpression(le) = inv.called_function() {
+                if let Some(bkm_name) = le.text() {
+                  for bkm in self.business_knowledge_models.values() {
+                    if bkm.name() == bkm_name {
+                      return extract_dt_from_bkm(bkm);
+                    }
+                  }
+                }
+              }
+            }
+            None
+          })
+        })
+        .unwrap_or_else(|| (String::new(), vec![], vec![], vec![]));
       nodes.push(crate::trace::TraceNode::DecisionTable {
         id: key.to_string(),
         name: decision.name().to_string(),

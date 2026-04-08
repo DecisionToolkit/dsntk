@@ -24,11 +24,7 @@ pub struct TraceGraph {
 #[serde(tag = "type")]
 pub enum TraceNode {
   #[serde(rename = "input_data")]
-  InputData {
-    id: String,
-    name: String,
-    value: Option<serde_json::Value>,
-  },
+  InputData { id: String, name: String, value: Option<serde_json::Value> },
   #[serde(rename = "decision_table")]
   DecisionTable {
     id: String,

@@ -56,6 +56,8 @@ fn config(cfg: &mut web::ServiceConfig) {
   cfg.service(evaluate_invocable_post);
   cfg.service(crate::trace_handlers::list_models);
   cfg.service(crate::trace_handlers::evaluate_trace);
+  cfg.service(crate::project_handlers::load_project);
+  cfg.service(crate::project_handlers::evaluate_project);
 }
 
 /// Starts the server.

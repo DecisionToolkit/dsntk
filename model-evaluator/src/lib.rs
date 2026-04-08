@@ -22,7 +22,7 @@ mod variable;
 #[cfg(test)]
 mod tests;
 
-pub use decision_table::build_decision_table_evaluator;
+pub use decision_table::{build_decision_table_evaluator, evaluate_decision_table_with_trace, DecisionTableEvalResult};
 pub use model_evaluator::ModelEvaluator;
 
 #[cfg(test)]
