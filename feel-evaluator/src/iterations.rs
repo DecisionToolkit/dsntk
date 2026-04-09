@@ -4,7 +4,7 @@ use crate::errors::*;
 use dsntk_common::Result;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::{VALUE_FALSE, VALUE_TRUE, Value, Values};
-use dsntk_feel::{Evaluator, FEEL_TYPE_NAME_DATE, FEEL_TYPE_NAME_NUMBER, FeelNumber, FeelScope, Name, value_null};
+use dsntk_feel::{Evaluator, FEEL_TYPE_NAME_DATE, FEEL_TYPE_NAME_NUMBER, FeelNumber, FeelScope, IntervalType, Name, value_null};
 use dsntk_feel_temporal::FeelDate;
 
 /// Common interface for all iteration state types.
@@ -323,8 +323,8 @@ impl FeelIterator {
 
   pub fn add_range(&mut self, variable: Name, start: Value, end: Value) -> Result<()> {
     match start {
-      Value::IntervalStart(start, true) => match end {
-        Value::IntervalEnd(end, true) => self.add_interval(variable, *start, *end, true),
+      Value::IntervalStart(start, IntervalType::Closed) => match end {
+        Value::IntervalEnd(end, IntervalType::Closed) => self.add_interval(variable, *start, *end, true),
         other => Err(err_invalid_range_end(&other.to_string())),
       },
       other => Err(err_invalid_range_start(&other.to_string())),

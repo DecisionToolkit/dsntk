@@ -5,6 +5,93 @@ use crate::errors::*;
 use dsntk_common::DsntkError;
 use std::str::FromStr;
 
+const BIF_ABS: &str = "abs";
+const BIF_AFTER: &str = "after";
+const BIF_ANY: &str = "any";
+const BIF_ALL: &str = "all";
+const BIF_APPEND: &str = "append";
+const BIF_BEFORE: &str = "before";
+const BIF_CEILING: &str = "ceiling";
+const BIF_COINCIDES: &str = "coincides";
+const BIF_CONCATENATE: &str = "concatenate";
+const BIF_CONTAINS: &str = "contains";
+const BIF_CONTEXT: &str = "context";
+const BIF_CONTEXT_MERGE: &str = "context merge";
+const BIF_CONTEXT_PUT: &str = "context put";
+const BIF_COUNT: &str = "count";
+const BIF_DATE: &str = "date";
+const BIF_DATE_AND_TIME: &str = "date and time";
+const BIF_DAY_OF_WEEK: &str = "day of week";
+const BIF_DAY_OF_YEAR: &str = "day of year";
+const BIF_DECIMAL: &str = "decimal";
+const BIF_DISTINCT_VALUES: &str = "distinct values";
+const BIF_DURATION: &str = "duration";
+const BIF_DURING: &str = "during";
+const BIF_ENDS_WITH: &str = "ends with";
+const BIF_EVEN: &str = "even";
+const BIF_EXP: &str = "exp";
+const BIF_FINISHED_BY: &str = "finished by";
+const BIF_FINISHES: &str = "finishes";
+const BIF_FLATTEN: &str = "flatten";
+const BIF_FLOOR: &str = "floor";
+const BIF_GET_ENTRIES: &str = "get entries";
+const BIF_GET_VALUE: &str = "get value";
+const BIF_INCLUDES: &str = "includes";
+const BIF_INDEX_OF: &str = "index of";
+const BIF_INSERT_BEFORE: &str = "insert before";
+const BIF_IS: &str = "is";
+const BIF_LIST_CONTAINS: &str = "list contains";
+const BIF_LIST_REPLACE: &str = "list replace";
+const BIF_LOG: &str = "log";
+const BIF_LOWER_CASE: &str = "lower case";
+const BIF_MATCHES: &str = "matches";
+const BIF_MAX: &str = "max";
+const BIF_MEAN: &str = "mean";
+const BIF_MEDIAN: &str = "median";
+const BIF_MEETS: &str = "meets";
+const BIF_MET_BY: &str = "met by";
+const BIF_MIN: &str = "min";
+const BIF_MODE: &str = "mode";
+const BIF_MODULO: &str = "modulo";
+const BIF_MONTH_OF_YEAR: &str = "month of year";
+const BIF_NOT: &str = "not";
+const BIF_NOW: &str = "now";
+const BIF_NUMBER: &str = "number";
+const BIF_ODD: &str = "odd";
+const BIF_OVERLAPS: &str = "overlaps";
+const BIF_OVERLAPS_AFTER: &str = "overlaps after";
+const BIF_OVERLAPS_BEFORE: &str = "overlaps before";
+const BIF_PRODUCT: &str = "product";
+const BIF_RANGE: &str = "range";
+const BIF_REMOVE: &str = "remove";
+const BIF_REPLACE: &str = "replace";
+const BIF_REVERSE: &str = "reverse";
+const BIF_ROUND_DOWN: &str = "round down";
+const BIF_ROUND_HALF_DOWN: &str = "round half down";
+const BIF_ROUND_HALF_UP: &str = "round half up";
+const BIF_ROUND_UP: &str = "round up";
+const BIF_SORT: &str = "sort";
+const BIF_SPLIT: &str = "split";
+const BIF_SQRT: &str = "sqrt";
+const BIF_STARTED_BY: &str = "started by";
+const BIF_STARTS: &str = "starts";
+const BIF_STARTS_WITH: &str = "starts with";
+const BIF_STDDEV: &str = "stddev";
+const BIF_STRING: &str = "string";
+const BIF_STRING_JOIN: &str = "string join";
+const BIF_STRING_LENGTH: &str = "string length";
+const BIF_SUBLIST: &str = "sublist";
+const BIF_SUBSTRING: &str = "substring";
+const BIF_SUBSTRING_AFTER: &str = "substring after";
+const BIF_SUBSTRING_BEFORE: &str = "substring before";
+const BIF_SUM: &str = "sum";
+const BIF_TIME: &str = "time";
+const BIF_TODAY: &str = "today";
+const BIF_UNION: &str = "union";
+const BIF_UPPER_CASE: &str = "upper case";
+const BIF_WEEK_OF_YEAR: &str = "week of year";
+const BIF_YEARS_AND_MONTHS_DURATION: &str = "years and months duration";
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Bif {
   Abs,
@@ -97,95 +184,95 @@ pub enum Bif {
 
 impl FromStr for Bif {
   type Err = DsntkError;
-  /// Converts a string into corresponding variant of the [Bif] enumeration.
+  /// Converts a string into corresponding built-in function enumeration.
   fn from_str(s: &str) -> Result<Self, Self::Err> {
     match s {
-      "abs" => Ok(Self::Abs),
-      "after" => Ok(Self::After),
-      "all" => Ok(Self::All),
-      "any" => Ok(Self::Any),
-      "append" => Ok(Self::Append),
-      "before" => Ok(Self::Before),
-      "ceiling" => Ok(Self::Ceiling),
-      "coincides" => Ok(Self::Coincides),
-      "concatenate" => Ok(Self::Concatenate),
-      "contains" => Ok(Self::Contains),
-      "context" => Ok(Self::Context),
-      "context merge" => Ok(Self::ContextMerge),
-      "context put" => Ok(Self::ContextPut),
-      "count" => Ok(Self::Count),
-      "date" => Ok(Self::Date),
-      "date and time" => Ok(Self::DateAndTime),
-      "day of week" => Ok(Self::DayOfWeek),
-      "day of year" => Ok(Self::DayOfYear),
-      "decimal" => Ok(Self::Decimal),
-      "distinct values" => Ok(Self::DistinctValues),
-      "duration" => Ok(Self::Duration),
-      "during" => Ok(Self::During),
-      "ends with" => Ok(Self::EndsWith),
-      "even" => Ok(Self::Even),
-      "exp" => Ok(Self::Exp),
-      "finished by" => Ok(Self::FinishedBy),
-      "finishes" => Ok(Self::Finishes),
-      "flatten" => Ok(Self::Flatten),
-      "floor" => Ok(Self::Floor),
-      "get entries" => Ok(Self::GetEntries),
-      "get value" => Ok(Self::GetValue),
-      "includes" => Ok(Self::Includes),
-      "index of" => Ok(Self::IndexOf),
-      "insert before" => Ok(Self::InsertBefore),
-      "is" => Ok(Self::Is),
-      "list contains" => Ok(Self::ListContains),
-      "list replace" => Ok(Self::ListReplace),
-      "log" => Ok(Self::Log),
-      "lower case" => Ok(Self::LoweCase),
-      "matches" => Ok(Self::Matches),
-      "max" => Ok(Self::Max),
-      "mean" => Ok(Self::Mean),
-      "median" => Ok(Self::Median),
-      "meets" => Ok(Self::Meets),
-      "met by" => Ok(Self::MetBy),
-      "min" => Ok(Self::Min),
-      "mode" => Ok(Self::Mode),
-      "modulo" => Ok(Self::Modulo),
-      "month of year" => Ok(Self::MonthOfYear),
-      "not" => Ok(Self::Not),
-      "now" => Ok(Self::Now),
-      "number" => Ok(Self::Number),
-      "odd" => Ok(Self::Odd),
-      "overlaps" => Ok(Self::Overlaps),
-      "overlaps after" => Ok(Self::OverlapsAfter),
-      "overlaps before" => Ok(Self::OverlapsBefore),
-      "product" => Ok(Self::Product),
-      "range" => Ok(Self::Range),
-      "remove" => Ok(Self::Remove),
-      "replace" => Ok(Self::Replace),
-      "reverse" => Ok(Self::Reverse),
-      "round down" => Ok(Self::RoundDown),
-      "round half down" => Ok(Self::RoundHalfDown),
-      "round half up" => Ok(Self::RoundHalfUp),
-      "round up" => Ok(Self::RoundUp),
-      "sort" => Ok(Self::Sort),
-      "split" => Ok(Self::Split),
-      "sqrt" => Ok(Self::Sqrt),
-      "started by" => Ok(Self::StartedBy),
-      "starts" => Ok(Self::Starts),
-      "starts with" => Ok(Self::StartsWith),
-      "stddev" => Ok(Self::Stddev),
-      "string" => Ok(Self::String),
-      "string join" => Ok(Self::StringJoin),
-      "string length" => Ok(Self::StringLength),
-      "sublist" => Ok(Self::Sublist),
-      "substring" => Ok(Self::Substring),
-      "substring after" => Ok(Self::SubstringAfter),
-      "substring before" => Ok(Self::SubstringBefore),
-      "sum" => Ok(Self::Sum),
-      "time" => Ok(Self::Time),
-      "today" => Ok(Self::Today),
-      "union" => Ok(Self::Union),
-      "upper case" => Ok(Self::UpperCase),
-      "week of year" => Ok(Self::WeekOfYear),
-      "years and months duration" => Ok(Self::YearsAndMonthsDuration),
+      BIF_ABS => Ok(Self::Abs),
+      BIF_AFTER => Ok(Self::After),
+      BIF_ALL => Ok(Self::All),
+      BIF_ANY => Ok(Self::Any),
+      BIF_APPEND => Ok(Self::Append),
+      BIF_BEFORE => Ok(Self::Before),
+      BIF_CEILING => Ok(Self::Ceiling),
+      BIF_COINCIDES => Ok(Self::Coincides),
+      BIF_CONCATENATE => Ok(Self::Concatenate),
+      BIF_CONTAINS => Ok(Self::Contains),
+      BIF_CONTEXT => Ok(Self::Context),
+      BIF_CONTEXT_MERGE => Ok(Self::ContextMerge),
+      BIF_CONTEXT_PUT => Ok(Self::ContextPut),
+      BIF_COUNT => Ok(Self::Count),
+      BIF_DATE => Ok(Self::Date),
+      BIF_DATE_AND_TIME => Ok(Self::DateAndTime),
+      BIF_DAY_OF_WEEK => Ok(Self::DayOfWeek),
+      BIF_DAY_OF_YEAR => Ok(Self::DayOfYear),
+      BIF_DECIMAL => Ok(Self::Decimal),
+      BIF_DISTINCT_VALUES => Ok(Self::DistinctValues),
+      BIF_DURATION => Ok(Self::Duration),
+      BIF_DURING => Ok(Self::During),
+      BIF_ENDS_WITH => Ok(Self::EndsWith),
+      BIF_EVEN => Ok(Self::Even),
+      BIF_EXP => Ok(Self::Exp),
+      BIF_FINISHED_BY => Ok(Self::FinishedBy),
+      BIF_FINISHES => Ok(Self::Finishes),
+      BIF_FLATTEN => Ok(Self::Flatten),
+      BIF_FLOOR => Ok(Self::Floor),
+      BIF_GET_ENTRIES => Ok(Self::GetEntries),
+      BIF_GET_VALUE => Ok(Self::GetValue),
+      BIF_INCLUDES => Ok(Self::Includes),
+      BIF_INDEX_OF => Ok(Self::IndexOf),
+      BIF_INSERT_BEFORE => Ok(Self::InsertBefore),
+      BIF_IS => Ok(Self::Is),
+      BIF_LIST_CONTAINS => Ok(Self::ListContains),
+      BIF_LIST_REPLACE => Ok(Self::ListReplace),
+      BIF_LOG => Ok(Self::Log),
+      BIF_LOWER_CASE => Ok(Self::LoweCase),
+      BIF_MATCHES => Ok(Self::Matches),
+      BIF_MAX => Ok(Self::Max),
+      BIF_MEAN => Ok(Self::Mean),
+      BIF_MEDIAN => Ok(Self::Median),
+      BIF_MEETS => Ok(Self::Meets),
+      BIF_MET_BY => Ok(Self::MetBy),
+      BIF_MIN => Ok(Self::Min),
+      BIF_MODE => Ok(Self::Mode),
+      BIF_MODULO => Ok(Self::Modulo),
+      BIF_MONTH_OF_YEAR => Ok(Self::MonthOfYear),
+      BIF_NOT => Ok(Self::Not),
+      BIF_NOW => Ok(Self::Now),
+      BIF_NUMBER => Ok(Self::Number),
+      BIF_ODD => Ok(Self::Odd),
+      BIF_OVERLAPS => Ok(Self::Overlaps),
+      BIF_OVERLAPS_AFTER => Ok(Self::OverlapsAfter),
+      BIF_OVERLAPS_BEFORE => Ok(Self::OverlapsBefore),
+      BIF_PRODUCT => Ok(Self::Product),
+      BIF_RANGE => Ok(Self::Range),
+      BIF_REMOVE => Ok(Self::Remove),
+      BIF_REPLACE => Ok(Self::Replace),
+      BIF_REVERSE => Ok(Self::Reverse),
+      BIF_ROUND_DOWN => Ok(Self::RoundDown),
+      BIF_ROUND_HALF_DOWN => Ok(Self::RoundHalfDown),
+      BIF_ROUND_HALF_UP => Ok(Self::RoundHalfUp),
+      BIF_ROUND_UP => Ok(Self::RoundUp),
+      BIF_SORT => Ok(Self::Sort),
+      BIF_SPLIT => Ok(Self::Split),
+      BIF_SQRT => Ok(Self::Sqrt),
+      BIF_STARTED_BY => Ok(Self::StartedBy),
+      BIF_STARTS => Ok(Self::Starts),
+      BIF_STARTS_WITH => Ok(Self::StartsWith),
+      BIF_STDDEV => Ok(Self::Stddev),
+      BIF_STRING => Ok(Self::String),
+      BIF_STRING_JOIN => Ok(Self::StringJoin),
+      BIF_STRING_LENGTH => Ok(Self::StringLength),
+      BIF_SUBLIST => Ok(Self::Sublist),
+      BIF_SUBSTRING => Ok(Self::Substring),
+      BIF_SUBSTRING_AFTER => Ok(Self::SubstringAfter),
+      BIF_SUBSTRING_BEFORE => Ok(Self::SubstringBefore),
+      BIF_SUM => Ok(Self::Sum),
+      BIF_TIME => Ok(Self::Time),
+      BIF_TODAY => Ok(Self::Today),
+      BIF_UNION => Ok(Self::Union),
+      BIF_UPPER_CASE => Ok(Self::UpperCase),
+      BIF_WEEK_OF_YEAR => Ok(Self::WeekOfYear),
+      BIF_YEARS_AND_MONTHS_DURATION => Ok(Self::YearsAndMonthsDuration),
       unknown => Err(err_unknown_function_name(unknown)),
     }
   }
@@ -206,20 +293,103 @@ impl Bif {
 }
 
 /// Returns `true` when the specified name is a built-in function name.
-pub fn is_built_in_function_name(name: &str) -> bool {
-  Bif::from_str(name).is_ok()
+pub fn is_built_in_function_name(name: impl AsRef<str>) -> bool {
+  matches!(
+    name.as_ref(),
+    BIF_ABS
+      | BIF_AFTER
+      | BIF_ALL
+      | BIF_ANY
+      | BIF_APPEND
+      | BIF_BEFORE
+      | BIF_CEILING
+      | BIF_COINCIDES
+      | BIF_CONCATENATE
+      | BIF_CONTAINS
+      | BIF_CONTEXT
+      | BIF_CONTEXT_MERGE
+      | BIF_CONTEXT_PUT
+      | BIF_COUNT
+      | BIF_DATE
+      | BIF_DATE_AND_TIME
+      | BIF_DAY_OF_WEEK
+      | BIF_DAY_OF_YEAR
+      | BIF_DECIMAL
+      | BIF_DISTINCT_VALUES
+      | BIF_DURATION
+      | BIF_DURING
+      | BIF_ENDS_WITH
+      | BIF_EVEN
+      | BIF_EXP
+      | BIF_FINISHED_BY
+      | BIF_FINISHES
+      | BIF_FLATTEN
+      | BIF_FLOOR
+      | BIF_GET_ENTRIES
+      | BIF_GET_VALUE
+      | BIF_INCLUDES
+      | BIF_INDEX_OF
+      | BIF_INSERT_BEFORE
+      | BIF_IS
+      | BIF_LIST_CONTAINS
+      | BIF_LIST_REPLACE
+      | BIF_LOG
+      | BIF_LOWER_CASE
+      | BIF_MATCHES
+      | BIF_MAX
+      | BIF_MEAN
+      | BIF_MEDIAN
+      | BIF_MEETS
+      | BIF_MET_BY
+      | BIF_MIN
+      | BIF_MODE
+      | BIF_MODULO
+      | BIF_MONTH_OF_YEAR
+      | BIF_NOT
+      | BIF_NOW
+      | BIF_NUMBER
+      | BIF_ODD
+      | BIF_OVERLAPS
+      | BIF_OVERLAPS_AFTER
+      | BIF_OVERLAPS_BEFORE
+      | BIF_PRODUCT
+      | BIF_RANGE
+      | BIF_REMOVE
+      | BIF_REPLACE
+      | BIF_REVERSE
+      | BIF_ROUND_DOWN
+      | BIF_ROUND_HALF_DOWN
+      | BIF_ROUND_HALF_UP
+      | BIF_ROUND_UP
+      | BIF_SORT
+      | BIF_SPLIT
+      | BIF_SQRT
+      | BIF_STARTED_BY
+      | BIF_STARTS
+      | BIF_STARTS_WITH
+      | BIF_STDDEV
+      | BIF_STRING
+      | BIF_STRING_JOIN
+      | BIF_STRING_LENGTH
+      | BIF_SUBLIST
+      | BIF_SUBSTRING
+      | BIF_SUBSTRING_AFTER
+      | BIF_SUBSTRING_BEFORE
+      | BIF_SUM
+      | BIF_TIME
+      | BIF_TODAY
+      | BIF_UNION
+      | BIF_UPPER_CASE
+      | BIF_WEEK_OF_YEAR
+      | BIF_YEARS_AND_MONTHS_DURATION
+  )
 }
 
-/// Returns `true` when the specified name is a one of the following
-/// built-in function name (date and time literals):
+/// Returns `true` when the specified name is one of the following built-in functions:
 /// - `date`,
 /// - `time`,
 /// - `date and time`,
 /// - `duration`.
-pub fn is_built_in_date_time_function_name(name: &str) -> bool {
-  if let Ok(built_in_function) = Bif::from_str(name) {
-    matches!(built_in_function, Bif::Date | Bif::Time | Bif::DateAndTime | Bif::Duration)
-  } else {
-    false
-  }
+pub fn is_built_in_date_time_function_name(name: impl AsRef<str>) -> bool {
+  matches!(name.as_ref(), BIF_DATE | BIF_TIME | BIF_DATE_AND_TIME | BIF_DURATION)
 }

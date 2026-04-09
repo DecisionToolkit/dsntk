@@ -3,7 +3,7 @@
                  xmlns:external="https://www.decision-toolkit.org/external"
                  namespace="namespace"
                  name="name">
-    <dmn:inputData external:name="">
+    <dmn:inputData external:names="">
         <!--
             This model is invalid.
             Element 'inputData' has no required attribute `name`.

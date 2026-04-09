@@ -1,7 +1,7 @@
 //! Implementation of a node in Abstract Syntax Tree for `FEEL` grammar.
 
 use antex::{Color, ColorMode, StyledText, TreeNode, leaf, node};
-use dsntk_feel::{FeelType, Name};
+use dsntk_feel::{FeelType, IntervalType, Name};
 use std::fmt;
 use std::fmt::{Display, Write};
 
@@ -153,10 +153,20 @@ pub enum AstNode {
   ),
 
   /// Node representing the interval end used in ranges.
-  IntervalEnd(Box<AstNode>, bool),
+  IntervalEnd(
+    /// Value at the interval end.
+    Box<AstNode>,
+    /// Type of the interval end: opened or closed.
+    IntervalType,
+  ),
 
   /// Node representing the interval start used in ranges.
-  IntervalStart(Box<AstNode>, bool),
+  IntervalStart(
+    /// Value at the interval start.
+    Box<AstNode>,
+    /// Type of the interval end: opened or closed.
+    IntervalType,
+  ),
 
   /// Node representing the comparison operator `irrelevant`.
   Irrelevant,
@@ -325,16 +335,15 @@ impl AstNode {
   pub fn tree(&self, indent: usize, cm: ColorMode) -> String {
     let root = ast_node_to_tree(self, cm);
     let mut output = String::new();
-    let _ = root.write_indent(&mut output, indent);
+    _ = write!(output, "{:indent$}", root);
     output
   }
 
   /// Returns AST as text for testing purposes.
   pub fn trace(&self) -> String {
     let root = ast_node_to_tree(self, ColorMode::Off);
-    let mut output = "\n".to_string();
-    let _ = root.write_indent(&mut output, 6);
-    let _ = write!(output, "    ");
+    let mut output = String::new();
+    _ = write!(output, "\n{:6}    ", root);
     output
   }
 }
@@ -365,7 +374,7 @@ fn ast_node_to_tree(node: &AstNode, cm: ColorMode) -> TreeNode {
     AstNode::For(lhs, rhs) => ast_node_2("For", lhs, rhs, cm),
     AstNode::FormalParameter(lhs, rhs) => ast_node_2("FormalParameter", lhs, rhs, cm),
     AstNode::FormalParameters(items) => ast_node_n("FormalParameters", items, cm),
-    AstNode::FunctionBody(lhs, external) => ast_node_and_label("FunctionBody", lhs, " (external)", "", *external, cm),
+    AstNode::FunctionBody(lhs, external) => ast_node_and_conditional_label("FunctionBody", lhs, " (external)", "", *external, cm),
     AstNode::FunctionDefinition(lhs, rhs) => ast_node_2("FunctionDefinition", lhs, rhs, cm),
     AstNode::FunctionInvocation(lhs, rhs) => ast_node_2("FunctionInvocation", lhs, rhs, cm),
     AstNode::FunctionType(lhs, rhs) => ast_node_2("FunctionType", lhs, rhs, cm),
@@ -374,8 +383,8 @@ fn ast_node_to_tree(node: &AstNode, cm: ColorMode) -> TreeNode {
     AstNode::If(lhs, mid, rhs) => ast_node_3("If", lhs, mid, rhs, cm),
     AstNode::In(lhs, rhs) => ast_node_2("In", lhs, rhs, cm),
     AstNode::InstanceOf(lhs, rhs) => ast_node_2("InstanceOf", lhs, rhs, cm),
-    AstNode::IntervalEnd(lhs, closed) => ast_node_and_label("IntervalEnd", lhs, " (closed)", " (opened)", *closed, cm),
-    AstNode::IntervalStart(lhs, closed) => ast_node_and_label("IntervalStart", lhs, " (closed)", " (opened)", *closed, cm),
+    AstNode::IntervalEnd(lhs, interval_type) => ast_node_and_label("IntervalEnd", lhs, interval_type.to_string(), cm),
+    AstNode::IntervalStart(lhs, interval_type) => ast_node_and_label("IntervalStart", lhs, interval_type.to_string(), cm),
     AstNode::Irrelevant => ast_leaf("Irrelevant", cm),
     AstNode::IterationContexts(items) => ast_node_n("IterationContexts", items, cm),
     AstNode::IterationContextSingle(lhs, rhs) => ast_node_2("IterationContextSingle", lhs, rhs, cm),
@@ -464,10 +473,16 @@ fn ast_node_and_leaf(name: &str, leaf_caption: &str, cm: ColorMode) -> TreeNode 
   node(DEFAULT_COLOR, cm).line().s(name).end().child(leaf(cm).line().s(leaf_caption).end().end()).end()
 }
 
-/// Creates a single node with additional label.
-fn ast_node_and_label(name: &str, lhs: &AstNode, label_true: &str, label_false: &str, label_flag: bool, cm: ColorMode) -> TreeNode {
+/// Creates a single node with conditional label.
+fn ast_node_and_conditional_label(name: &str, lhs: &AstNode, label_true: &str, label_false: &str, label_flag: bool, cm: ColorMode) -> TreeNode {
   let name_label = if label_flag { label_true } else { label_false };
   node(DEFAULT_COLOR, cm).line().s(name).s(name_label).end().child(ast_node_to_tree(lhs, cm)).end()
+}
+
+/// Creates a single node with label.
+fn ast_node_and_label(name: &str, lhs: &AstNode, label: impl AsRef<str>, cm: ColorMode) -> TreeNode {
+  let label = format!(" ({})", label.as_ref());
+  node(DEFAULT_COLOR, cm).line().s(name).s(label).end().child(ast_node_to_tree(lhs, cm)).end()
 }
 
 /// Creates a leaf node.

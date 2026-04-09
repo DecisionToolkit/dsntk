@@ -73,7 +73,7 @@ impl Jsonify for Name {
 impl Name {
   /// Creates a [Name] from string parts.
   pub fn new(parts: &[&str]) -> Self {
-    let mut result = String::with_capacity(80);
+    let mut result = String::new();
     let mut current;
     let mut prev = false;
     for (index, part) in parts.iter().map(|s| s.trim()).enumerate() {
@@ -85,6 +85,11 @@ impl Name {
       prev = current;
     }
     Self(result)
+  }
+
+  /// Extracts a string slice containing the entire [Name].
+  pub fn as_str(&self) -> &str {
+    &self.0
   }
 
   /// Returns `true` when this name is empty.

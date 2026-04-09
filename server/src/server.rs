@@ -69,7 +69,7 @@ pub async fn start_server(opt_host: Option<String>, opt_port: Option<String>, di
     workspaces: Arc::new(Workspaces::new(&resolve_search_paths(dirs), cm, verbose)),
   });
   let address = get_server_address(opt_host, opt_port);
-  Text::new(cm).blue().s("dsntk").clear().space().yellow().s(&address).clear().println();
+  println!("{}", Text::new(cm).bright_blue().s("dsntk").reset().s(' ').bright_yellow().s(&address).reset());
   HttpServer::new(move || {
     App::new()
       .app_data(application_data.clone())

@@ -102,12 +102,18 @@ textual_expression:
   | expression DIV expression {/* division */}
   | expression EXP expression {/* exponentiation */}
   | MINUS expression %prec PREC_NEG {/* negation */}
+  | LT expression %prec PREC_NEG {/* comparison_unary_lt */}
+  | LE expression %prec PREC_NEG {/* comparison_unary_le */}
+  | GT expression %prec PREC_NEG {/* comparison_unary_gt */}
+  | GE expression %prec PREC_NEG {/* comparison_unary_ge */}
+  | EQ expression %prec PREC_NEG {/* comparison_unary_eq */}
+  | NE expression %prec PREC_NEG {/* comparison_unary_ne */}
   | expression INSTANCE OF {/* type_name */} type {/* instance_of */}
-  | expression DOT NAME {/* path */}
+  | expression DOT {/* after_dot */} NAME {/* path */}
   | expression LEFT_BRACKET expression RIGHT_BRACKET {/* filter */}
   | expression LEFT_PAREN parameters
   | literal
-  | simple_positive_unary_test
+  | interval
   | NAME {/* name */}
   | LEFT_PAREN expression RIGHT_PAREN
   ;
@@ -145,16 +151,6 @@ simple_expression:
 simple_expressions:
     simple_expression COMMA simple_expressions {/* expression_list_tail */}
   | simple_expression {/* expression_list_tail */}
-  ;
-
-simple_positive_unary_test:
-    LT endpoint {/* comparison_unary_lt */}
-  | LE endpoint {/* comparison_unary_le */}
-  | GT endpoint {/* comparison_unary_gt */}
-  | GE endpoint {/* comparison_unary_ge */}
-  | EQ endpoint {/* comparison_unary_eq */}
-  | NE endpoint {/* comparison_unary_ne */}
-  | interval
   ;
 
 interval:
@@ -261,7 +257,7 @@ positional_parameters_tail:
   ;
 
 qualified_name:
-    NAME DOT qualified_name {/* qualified_name_tail */}
+    NAME DOT {/* after_dot */} qualified_name {/* qualified_name_tail */}
   | NAME {/* qualified_name */}
   ;
 

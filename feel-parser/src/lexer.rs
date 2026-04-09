@@ -5,6 +5,8 @@ use crate::lalr::TokenType;
 use crate::scope::ParsingScope;
 use dsntk_common::Result;
 use dsntk_feel::Name;
+use dsntk_feel::bif::is_built_in_date_time_function_name;
+use dsntk_feel::bip::is_built_in_property_name;
 
 /// Definition of a single space character.
 const WS: char = ' ';
@@ -111,6 +113,8 @@ pub struct Lexer<'lexer> {
   type_name: bool,
   /// ???
   till_in: bool,
+  /// ??
+  after_dot: bool,
 }
 
 /// FEEL lexer implementation.
@@ -126,6 +130,7 @@ impl<'lexer> Lexer<'lexer> {
       between: false,
       type_name: false,
       till_in: false,
+      after_dot: false,
     }
   }
 
@@ -145,6 +150,10 @@ impl<'lexer> Lexer<'lexer> {
     self.till_in = true;
   }
 
+  pub fn set_after_dot(&mut self) {
+    self.after_dot = true;
+  }
+
   pub fn push_to_scope(&mut self) {
     self.scope.push_default();
   }
@@ -155,6 +164,10 @@ impl<'lexer> Lexer<'lexer> {
 
   pub fn add_name_to_scope(&mut self, name: &Name) {
     self.scope.set_entry_name(name.to_owned());
+  }
+
+  pub fn add_parsed_name(&mut self, name: Name) {
+    self.scope.add_parsed_name(name);
   }
 
   /// Returns the next token from input.
@@ -203,7 +216,7 @@ impl<'lexer> Lexer<'lexer> {
         self.position += 7;
         Ok((TokenType::Between, TokenValue::Between))
       }
-      ['c', 'o', 'n', 't', 'e', 'x', 't', _h, _, _, _, _] if self.is_context_separator(7) => {
+      ['c', 'o', 'n', 't', 'e', 'x', 't', _, _, _, _, _] if self.is_context_separator(7) => {
         self.position += 7;
         Ok((TokenType::Context, TokenValue::Context))
       }
@@ -512,9 +525,9 @@ impl<'lexer> Lexer<'lexer> {
     let mut exponent_sign: char = '+';
     // storage for digits of the exponent
     let mut digits_exponent = String::new();
-    //------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     // Parse number using a state machine.
-    //------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     let mut state = 1;
     while let Some(ch) = self.char_at(0) {
       match state {
@@ -596,18 +609,18 @@ impl<'lexer> Lexer<'lexer> {
     // positions of consumed characters
     let mut consumed_positions = vec![];
 
-    //------------------------------------------------------------------------------------------------------------------
-    // The current character on input is already a name start character,
-    // so just consume it and advance the input position.
-    //------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // The current character on input is already a `name start` character;
+    // consume it and advance the input position.
+    //------------------------------------------------------------------------------
     let mut ch = self.peek_character();
     current_part.push(ch);
 
-    //------------------------------------------------------------------------------------------------------------------
-    // First character of the name was just consumed.
-    // Now start parsing the rest of input using a state machine,
+    //------------------------------------------------------------------------------
+    // The first character of the name was just consumed.
+    // Now start parsing the rest of the input using a state machine,
     // looking for characters belonging to this name.
-    //------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     let mut state = 1;
     loop {
       match state {
@@ -671,42 +684,48 @@ impl<'lexer> Lexer<'lexer> {
       }
     }
 
-    //==================================================================================================================
+    //==============================================================================
     // Now the `parts` vector contains all parts of the longest possible name.
+    // The `parts` vector is non-empty and contains minimum one element.
     // Now decide, what kind of name it is.
-    //==================================================================================================================
+    //==============================================================================
 
-    //------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     // Tweak with the name `item` used in filters.
     // If the first part is `item`, then treat it as a resulting name.
-    //------------------------------------------------------------------------------------------------------------------
-    const ITEM: &str = "item";
-    if let Some(part_name) = parts.first()
-      && part_name == ITEM
-    {
+    // Unwrapping is ok on the first element, because `parts` is non-empty.
+    //-------------------------------------------------------------------------------
+    if parts.first().unwrap() == "item" {
       self.position = consumed_positions[0] + 1;
-      return Ok((TokenType::Name, TokenValue::Name(ITEM.into())));
+      return Ok((TokenType::Name, TokenValue::Name("item".into())));
     }
 
-    //------------------------------------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------
     // Tweak with the name in `for` and `quantified` expressions.
-    // The variable's name is the name before the keyword `in`.
-    // Return the name of the local variable before `in` keyword.
-    //------------------------------------------------------------------------------------------------------------------
-    const KEYWORD_IN: &str = "in";
+    // The variable's name is the name until the keyword `in` appears.
+    // Return the whole name before the `in` keyword.
+    //-------------------------------------------------------------------------------
     if self.till_in
-      && let Some(index) = parts.iter().position(|value| value == KEYWORD_IN)
+      && let Some(index) = parts.iter().position(|value| value == "in")
     {
       self.till_in = false;
       parts.truncate(index);
       self.position = consumed_positions[index - 1] + 1;
-      let name: Name = parts.to_vec().into();
-      return Ok((TokenType::Name, TokenValue::Name(name)));
+      return Ok((TokenType::Name, TokenValue::Name(parts.into())));
     }
 
-    //------------------------------------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------
+    // Tweak with the context keys or named parameters.
+    // In such cases, the name is followed by a colon.
+    // Return the whole name before the `:`.
+    //-------------------------------------------------------------------------------
+    if self.is_next_character(&[':'], 0) {
+      return Ok((TokenType::Name, TokenValue::Name(parts.into())));
+    }
+
+    //-------------------------------------------------------------------------------
     // begin with with the longest name containing all parts
-    //------------------------------------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------
     let mut part_count = parts.len();
     let flattened = self.scope.flattened();
     while part_count > 0 {
@@ -714,29 +733,35 @@ impl<'lexer> Lexer<'lexer> {
       let part_sublist = &parts[..part_count];
       // flatten the name parts to compare it with built-in names and keys in current scope
       let name = flatten_name_parts(part_sublist);
+      // Check if the name is a built-in property name.
+      if self.after_dot && is_built_in_property_name(&name) {
+        self.after_dot = false;
+        self.position = consumed_positions[part_count - 1] + 1;
+        return Ok((TokenType::Name, TokenValue::Name(part_sublist.to_vec().into())));
+      }
       // check if the flattened name exists as a key in the current context
       if flattened.contains(&name) {
         // return to the input all characters that do not belong to the name that was found
         self.position = consumed_positions[part_count - 1] + 1;
-        let part_vector = part_sublist.to_vec();
         // return the name that exists in the current context
-        return Ok((TokenType::Name, TokenValue::Name(part_vector.into())));
+        return Ok((TokenType::Name, TokenValue::Name(part_sublist.to_vec().into())));
       }
       part_count -= 1;
     }
 
-    //------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     // Build the name from name parts.
-    //------------------------------------------------------------------------------------------------------------------
-    let name: Name = parts.to_vec().into();
+    //------------------------------------------------------------------------------
+    let name: Name = parts.into();
 
-    //------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     // Tweak with the names of built-in types.
-    // If the name is a built-in type name, then return a type name instead of regular name.
-    //------------------------------------------------------------------------------------------------------------------
+    // If the name is a built-in type name,
+    // then return a type name instead of regular name.
+    //------------------------------------------------------------------------------
     if self.type_name
       && matches!(
-        name.to_string().as_str(),
+        name.as_str(),
         "Any" | "Null" | "boolean" | "number" | "string" | "date" | "date and time" | "time" | "years and months duration" | "days and time duration"
       )
     {
@@ -744,32 +769,18 @@ impl<'lexer> Lexer<'lexer> {
       return Ok((TokenType::BuiltInTypeName, TokenValue::BuiltInTypeName(name)));
     }
 
-    //------------------------------------------------------------------------------------------------------------------
-    // Tweak with `date and time` and `duration` literals.
-    // When these names are encountered, then treat them as the names of temporal functions.
-    //------------------------------------------------------------------------------------------------------------------
-    let name_str = name.to_string();
-    if matches!(name_str.as_str(), "date and time" | "duration") {
+    //------------------------------------------------------------------------------
+    // Tweak with `date`, `time`, `date and time` and `duration` literals.
+    // When these names are encountered and are followed by `(`,
+    // then treat them as names of temporal functions (date literals).
+    //------------------------------------------------------------------------------
+    if is_built_in_date_time_function_name(name.as_str()) && self.is_next_character(&['('], 0) {
       return Ok((TokenType::NameDateTime, TokenValue::NameDateTime(name)));
     }
 
-    //------------------------------------------------------------------------------------------------------------------
-    // Tweak with `date` and `time` literals.
-    // When a colon is encountered after these names, then treat them as a name of the parameter,
-    // otherwise treat them as names of temporal functions.
-    //------------------------------------------------------------------------------------------------------------------
-    if matches!(name_str.as_str(), "date" | "time") {
-      return if self.is_next_character(&[':'], 0) {
-        Ok((TokenType::Name, TokenValue::Name(name)))
-      } else {
-        Ok((TokenType::NameDateTime, TokenValue::NameDateTime(name)))
-      };
-    }
-
-    //------------------------------------------------------------------------------------------------------------------
-    // By default, return the name as it appears on input.
-    //------------------------------------------------------------------------------------------------------------------
-    self.scope.add_name(name.clone());
+    //------------------------------------------------------------------------------
+    // Return the name as it appears on input.
+    //------------------------------------------------------------------------------
     Ok((TokenType::Name, TokenValue::Name(name)))
   }
 
@@ -778,7 +789,7 @@ impl<'lexer> Lexer<'lexer> {
     if let Some(ch) = self.char_at(0) {
       if ch.is_ascii_hexdigit() {
         self.position += 1;
-        Ok(hex_to_decimal(ch))
+        hex_to_decimal(ch)
       } else {
         Err(err_expected_hex_digit(ch))
       }
@@ -996,26 +1007,26 @@ fn is_vertical_space(ch: char) -> bool {
   matches!(ch, '\u{000A}'..='\u{000D}')
 }
 
-/// Return the decimal value that corresponds to hexadecimal digit, case insensitive.
-fn hex_to_decimal(ch: char) -> u64 {
+/// Return the decimal value that corresponds to hexadecimal digit, case-insensitive.
+fn hex_to_decimal(ch: char) -> Result<u64> {
   match ch {
-    '0' => 0,
-    '1' => 1,
-    '2' => 2,
-    '3' => 3,
-    '4' => 4,
-    '5' => 5,
-    '6' => 6,
-    '7' => 7,
-    '8' => 8,
-    '9' => 9,
-    'A' | 'a' => 10,
-    'B' | 'b' => 11,
-    'C' | 'c' => 12,
-    'D' | 'd' => 13,
-    'E' | 'e' => 14,
-    'F' | 'f' => 15,
-    _ => u64::MAX,
+    '0' => Ok(0),
+    '1' => Ok(1),
+    '2' => Ok(2),
+    '3' => Ok(3),
+    '4' => Ok(4),
+    '5' => Ok(5),
+    '6' => Ok(6),
+    '7' => Ok(7),
+    '8' => Ok(8),
+    '9' => Ok(9),
+    'A' | 'a' => Ok(10),
+    'B' | 'b' => Ok(11),
+    'C' | 'c' => Ok(12),
+    'D' | 'd' => Ok(13),
+    'E' | 'e' => Ok(14),
+    'F' | 'f' => Ok(15),
+    other => Err(err_expected_hex_digit(other)),
   }
 }
 
@@ -1040,8 +1051,7 @@ fn flatten_name_parts(parts: &[String]) -> String {
 
 #[cfg(test)]
 mod tests {
-  use super::{flatten_name_parts, is_additional_name_symbol, is_separator};
-  use crate::lexer::hex_to_decimal;
+  use super::*;
 
   #[test]
   fn test_is_separator() {
@@ -1100,29 +1110,29 @@ mod tests {
 
   #[test]
   fn test_hex_to_decimal() {
-    assert_eq!(0, hex_to_decimal('0'));
-    assert_eq!(1, hex_to_decimal('1'));
-    assert_eq!(2, hex_to_decimal('2'));
-    assert_eq!(3, hex_to_decimal('3'));
-    assert_eq!(4, hex_to_decimal('4'));
-    assert_eq!(5, hex_to_decimal('5'));
-    assert_eq!(6, hex_to_decimal('6'));
-    assert_eq!(7, hex_to_decimal('7'));
-    assert_eq!(8, hex_to_decimal('8'));
-    assert_eq!(9, hex_to_decimal('9'));
-    assert_eq!(10, hex_to_decimal('A'));
-    assert_eq!(11, hex_to_decimal('B'));
-    assert_eq!(12, hex_to_decimal('C'));
-    assert_eq!(13, hex_to_decimal('D'));
-    assert_eq!(14, hex_to_decimal('E'));
-    assert_eq!(15, hex_to_decimal('F'));
-    assert_eq!(10, hex_to_decimal('a'));
-    assert_eq!(11, hex_to_decimal('b'));
-    assert_eq!(12, hex_to_decimal('c'));
-    assert_eq!(13, hex_to_decimal('d'));
-    assert_eq!(14, hex_to_decimal('e'));
-    assert_eq!(15, hex_to_decimal('f'));
-    assert_eq!(u64::MAX, hex_to_decimal('G'));
-    assert_eq!(u64::MAX, hex_to_decimal('g'));
+    assert_eq!(0, hex_to_decimal('0').unwrap());
+    assert_eq!(1, hex_to_decimal('1').unwrap());
+    assert_eq!(2, hex_to_decimal('2').unwrap());
+    assert_eq!(3, hex_to_decimal('3').unwrap());
+    assert_eq!(4, hex_to_decimal('4').unwrap());
+    assert_eq!(5, hex_to_decimal('5').unwrap());
+    assert_eq!(6, hex_to_decimal('6').unwrap());
+    assert_eq!(7, hex_to_decimal('7').unwrap());
+    assert_eq!(8, hex_to_decimal('8').unwrap());
+    assert_eq!(9, hex_to_decimal('9').unwrap());
+    assert_eq!(10, hex_to_decimal('A').unwrap());
+    assert_eq!(11, hex_to_decimal('B').unwrap());
+    assert_eq!(12, hex_to_decimal('C').unwrap());
+    assert_eq!(13, hex_to_decimal('D').unwrap());
+    assert_eq!(14, hex_to_decimal('E').unwrap());
+    assert_eq!(15, hex_to_decimal('F').unwrap());
+    assert_eq!(10, hex_to_decimal('a').unwrap());
+    assert_eq!(11, hex_to_decimal('b').unwrap());
+    assert_eq!(12, hex_to_decimal('c').unwrap());
+    assert_eq!(13, hex_to_decimal('d').unwrap());
+    assert_eq!(14, hex_to_decimal('e').unwrap());
+    assert_eq!(15, hex_to_decimal('f').unwrap());
+    assert_eq!("<LexerError> expected hex digit but encountered 'G'", hex_to_decimal('G').unwrap_err().to_string());
+    assert_eq!("<LexerError> expected hex digit but encountered 'g'", hex_to_decimal('g').unwrap_err().to_string());
   }
 }

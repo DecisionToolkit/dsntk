@@ -8,7 +8,7 @@ use dsntk_common::Result;
 use dsntk_feel::closure::Closure;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
-use dsntk_feel::{Evaluator, FeelScope, FeelType, FunctionBody, value_null};
+use dsntk_feel::{Evaluator, FeelScope, FeelType, FunctionBody, IntervalType, value_null};
 use dsntk_feel_evaluator::{EveryExpressionEvaluator, FilterExpressionEvaluator, ForExpressionEvaluator, SomeExpressionEvaluator};
 use dsntk_feel_parser::{ClosureBuilder, parse_name};
 use dsntk_model::*;
@@ -372,7 +372,7 @@ pub fn build_for_evaluator(scope: &FeelScope, r#for: &For, model_builder: &Model
     let iterator_variable = iterator_variable.clone();
     match in_evaluator(scope) {
       value @ Value::List(_) => for_expression_evaluator.add_list(iterator_variable, value),
-      Value::Range(start, true, end, true) => {
+      Value::Range(start, IntervalType::Closed, end, IntervalType::Closed) => {
         if let Err(reason) = for_expression_evaluator.add_interval(iterator_variable, *start, *end) {
           return value_null!(reason);
         }

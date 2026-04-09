@@ -1,4 +1,4 @@
-[dsntk][dsntk-url] | [DecisionToolkit][github-url]
+[dsntk][dsntk-url] | [ÐecisionToolkit][github-url]
 
 # FEEL definitions
 

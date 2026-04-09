@@ -153,7 +153,7 @@ pub const ATTR_Y: &str = "y";
 /// Returns the value of the required attribute.
 pub fn required_attribute(node: &Node, attr_name: &str) -> Result<String> {
   if let Some(attr_value) = node.attribute(attr_name) {
-    Ok(attr_value.to_owned())
+    Ok(attr_value.to_string())
   } else {
     Err(err_xml_expected_mandatory_attribute(&node_name_pos(node), attr_name))
   }

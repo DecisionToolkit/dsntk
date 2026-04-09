@@ -222,8 +222,6 @@ impl Recognizer {
             }
           }
           2 => {
-            println!("DDD: allowed_values_present: {}", allowed_values_present);
-
             if allowed_values_present {
               // component names and output values
               for col in r_out.left..r_out.right {

@@ -2,7 +2,7 @@
 name = "dsntk"
 version = { workspace = true }
 authors = { workspace = true }
-description = "dsntk | DecisionToolkit"
+description = "dsntk | ÐecisionToolkit"
 categories = ["development-tools", "command-line-utilities", "finance", "parsing"]
 keywords = ["dmn", "decision", "toolkit", "dsntk"]
 documentation = "https://docs.rs/dsntk"

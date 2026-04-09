@@ -1,6 +1,6 @@
 use super::*;
 use crate::AstNode;
-use dsntk_feel::FeelType;
+use dsntk_feel::{FeelType, IntervalType};
 use std::collections::BTreeMap;
 
 #[test]
@@ -639,8 +639,8 @@ fn test_node_instance_of() {
 
 #[test]
 fn test_node_interval_end() {
-  let node = &AstNode::IntervalEnd(b_num!(1), false);
-  eqd(r#"IntervalEnd(Numeric("1", "", '+', ""), false)"#, node);
+  let node = &AstNode::IntervalEnd(b_num!(1), IntervalType::Opened);
+  eqd(r#"IntervalEnd(Numeric("1", "", '+', ""), Opened)"#, node);
   eqs(
     r#"
        IntervalEnd (opened)
@@ -653,8 +653,8 @@ fn test_node_interval_end() {
 
 #[test]
 fn test_node_interval_start() {
-  let node = &AstNode::IntervalStart(b_num!(100), true);
-  eqd(r#"IntervalStart(Numeric("100", "", '+', ""), true)"#, node);
+  let node = &AstNode::IntervalStart(b_num!(100), IntervalType::Closed);
+  eqd(r#"IntervalStart(Numeric("100", "", '+', ""), Closed)"#, node);
   eqs(
     r#"
        IntervalStart (closed)

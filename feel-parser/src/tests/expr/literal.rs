@@ -32,17 +32,7 @@ fn _0002() {
 #[test]
 fn _0003() {
   let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    r#" "line \n line" "#,
-    r#"
-       String
-       └─ `line 
-       line`
-    "#,
-    false,
-  );
+  accept(&scope, StartExpression, r#" "line \n line" "#, "\n       String\n       └─ `line \n line`\n    ", false);
 }
 
 #[test]
@@ -82,7 +72,7 @@ fn _0006() {
     &scope,
     StartExpression,
     r#" "line \n line \t line \r line" "#,
-    "\n       String\n       └─ `line \n       line \t line \r line`\n    ",
+    "\n       String\n       └─ `line \n line \t line \r line`\n    ",
     false,
   );
 }

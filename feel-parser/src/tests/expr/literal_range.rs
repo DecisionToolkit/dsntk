@@ -177,7 +177,7 @@ fn _0013() {
   let input = "(..10)";
   let expected = r#"
        Range
-       ├─ IntervalStart (opened)
+       ├─ IntervalStart (opened,undefined)
        │  └─ Null
        └─ IntervalEnd (opened)
           └─ Numeric
@@ -191,7 +191,7 @@ fn _0014() {
   let input = "]..10]";
   let expected = r#"
        Range
-       ├─ IntervalStart (opened)
+       ├─ IntervalStart (opened,undefined)
        │  └─ Null
        └─ IntervalEnd (closed)
           └─ Numeric
@@ -222,7 +222,7 @@ fn _0017() {
        ├─ IntervalStart (opened)
        │  └─ Numeric
        │     └─ `10`
-       └─ IntervalEnd (opened)
+       └─ IntervalEnd (opened,undefined)
           └─ Null
     "#;
   accept(&scope!(), StartRangeLiteral, input, expected, false);
@@ -243,7 +243,7 @@ fn _0019() {
        ├─ IntervalStart (closed)
        │  └─ Numeric
        │     └─ `10`
-       └─ IntervalEnd (opened)
+       └─ IntervalEnd (opened,undefined)
           └─ Null
     "#;
   accept(&scope!(), StartRangeLiteral, input, expected, false);

@@ -29,6 +29,7 @@ mod miscellaneous;
 mod multiplication;
 mod name;
 mod path_expression;
+mod properties;
 mod range;
 mod simple_positive_unary_test;
 mod some_expression;

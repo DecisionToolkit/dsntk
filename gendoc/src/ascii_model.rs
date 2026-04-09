@@ -134,7 +134,7 @@ fn write_model(w: &mut dyn Write, definitions: &Definitions, cm: ColorMode, colo
     .opt_child(build_extension_elements(definitions.extension_elements(), colors))
     .opt_child(build_extension_attributes(definitions.extension_attributes(), colors))
     .end();
-  let _ = node_model.write_indent(w, indent);
+  _ = write!(w, "{:indent$}", node_model);
 }
 
 /// Write decisions.
@@ -157,7 +157,7 @@ fn write_decisions(w: &mut dyn Write, definitions: &Definitions, cm: ColorMode, 
       .opt_child(build_extension_attributes(decision.extension_attributes(), colors))
       .end();
     write_empty_line(w, i);
-    let _ = node_decision.write_indent(w, indent);
+    _ = write!(w, "{:indent$}", node_decision);
   }
 }
 
@@ -179,7 +179,7 @@ fn write_business_knowledge_models(w: &mut dyn Write, definitions: &Definitions,
       .opt_child(build_extension_attributes(bkm.extension_attributes(), colors))
       .end();
     write_empty_line(w, i);
-    let _ = node_decision.write_indent(w, indent);
+    _ = write!(w, "{:indent$}", node_decision);
   }
 }
 
@@ -200,7 +200,7 @@ fn write_decision_services(w: &mut dyn Write, definitions: &Definitions, cm: Col
       .opt_child(build_extension_attributes(decision_service.extension_attributes(), colors))
       .end();
     write_empty_line(w, i);
-    let _ = node_decision.write_indent(w, indent);
+    _ = write!(w, "{:indent$}", node_decision);
   }
 }
 
@@ -221,7 +221,7 @@ fn write_knowledge_sources(w: &mut dyn Write, definitions: &Definitions, cm: Col
       .opt_child(build_authority_requirements(knowledge_source.authority_requirements(), cm, colors))
       .end();
     write_empty_line(w, i);
-    let _ = node_decision.write_indent(w, indent);
+    _ = write!(w, "{:indent$}", node_decision);
   }
 }
 
@@ -242,7 +242,7 @@ fn write_input_data(w: &mut dyn Write, definitions: &Definitions, cm: ColorMode,
       .opt_child(build_extension_attributes(input.extension_attributes(), colors))
       .end();
     write_empty_line(w, i);
-    let _ = node_input.write_indent(w, indent);
+    _ = write!(w, "{:indent$}", node_input);
   }
 }
 
@@ -254,7 +254,7 @@ fn write_performance_indicators(w: &mut dyn Write, definitions: &Definitions, cm
   }
   for (i, performance_indicator) in performance_indicators.iter().enumerate() {
     // prepare a node with impacting decisions
-    let mut impacting_decisions_builder = node(DEFAULT_COLOR, cm).line().s(LABEL_IMPACTING_DECISIONS).colon().end();
+    let mut impacting_decisions_builder = node(DEFAULT_COLOR, cm).line().s(LABEL_IMPACTING_DECISIONS).s(':').end();
     for impacting_decision in performance_indicator.impacting_decisions() {
       impacting_decisions_builder.add_child(build_href(impacting_decision, cm, colors));
     }
@@ -270,11 +270,11 @@ fn write_performance_indicators(w: &mut dyn Write, definitions: &Definitions, cm
       .opt_child(build_extension_attributes(performance_indicator.extension_attributes(), colors))
       .end();
     write_empty_line(w, i);
-    let _ = node_performance_indicator.write_indent(w, indent);
+    _ = write!(w, "{:indent$}", node_performance_indicator);
   }
 }
 
-/// Write organisation units.
+/// Write organization units.
 fn write_organisation_units(w: &mut dyn Write, definitions: &Definitions, cm: ColorMode, colors: &Colors, indent: usize) {
   let organisation_units = definitions.organisation_units();
   if !organisation_units.is_empty() {
@@ -282,13 +282,13 @@ fn write_organisation_units(w: &mut dyn Write, definitions: &Definitions, cm: Co
   }
   for (i, organisation_units) in definitions.organisation_units().iter().enumerate() {
     // prepare a node with decisions made
-    let mut decisions_made_builder = node(DEFAULT_COLOR, cm).line().s(LABEL_DECISIONS_MADE).colon().end();
+    let mut decisions_made_builder = node(DEFAULT_COLOR, cm).line().s(LABEL_DECISIONS_MADE).s(':').end();
     for decision_made in organisation_units.decisions_made() {
       decisions_made_builder.add_child(build_href(decision_made, cm, colors));
     }
     let node_decisions_made = decisions_made_builder.end();
     // prepare a node with decisions owned
-    let mut decisions_made_builder = node(DEFAULT_COLOR, cm).line().s(LABEL_DECISIONS_OWNED).colon().end();
+    let mut decisions_made_builder = node(DEFAULT_COLOR, cm).line().s(LABEL_DECISIONS_OWNED).s(':').end();
     for decision_owned in organisation_units.decisions_owned() {
       decisions_made_builder.add_child(build_href(decision_owned, cm, colors));
     }
@@ -305,13 +305,13 @@ fn write_organisation_units(w: &mut dyn Write, definitions: &Definitions, cm: Co
       .opt_child(build_extension_attributes(organisation_units.extension_attributes(), colors))
       .end();
     write_empty_line(w, i);
-    let _ = node_organisation_unit.write_indent(w, indent);
+    _ = write!(w, "{:indent$}", node_organisation_unit);
   }
 }
 
 /// Prepares a node builder containing a name as a root element.
 fn builder_name(text: &str, cm: ColorMode, colors: &Colors) -> NodeBuilder {
-  node(DEFAULT_COLOR, cm).line().color_256(colors.name()).s(text).clear().end()
+  node(DEFAULT_COLOR, cm).line().color_256(colors.name()).s(text).reset().end()
 }
 
 /// Builds a leaf node containing a name.
@@ -342,7 +342,7 @@ fn build_label(opt_text: &Option<String>, cm: ColorMode, colors: &Colors) -> Opt
 /// Builds a leaf node containing a label.
 fn build_href(href: &HRef, cm: ColorMode, colors: &Colors) -> TreeNode {
   let text = href.id();
-  leaf(cm).line().color_256(colors.href()).s('#').s(text).clear().end().end()
+  leaf(cm).line().color_256(colors.href()).s('#').s(text).reset().end().end()
 }
 
 /// Builds a leaf node containing URI.
@@ -413,21 +413,19 @@ fn build_authority_requirements(authority_requirements: &Vec<AuthorityRequiremen
 
 /// Builds a leaf with a single line containing label and coloured value.
 fn build_labeled_text(label: &str, text: &str, cm: ColorMode, color: u8) -> TreeNode {
-  leaf(cm).line().s(label).colon().space().color_256(color).s(text).clear().end().end()
+  leaf(cm).line().s(label).s(": ").color_256(color).s(text).reset().end().end()
 }
 
 /// Builds optional a leaf with a single line containing label and coloured value.
 fn build_opt_labeled_text(label: &str, opt_text: &Option<String>, cm: ColorMode, color: u8) -> Option<TreeNode> {
-  opt_text
-    .as_ref()
-    .map(|text| leaf(cm).line().s(label).colon().space().color_256(color).s(text).clear().end().end())
+  opt_text.as_ref().map(|text| leaf(cm).line().s(label).s(": ").color_256(color).s(text).reset().end().end())
 }
 
 /// Builds a node containing optional labeled multiline text.
 fn build_opt_labeled_multiline_text(label: &str, text: &Option<String>, cm: ColorMode, color: u8) -> Option<TreeNode> {
   text.as_ref().map(|text| {
     // prepare the label of the node
-    let label = Text::new(cm).s(label).colon();
+    let label = Text::new(cm).s(label).s(':');
     // prepare the leaf node builder
     let mut leaf_builder = leaf(cm).line().s(label).end();
     // calculate the left margin of the multiline text
@@ -440,7 +438,7 @@ fn build_opt_labeled_multiline_text(label: &str, text: &Option<String>, cm: Colo
     }
     // add multiple lines to the leaf node without the left margin
     for line in text.lines().filter(|s| !s.trim().is_empty()) {
-      let indented_line = Text::new(cm).spaces(2).color_256(color).s(line[left_margin..].trim_end()).clear();
+      let indented_line = Text::new(cm).s("  ").color_256(color).s(line[left_margin..].trim_end()).reset();
       leaf_builder.add_line(indented_line);
     }
     // return the leaf node

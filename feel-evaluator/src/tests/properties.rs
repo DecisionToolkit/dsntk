@@ -343,85 +343,95 @@ fn _0066() {
 
 #[test]
 fn _0067() {
-  te_null(false, &scope!(), r#" >1.end "#, "no such property in unary greater: end");
+  te_number(false, &scope!(), r#"(>10).start"#, 10, 0);
 }
 
 #[test]
 fn _0068() {
-  te_bool(false, &scope!(), r#" >1.start included "#, false);
+  te_number(false, &scope!(), r#"(=10).start"#, 10, 0);
 }
 
 #[test]
 fn _0069() {
-  te_bool(false, &scope!(), r#" >1.end included "#, false);
+  te_null(false, &scope!(), r#" >1.end "#, "no such property in unary greater: end");
 }
 
 #[test]
 fn _0070() {
-  te_number(true, &scope!(), r#" >=1.start "#, 1, 0);
+  te_bool(false, &scope!(), r#" >1.start included "#, false);
 }
 
 #[test]
 fn _0071() {
-  te_null(false, &scope!(), r#" >=1.end "#, "no such property in unary greater or equal: end");
+  te_bool(false, &scope!(), r#" >1.end included "#, false);
 }
 
 #[test]
 fn _0072() {
-  te_bool(false, &scope!(), r#" >=1.start included "#, true);
+  te_number(true, &scope!(), r#" >=1.start "#, 1, 0);
 }
 
 #[test]
 fn _0073() {
-  te_bool(false, &scope!(), r#" >=1.end included "#, false);
+  te_null(false, &scope!(), r#" >=1.end "#, "no such property in unary greater or equal: end");
 }
 
 #[test]
 fn _0074() {
-  te_null(false, &scope!(), r#" <1.start "#, "no such property in unary less: start");
+  te_bool(false, &scope!(), r#" >=1.start included "#, true);
 }
 
 #[test]
 fn _0075() {
-  te_number(false, &scope!(), r#" <1.end "#, 1, 0);
+  te_bool(false, &scope!(), r#" >=1.end included "#, false);
 }
 
 #[test]
 fn _0076() {
-  te_bool(false, &scope!(), r#" <1.start included "#, false);
+  te_null(false, &scope!(), r#" <1.start "#, "no such property in unary less: start");
 }
 
 #[test]
 fn _0077() {
-  te_bool(false, &scope!(), r#" <1.end included "#, false);
+  te_number(false, &scope!(), r#" <1.end "#, 1, 0);
 }
 
 #[test]
 fn _0078() {
-  te_null(false, &scope!(), r#" <=1.start "#, "no such property in unary less or equal: start");
+  te_bool(false, &scope!(), r#" <1.start included "#, false);
 }
 
 #[test]
 fn _0079() {
-  te_number(false, &scope!(), r#" <=1.end "#, 1, 0);
+  te_bool(false, &scope!(), r#" <1.end included "#, false);
 }
 
 #[test]
 fn _0080() {
-  te_bool(false, &scope!(), r#" <=1.start included "#, false);
+  te_null(false, &scope!(), r#" <=1.start "#, "no such property in unary less or equal: start");
 }
 
 #[test]
 fn _0081() {
-  te_bool(false, &scope!(), r#" <=1.end included "#, true);
+  te_number(false, &scope!(), r#" <=1.end "#, 1, 0);
 }
 
 #[test]
 fn _0082() {
-  te_bool(false, &scope!(), "(>= 10).end included", false);
+  te_bool(false, &scope!(), r#" <=1.start included "#, false);
 }
 
 #[test]
 fn _0083() {
+  te_bool(false, &scope!(), r#" <=1.end included "#, true);
+}
+
+#[test]
+fn _0084() {
+  te_bool(false, &scope!(), "(>= 10).end included", false);
+}
+
+#[test]
+fn _0085() {
   te_bool(false, &scope!(), "(> (1+3)).end included", false);
 }

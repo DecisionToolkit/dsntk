@@ -4,7 +4,7 @@ use crate::closure::Closure;
 use crate::context::FeelContext;
 use crate::function::FunctionBody;
 use crate::values::{Value, Values};
-use crate::{FeelNumber, FeelScope, ToFeelString, value_null, value_number};
+use crate::{FeelNumber, FeelScope, IntervalType, ToFeelString, value_null, value_number};
 use dsntk_common::Jsonify;
 use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelTime, FeelYearsAndMonthsDuration};
 use std::collections::BTreeMap;
@@ -80,8 +80,8 @@ fn test_debug() {
     r#"FunctionDefinition([(Name("a"), Number)], FunctionBodyLiteralExpression, false, Closure({}), FeelContext({}), Number)"#,
     Value::FunctionDefinition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
   );
-  eq_dbg!(r#"IntervalEnd(Number(+1E+0), false)"#, Value::IntervalEnd(b_number.clone(), false));
-  eq_dbg!(r#"IntervalStart(Number(+1E+0), false)"#, Value::IntervalStart(b_number.clone(), false));
+  eq_dbg!(r#"IntervalEnd(Number(+1E+0), Opened)"#, Value::IntervalEnd(b_number.clone(), IntervalType::Opened));
+  eq_dbg!(r#"IntervalStart(Number(+1E+0), Opened)"#, Value::IntervalStart(b_number.clone(), IntervalType::Opened));
   eq_dbg!(r#"Irrelevant"#, Value::Irrelevant);
   eq_dbg!(r#"List([])"#, Value::List(Values::default()));
   eq_dbg!(
@@ -97,8 +97,8 @@ fn test_debug() {
   eq_dbg!(r#"PositionalParameters([])"#, Value::PositionalParameters(Values::default()));
   eq_dbg!(r#"QualifiedNameSegment(Name("a"))"#, Value::QualifiedNameSegment(name));
   eq_dbg!(
-    r#"Range(Number(+1E+0), false, Number(+1E+0), true)"#,
-    Value::Range(b_number.clone(), false, b_number.clone(), true)
+    r#"Range(Number(+1E+0), Opened, Number(+1E+0), Closed)"#,
+    Value::Range(b_number.clone(), IntervalType::Opened, b_number.clone(), IntervalType::Closed)
   );
   eq_dbg!(r#"String("beta")"#, Value::String("beta".to_string()));
   eq_dbg!(r#"Time(FeelTime(12, 13, 23, 0, Local))"#, Value::Time(v_time));
@@ -158,8 +158,8 @@ fn test_display() {
     r#"FunctionDefinition([(Name("a"), Number)],_,false,[],{},number)"#,
     Value::FunctionDefinition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
   );
-  eq_dsp!(r#"IntervalEnd"#, Value::IntervalEnd(b_number.clone(), false));
-  eq_dsp!(r#"IntervalStart"#, Value::IntervalStart(b_number.clone(), false));
+  eq_dsp!(r#"IntervalEnd"#, Value::IntervalEnd(b_number.clone(), IntervalType::Opened));
+  eq_dsp!(r#"IntervalStart"#, Value::IntervalStart(b_number.clone(), IntervalType::Opened));
   eq_dsp!(r#"Irrelevant"#, Value::Irrelevant);
   eq_dsp!(r#"[]"#, Value::List(Values::default()));
   eq_dsp!(r#"NamedParameter"#, Value::NamedParameter(Box::new(Value::ParameterName(name.clone())), b_number.clone()));
@@ -171,7 +171,7 @@ fn test_display() {
   eq_dsp!(r#"ParameterTypes"#, Value::ParameterTypes(vec![]));
   eq_dsp!(r#"PositionalParameters"#, Value::PositionalParameters(Values::default()));
   eq_dsp!(r#"QualifiedNameSegment"#, Value::QualifiedNameSegment(name));
-  eq_dsp!(r#"(1..1]"#, Value::Range(b_number.clone(), false, b_number.clone(), true));
+  eq_dsp!(r#"(1..1]"#, Value::Range(b_number.clone(), IntervalType::Opened, b_number.clone(), IntervalType::Closed));
   eq_dsp!(r#""beta""#, Value::String("beta".to_string()));
   eq_dsp!(r#"12:13:23"#, Value::Time(v_time));
   eq_dsp!(r#"UnaryGreater(1)"#, Value::UnaryGreater(b_number.clone()));
@@ -230,8 +230,8 @@ fn test_type_of() {
       t_number.clone()
     )
   );
-  eq_typ!(FeelType::Number, Value::IntervalEnd(b_number.clone(), false));
-  eq_typ!(FeelType::Number, Value::IntervalStart(b_number.clone(), false));
+  eq_typ!(FeelType::Number, Value::IntervalEnd(b_number.clone(), IntervalType::Opened));
+  eq_typ!(FeelType::Number, Value::IntervalStart(b_number.clone(), IntervalType::Opened));
   eq_typ!(FeelType::Any, Value::Irrelevant);
   eq_typ!(FeelType::List(Box::new(FeelType::Null)), Value::List(vec![]));
   eq_typ!(FeelType::List(Box::new(t_number)), Value::List(vec![v_number.clone()]));
@@ -245,8 +245,14 @@ fn test_type_of() {
   eq_typ!(FeelType::Any, Value::ParameterTypes(vec![]));
   eq_typ!(FeelType::Any, Value::PositionalParameters(Values::default()));
   eq_typ!(FeelType::Any, Value::QualifiedNameSegment(name));
-  eq_typ!(FeelType::Range(Box::new(FeelType::Number)), Value::Range(b_number.clone(), false, b_number.clone(), true));
-  eq_typ!(FeelType::Range(Box::new(FeelType::Any)), Value::Range(b_number.clone(), false, b_boolean, true));
+  eq_typ!(
+    FeelType::Range(Box::new(FeelType::Number)),
+    Value::Range(b_number.clone(), IntervalType::Opened, b_number.clone(), IntervalType::Closed)
+  );
+  eq_typ!(
+    FeelType::Range(Box::new(FeelType::Any)),
+    Value::Range(b_number.clone(), IntervalType::Opened, b_boolean, IntervalType::Closed)
+  );
   eq_typ!(FeelType::String, Value::String("beta".to_string()));
   eq_typ!(FeelType::Time, Value::Time(v_time));
   eq_typ!(FeelType::Boolean, Value::UnaryGreater(b_number.clone()));
@@ -391,7 +397,7 @@ fn test_jsonify() {
   assert_eq!(r#""null(error details)""#, Value::Null(Some("error details".to_string())).jsonify());
   let n_start = Box::new(Value::Number(FeelNumber::new(1, 0)));
   let n_end = Box::new(Value::Number(FeelNumber::new(12, 0)));
-  assert_eq!(r#""(1..12]""#, Value::Range(n_start, false, n_end, true).jsonify());
+  assert_eq!(r#""(1..12]""#, Value::Range(n_start, IntervalType::Opened, n_end, IntervalType::Closed).jsonify());
   assert_eq!(r#"jsonify trait not implemented for value: Irrelevant"#, Value::Irrelevant.jsonify());
 }
 

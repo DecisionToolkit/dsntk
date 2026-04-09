@@ -6,7 +6,7 @@ use crate::lalr::*;
 use crate::lexer::*;
 use crate::scope::ParsingScope;
 use dsntk_common::Result;
-use dsntk_feel::{FeelType, Name};
+use dsntk_feel::{FeelType, IntervalType, Name};
 
 enum Action {
   Accept,
@@ -108,7 +108,7 @@ impl<'parser> Parser<'parser> {
             action = Action::Default;
             continue;
           }
-          // not known, so get a lookahead token if don't already have one
+          // not known, so get a lookahead token, only if we don't have one already
           if self.yy_char == TokenType::YyEmpty as i16 {
             let (token_type, opt_token_value) = self.yy_lexer.next_token()?;
             self.yy_char = token_type as i16;
@@ -242,6 +242,12 @@ impl ReduceActions for Parser<'_> {
     let rhs = self.yy_node_stack.pop().unwrap();
     let lhs = self.yy_node_stack.pop().unwrap();
     self.yy_node_stack.push(AstNode::Add(Box::new(lhs), Box::new(rhs)));
+    Ok(())
+  }
+
+  fn action_after_dot(&mut self) -> Result<()> {
+    trace_action!(self, "after dot");
+    self.yy_lexer.set_after_dot();
     Ok(())
   }
 
@@ -388,12 +394,12 @@ impl ReduceActions for Parser<'_> {
 
   fn action_context_entry(&mut self) -> Result<()> {
     trace_action!(self, "context_entry");
-    let value_node = self.yy_node_stack.pop().unwrap();
-    let key_node = self.yy_node_stack.pop().unwrap();
-    if let AstNode::ContextEntryKey(name) = &key_node {
-      self.yy_lexer.add_name_to_scope(name);
+    let value = self.yy_node_stack.pop().unwrap();
+    let key = self.yy_node_stack.pop().unwrap();
+    if let AstNode::ContextEntryKey(name) = &key {
+      self.yy_lexer.add_parsed_name(name.clone());
     }
-    self.yy_node_stack.push(AstNode::ContextEntry(Box::new(key_node), Box::new(value_node)));
+    self.yy_node_stack.push(AstNode::ContextEntry(Box::new(key), Box::new(value)));
     Ok(())
   }
 
@@ -712,17 +718,25 @@ impl ReduceActions for Parser<'_> {
 
   fn action_interval_end(&mut self) -> Result<()> {
     trace_action!(self, "interval_end");
-    let closed = matches!(&self.yy_value_stack[self.yy_value_stack.len() - 1], TokenValue::RightBracket);
+    let interval_type = if matches!(&self.yy_value_stack[self.yy_value_stack.len() - 1], TokenValue::RightBracket) {
+      IntervalType::Closed
+    } else {
+      IntervalType::Opened
+    };
     let lhs = self.yy_node_stack.pop().unwrap();
-    self.yy_node_stack.push(AstNode::IntervalEnd(Box::new(lhs), closed));
+    self.yy_node_stack.push(AstNode::IntervalEnd(Box::new(lhs), interval_type));
     Ok(())
   }
 
   fn action_interval_start(&mut self) -> Result<()> {
     trace_action!(self, "interval_start");
-    let closed = matches!(&self.yy_value_stack[self.yy_value_stack.len() - self.yy_len as usize], TokenValue::LeftBracket);
+    let interval_type = if matches!(&self.yy_value_stack[self.yy_value_stack.len() - self.yy_len as usize], TokenValue::LeftBracket) {
+      IntervalType::Closed
+    } else {
+      IntervalType::Opened
+    };
     let lhs = self.yy_node_stack.pop().unwrap();
-    self.yy_node_stack.push(AstNode::IntervalStart(Box::new(lhs), closed));
+    self.yy_node_stack.push(AstNode::IntervalStart(Box::new(lhs), interval_type));
     Ok(())
   }
 
@@ -967,11 +981,13 @@ impl ReduceActions for Parser<'_> {
 
   fn action_qualified_name_tail(&mut self) -> Result<()> {
     trace_action!(self, "action_qualified_name_tail");
-    if let TokenValue::Name(name) = &self.yy_value_stack[self.yy_value_stack.len() - 3]
-      && let Some(AstNode::QualifiedName(mut parts)) = self.yy_node_stack.pop()
-    {
-      parts.insert(0, AstNode::QualifiedNameSegment(name.clone()));
-      self.yy_node_stack.push(AstNode::QualifiedName(parts));
+    if let TokenValue::Name(name) = &self.yy_value_stack[self.yy_value_stack.len() - 4] {
+      // The parent name is taken from the value stack, after adding actions to grammar rules,
+      // the index must be adjusted, now it is `-4` after adding `{/* after_dot */}`.
+      if let Some(AstNode::QualifiedName(mut parts)) = self.yy_node_stack.pop() {
+        parts.insert(0, AstNode::QualifiedNameSegment(name.clone()));
+        self.yy_node_stack.push(AstNode::QualifiedName(parts));
+      }
     }
     Ok(())
   }
@@ -1026,32 +1042,48 @@ impl ReduceActions for Parser<'_> {
   }
 
   fn action_range_literal_empty_end(&mut self) -> Result<()> {
-    trace_action!(self, "range_literal_end");
-    let closed = matches!(&self.yy_value_stack[self.yy_value_stack.len() - 1], TokenValue::RightBracket);
-    self.yy_node_stack.push(AstNode::IntervalEnd(AstNode::Null.into(), closed));
+    trace_action!(self, "range_literal_empty_end");
+    let interval_type = if matches!(&self.yy_value_stack[self.yy_value_stack.len() - 1], TokenValue::RightBracket) {
+      IntervalType::ClosedUndef
+    } else {
+      IntervalType::OpenedUndef
+    };
+    self.yy_node_stack.push(AstNode::IntervalEnd(AstNode::Null.into(), interval_type));
     Ok(())
   }
 
   fn action_range_literal_empty_start(&mut self) -> Result<()> {
-    trace_action!(self, "range_literal_start");
-    let closed = matches!(&self.yy_value_stack[self.yy_value_stack.len() - self.yy_len as usize], TokenValue::LeftBracket);
-    self.yy_node_stack.push(AstNode::IntervalStart(AstNode::Null.into(), closed));
+    trace_action!(self, "range_literal_empty_start");
+    let interval_type = if matches!(&self.yy_value_stack[self.yy_value_stack.len() - self.yy_len as usize], TokenValue::LeftBracket) {
+      IntervalType::ClosedUndef
+    } else {
+      IntervalType::OpenedUndef
+    };
+    self.yy_node_stack.push(AstNode::IntervalStart(AstNode::Null.into(), interval_type));
     Ok(())
   }
 
   fn action_range_literal_end(&mut self) -> Result<()> {
     trace_action!(self, "range_literal_end");
-    let closed = matches!(&self.yy_value_stack[self.yy_value_stack.len() - 1], TokenValue::RightBracket);
+    let interval_type = if matches!(&self.yy_value_stack[self.yy_value_stack.len() - 1], TokenValue::RightBracket) {
+      IntervalType::Closed
+    } else {
+      IntervalType::Opened
+    };
     let lhs = self.yy_node_stack.pop().unwrap();
-    self.yy_node_stack.push(AstNode::IntervalEnd(Box::new(lhs), closed));
+    self.yy_node_stack.push(AstNode::IntervalEnd(Box::new(lhs), interval_type));
     Ok(())
   }
 
   fn action_range_literal_start(&mut self) -> Result<()> {
     trace_action!(self, "range_literal_start");
-    let closed = matches!(&self.yy_value_stack[self.yy_value_stack.len() - self.yy_len as usize], TokenValue::LeftBracket);
+    let interval_type = if matches!(&self.yy_value_stack[self.yy_value_stack.len() - self.yy_len as usize], TokenValue::LeftBracket) {
+      IntervalType::Closed
+    } else {
+      IntervalType::Opened
+    };
     let lhs = self.yy_node_stack.pop().unwrap();
-    self.yy_node_stack.push(AstNode::IntervalStart(Box::new(lhs), closed));
+    self.yy_node_stack.push(AstNode::IntervalStart(Box::new(lhs), interval_type));
     Ok(())
   }
 

@@ -723,32 +723,33 @@ fn get_cli_action() -> Action {
     }
     _ => {}
   }
-  Text::default()
-    .green()
-    .bold()
-    .s("dsntk")
-    .clear()
-    .s(" | ")
-    .green()
-    .s("DecisionToolkit")
-    .clear()
-    .s(" | ")
-    .green()
-    .s(crate_version!())
-    .clear()
-    .nl()
-    .color_256(250)
-    .s("Try '")
-    .cyan()
-    .s("dsntk --help")
-    .color_256(250)
-    .s("' to see all available commands.")
-    .nl()
-    .s("For more information, visit ")
-    .cyan()
-    .underline()
-    .s("https://decision-toolkit.org")
-    .cprintln();
+  println!(
+    "{}",
+    Text::default()
+      .bright_green()
+      .bold()
+      .s("dsntk")
+      .reset()
+      .s(" | ")
+      .bright_green()
+      .s("ÐecisionToolkit")
+      .r(" | ")
+      .bright_blue()
+      .s(crate_version!())
+      .reset()
+      .s('\n')
+      .color_256(250)
+      .s("Try '")
+      .cyan()
+      .s("dsntk --help")
+      .color_256(250)
+      .s("' to see all available commands.\n")
+      .s("For more information, visit ")
+      .cyan()
+      .underline()
+      .s("https://decision-toolkit.org")
+      .reset()
+  );
   Action::DoNothing
 }
 
@@ -1145,14 +1146,14 @@ fn display_test_case_result(actual: &Value, expected: &Value, test_no: &usize, p
   if dsntk_evaluator::evaluate_equals(actual, expected) {
     *passed += 1;
     if !summary_only {
-      Text::new(cm).s("test ").s(test_no + 1).space().dots(3).space().green().s("ok").cprintln();
+      println!("{}", Text::new(cm).s("test ").s(test_no + 1).s(" ... ").green().s("ok").reset());
     }
   } else {
     *failed += 1;
     if !summary_only {
-      Text::new(cm).s("test ").s(test_no + 1).space().dots(3).space().red().s("FAILED").cprintln();
-      Text::new(cm).s("    expected: ").green().s(expected).cprintln();
-      Text::new(cm).s("      actual: ").red().s(actual).cprintln();
+      println!("{}", Text::new(cm).s("test ").s(test_no + 1).s(" ... ").red().s("FAILED").reset());
+      println!("{}", Text::new(cm).s("    expected: ").green().s(expected).reset());
+      println!("{}", Text::new(cm).s("      actual: ").red().s(actual).reset());
     }
   }
 }
@@ -1168,5 +1169,5 @@ fn display_test_summary(passed: usize, failed: usize, summary_only: bool, cm: Co
   } else {
     text = text.green().s("ok");
   }
-  text.clear().dot().space().s(passed).s(" passed; ").s(failed).s(" failed.").nl().println();
+  println!("{}\n", text.reset().s(". ").s(passed).s(" passed; ").s(failed).s(" failed.").reset());
 }

@@ -1,5 +1,5 @@
 use super::*;
-use dsntk_feel::scope;
+use dsntk_feel::{IntervalType, scope};
 
 #[test]
 fn _0001() {
@@ -184,8 +184,14 @@ fn _0034() {
 #[test]
 fn _0035() {
   let node = AstNode::Range(
-    Box::new(AstNode::IntervalStart(Box::new(AstNode::Numeric("1".into(), "0".into(), '+', "".into())), false)),
-    Box::new(AstNode::IntervalEnd(Box::new(AstNode::Numeric("5".into(), "0".into(), '+', "".into())), false)),
+    Box::new(AstNode::IntervalStart(
+      Box::new(AstNode::Numeric("1".into(), "0".into(), '+', "".into())),
+      IntervalType::Opened,
+    )),
+    Box::new(AstNode::IntervalEnd(
+      Box::new(AstNode::Numeric("5".into(), "0".into(), '+', "".into())),
+      IntervalType::Opened,
+    )),
   );
   assert_eq!(r#"(1.0..5.0)"#, crate::evaluate(&scope!(), &node).to_string());
 }
@@ -193,8 +199,14 @@ fn _0035() {
 #[test]
 fn _0036() {
   let node = AstNode::Range(
-    Box::new(AstNode::IntervalEnd(Box::new(AstNode::Numeric("5".into(), "0".into(), '+', "".into())), false)),
-    Box::new(AstNode::IntervalStart(Box::new(AstNode::Numeric("1".into(), "0".into(), '+', "".into())), false)),
+    Box::new(AstNode::IntervalEnd(
+      Box::new(AstNode::Numeric("5".into(), "0".into(), '+', "".into())),
+      IntervalType::Opened,
+    )),
+    Box::new(AstNode::IntervalStart(
+      Box::new(AstNode::Numeric("1".into(), "0".into(), '+', "".into())),
+      IntervalType::Opened,
+    )),
   );
   assert_eq!(r#"null(expected interval start)"#, crate::evaluate(&scope!(), &node).to_string());
 }
@@ -202,8 +214,14 @@ fn _0036() {
 #[test]
 fn _0037() {
   let node = AstNode::Range(
-    Box::new(AstNode::IntervalStart(Box::new(AstNode::Numeric("1".into(), "0".into(), '+', "".into())), false)),
-    Box::new(AstNode::IntervalStart(Box::new(AstNode::Numeric("1".into(), "0".into(), '+', "".into())), false)),
+    Box::new(AstNode::IntervalStart(
+      Box::new(AstNode::Numeric("1".into(), "0".into(), '+', "".into())),
+      IntervalType::Opened,
+    )),
+    Box::new(AstNode::IntervalStart(
+      Box::new(AstNode::Numeric("1".into(), "0".into(), '+', "".into())),
+      IntervalType::Opened,
+    )),
   );
   assert_eq!(r#"null(expected interval end)"#, crate::evaluate(&scope!(), &node).to_string());
 }

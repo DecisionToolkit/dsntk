@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<definitions namespace="http://www.montera.com.au/spec/DMN/0072-feel-in" name="0072-feel-in" id="_i9fboPUUEeesLuP4RHs4vB" xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
-             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+<definitions namespace="http://www.montera.com.au/spec/DMN/0072-feel-in" name="0072-feel-in"
+             id="_i9fboPUUEeesLuP4RHs4vB" xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <description>FEEL in</description>
     <decision name="number_001" id="_number_001">
@@ -223,6 +226,12 @@
         <variable name="number_014"/>
         <literalExpression>
             <text>10 in (1, &lt; 5, >=10)</text>
+        </literalExpression>
+    </decision>
+    <decision name="number_015_a" id="_number_015_a">
+        <variable name="number_015_a"/>
+        <literalExpression>
+            <text>10 in =10</text>
         </literalExpression>
     </decision>
     <decision name="number_014_a" id="_number_014_a">
@@ -966,17 +975,13 @@
     <decision name="dateTime_002" id="_dateTime_002">
         <variable name="dateTime_002"/>
         <literalExpression>
-            <text>date and time("2018-12-08T10:30:11") in [[date and time("2018-12-08T10:30:05") .. date and time("2018-12-08T10:30:07")], [date and time("2018-12-08T10:30:10") .. date and
-                time("2018-12-08T10:30:12")]]
-            </text>
+            <text>date and time("2018-12-08T10:30:11") in [[date and time("2018-12-08T10:30:05") .. date and time("2018-12-08T10:30:07")], [date and time("2018-12-08T10:30:10") .. date and time("2018-12-08T10:30:12")]]</text>
         </literalExpression>
     </decision>
     <decision name="dateTime_002_a" id="_dateTime_002_a">
         <variable name="dateTime_002_a"/>
         <literalExpression>
-            <text>date and time("2018-12-08T10:30:04") in [[date and time("2018-12-08T10:30:05") .. date and time("2018-12-08T10:30:07")], [date and time("2018-12-08T10:30:10") .. date and
-                time("2018-12-08T10:30:12")]]
-            </text>
+            <text>date and time("2018-12-08T10:30:04") in [[date and time("2018-12-08T10:30:05") .. date and time("2018-12-08T10:30:07")], [date and time("2018-12-08T10:30:10") .. date and time("2018-12-08T10:30:12")]]</text>
         </literalExpression>
     </decision>
     <decision name="dateTime_003" id="_dateTime_003">
@@ -1242,6 +1247,12 @@
                 <text>[1,2,3] in ([1,2,3])</text>
             </literalExpression>
         </decision>-->
+    <decision name="list_015_a" id="_list_015_a">
+        <variable name="list_015_a"/>
+        <literalExpression>
+            <text>[1,2,3] in =[1,2,3]</text>
+        </literalExpression>
+    </decision>
     <decision name="context_001" id="_context_001">
         <variable name="context_001"/>
         <literalExpression>
@@ -1735,4 +1746,3 @@
         </literalExpression>
     </decision>
 </definitions>
-

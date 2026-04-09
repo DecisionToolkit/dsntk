@@ -6,9 +6,10 @@ use crate::iterations::{EveryExpressionEvaluator, ForExpressionEvaluator, SomeEx
 use crate::macros::invalid_argument_type;
 use crate::{FilterExpressionEvaluator, bifs};
 use dsntk_feel::bif::Bif;
+use dsntk_feel::bip::*;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::{VALUE_FALSE, VALUE_TRUE, Value};
-use dsntk_feel::{Evaluator, FeelNumber, FeelScope, FeelType, FunctionBody, Name, value_null};
+use dsntk_feel::{Evaluator, FeelNumber, FeelScope, FeelType, FunctionBody, IntervalType, Name, value_null};
 use dsntk_feel_parser::{AstNode, ClosureBuilder};
 use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelTime, FeelYearsAndMonthsDuration};
 use std::borrow::Borrow;
@@ -1111,7 +1112,7 @@ impl<'b> EvaluatorBuilder<'b> {
         | inner @ Value::YearsAndMonthsDuration(_)
         | inner @ Value::DaysAndTimeDuration(_)
         | inner @ Value::Context(_) => eval_in_equal(&lhv, &inner),
-        Value::Range(l, l_closed, r, r_closed) => eval_in_range(&lhv, &l, l_closed, &r, r_closed),
+        Value::Range(l, l_type, r, r_type) => eval_in_range(&lhv, &l, l_type, &r, r_type),
         Value::List(r_inner) => {
           if let Value::List(l_inner) = lhv {
             eval_in_list_in_list(&l_inner, &r_inner)
@@ -1121,6 +1122,8 @@ impl<'b> EvaluatorBuilder<'b> {
         }
         Value::ExpressionList(inner) => eval_in_list(&lhv, &inner),
         Value::NegatedCommaList(inner) => eval_in_negated_list(&lhv, &inner),
+        Value::UnaryEqual(inner) => eval_in_equal(&lhv, &inner),
+        Value::UnaryNotEqual(inner) => eval_in_not_equal(&lhv, &inner),
         Value::UnaryLess(inner) => eval_in_unary_less(&lhv, inner.borrow()),
         Value::UnaryLessOrEqual(inner) => eval_in_unary_less_or_equal(&lhv, inner.borrow()),
         Value::UnaryGreater(inner) => eval_in_unary_greater(&lhv, inner.borrow()),
@@ -1131,21 +1134,21 @@ impl<'b> EvaluatorBuilder<'b> {
     })
   }
 
-  fn build_interval_end(&mut self, lhs: &'b AstNode, rhs: &bool) -> Evaluator {
+  fn build_interval_end(&mut self, lhs: &'b AstNode, rhs: &IntervalType) -> Evaluator {
     let lhe = self.build(lhs);
-    let closed = *rhs;
+    let interval_type = *rhs;
     Box::new(move |scope: &FeelScope| {
       let lhv = lhe(scope);
-      Value::IntervalEnd(Box::new(lhv), closed)
+      Value::IntervalEnd(Box::new(lhv), interval_type)
     })
   }
 
-  fn build_interval_start(&mut self, lhs: &'b AstNode, rhs: &bool) -> Evaluator {
+  fn build_interval_start(&mut self, lhs: &'b AstNode, rhs: &IntervalType) -> Evaluator {
     let lhe = self.build(lhs);
-    let closed = *rhs;
+    let interval_type = *rhs;
     Box::new(move |scope: &FeelScope| {
       let lhv = lhe(scope);
-      Value::IntervalStart(Box::new(lhv), closed)
+      Value::IntervalStart(Box::new(lhv), interval_type)
     })
   }
 
@@ -1600,6 +1603,8 @@ impl<'b> EvaluatorBuilder<'b> {
       return build_err_msg(err_expected_name(rhs));
     };
     let fn_adjust = match self.parent_node() {
+      Some(AstNode::UnaryEq(_)) => |value: Value| (Value::UnaryEqual(value.into()), true),
+      Some(AstNode::UnaryNe(_)) => |value: Value| (Value::UnaryNotEqual(value.into()), true),
       Some(AstNode::UnaryGt(_)) => |value: Value| (Value::UnaryGreater(value.into()), true),
       Some(AstNode::UnaryGe(_)) => |value: Value| (Value::UnaryGreaterOrEqual(value.into()), true),
       Some(AstNode::UnaryLt(_)) => |value: Value| (Value::UnaryLess(value.into()), true),
@@ -1803,9 +1808,9 @@ impl<'b> EvaluatorBuilder<'b> {
   /// Returns an evaluator for unary `=` (equal) operator.
   fn build_unary_eq(&mut self, lhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
-    Box::new(move |scope: &FeelScope| {
-      let lhv = lhe(scope);
-      Value::UnaryEqual(Box::from(lhv))
+    Box::new(move |scope: &FeelScope| match lhe(scope) {
+      Value::Transparent(value) => *value,
+      other => Value::UnaryEqual(other.into()),
     })
   }
 
@@ -1839,9 +1844,9 @@ impl<'b> EvaluatorBuilder<'b> {
   /// Returns an evaluator for unary `!=` (not equal) operator.
   fn build_unary_ne(&mut self, lhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
-    Box::new(move |scope: &FeelScope| {
-      let lhv = lhe(scope);
-      Value::UnaryNotEqual(Box::from(lhv))
+    Box::new(move |scope: &FeelScope| match lhe(scope) {
+      Value::Transparent(value) => *value,
+      other => Value::UnaryNotEqual(other.into()),
     })
   }
 }
@@ -1851,13 +1856,13 @@ fn adjust(value: Value, adjusted: bool) -> Value {
 }
 
 fn get_property_from_value(value: Value, adjusted: bool, name: &Name) -> Value {
-  let property_name = name.to_string();
+  let property = Bip::new(name.as_str());
   match value {
-    Value::Date(date) => match property_name.as_str() {
-      "year" => Value::Number(date.year().into()),
-      "month" => Value::Number(date.month().into()),
-      "day" => Value::Number(date.day().into()),
-      "weekday" => {
+    Value::Date(date) => match property {
+      Bip::Year => Value::Number(date.year().into()),
+      Bip::Month => Value::Number(date.month().into()),
+      Bip::Day => Value::Number(date.day().into()),
+      Bip::Weekday => {
         if let Some(day_of_week) = date.day_of_week() {
           Value::Number(day_of_week.1.into())
         } else {
@@ -1866,28 +1871,28 @@ fn get_property_from_value(value: Value, adjusted: bool, name: &Name) -> Value {
       }
       other => value_null!("no such property in date: {}", other),
     },
-    Value::DateTime(date_time) => match property_name.as_str() {
-      "year" => Value::Number(date_time.year().into()),
-      "month" => Value::Number(date_time.month().into()),
-      "day" => Value::Number(date_time.day().into()),
-      "weekday" => {
+    Value::DateTime(date_time) => match property {
+      Bip::Year => Value::Number(date_time.year().into()),
+      Bip::Month => Value::Number(date_time.month().into()),
+      Bip::Day => Value::Number(date_time.day().into()),
+      Bip::Weekday => {
         if let Some(day_of_week) = date_time.day_of_week() {
           Value::Number(day_of_week.1.into())
         } else {
           value_null!("could not retrieve weekday for date and time")
         }
       }
-      "hour" => Value::Number(date_time.hour().into()),
-      "minute" => Value::Number(date_time.minute().into()),
-      "second" => Value::Number(date_time.second().into()),
-      "time offset" => {
+      Bip::Hour => Value::Number(date_time.hour().into()),
+      Bip::Minute => Value::Number(date_time.minute().into()),
+      Bip::Second => Value::Number(date_time.second().into()),
+      Bip::TimeOffset => {
         if let Some(offset) = date_time.feel_time_offset() {
           Value::DaysAndTimeDuration(FeelDaysAndTimeDuration::from_s(offset as i64))
         } else {
           value_null!("could not retrieve time offset for date and time")
         }
       }
-      "timezone" => {
+      Bip::Timezone => {
         if let Some(feel_time_zone) = date_time.feel_time_zone() {
           Value::String(feel_time_zone)
         } else {
@@ -1896,18 +1901,18 @@ fn get_property_from_value(value: Value, adjusted: bool, name: &Name) -> Value {
       }
       other => value_null!("no such property in date and time: {}", other),
     },
-    Value::Time(time) => match property_name.as_str() {
-      "hour" => Value::Number(time.hour().into()),
-      "minute" => Value::Number(time.minute().into()),
-      "second" => Value::Number(time.second().into()),
-      "time offset" => {
+    Value::Time(time) => match property {
+      Bip::Hour => Value::Number(time.hour().into()),
+      Bip::Minute => Value::Number(time.minute().into()),
+      Bip::Second => Value::Number(time.second().into()),
+      Bip::TimeOffset => {
         if let Some(offset) = time.feel_time_offset() {
           Value::DaysAndTimeDuration(FeelDaysAndTimeDuration::from_s(offset as i64))
         } else {
           value_null!("could not retrieve time offset for time")
         }
       }
-      "timezone" => {
+      Bip::Timezone => {
         if let Some(feel_time_zone) = time.feel_time_zone() {
           Value::String(feel_time_zone)
         } else {
@@ -1916,55 +1921,60 @@ fn get_property_from_value(value: Value, adjusted: bool, name: &Name) -> Value {
       }
       other => value_null!("no such property in time: {}", other),
     },
-    Value::DaysAndTimeDuration(dt_duration) => match property_name.as_str() {
-      "days" => Value::Number(dt_duration.get_days().into()),
-      "hours" => Value::Number(dt_duration.get_hours().into()),
-      "minutes" => Value::Number(dt_duration.get_minutes().into()),
-      "seconds" => Value::Number(dt_duration.get_seconds().into()),
+    Value::DaysAndTimeDuration(dt_duration) => match property {
+      Bip::Days => Value::Number(dt_duration.get_days().into()),
+      Bip::Hours => Value::Number(dt_duration.get_hours().into()),
+      Bip::Minutes => Value::Number(dt_duration.get_minutes().into()),
+      Bip::Seconds => Value::Number(dt_duration.get_seconds().into()),
       other => value_null!("no such property in days and time duration: {}", other),
     },
-    Value::YearsAndMonthsDuration(ym_duration) => match property_name.as_str() {
-      "years" => Value::Number(ym_duration.years().into()),
-      "months" => Value::Number(ym_duration.months().into()),
+    Value::YearsAndMonthsDuration(ym_duration) => match property {
+      Bip::Years => Value::Number(ym_duration.years().into()),
+      Bip::Months => Value::Number(ym_duration.months().into()),
       other => value_null!("no such property in years and months duration: {}", other),
     },
-    Value::Range(rs, cs, re, ce) => match property_name.as_str() {
-      "start" => *rs,
-      "start included" => Value::Boolean(cs),
-      "end" => *re,
-      "end included" => Value::Boolean(ce),
+    Value::Range(rs, cs, re, ce) => match property {
+      Bip::Start => *rs,
+      Bip::StartIncluded => Value::Boolean(cs.closed()),
+      Bip::End => *re,
+      Bip::EndIncluded => Value::Boolean(ce.closed()),
       other => value_null!("no such property in range: {}", other),
     },
-    Value::UnaryGreater(value) => match property_name.as_str() {
-      "start" => adjust(*value, adjusted),
-      "start included" | "end included" => adjust(Value::Boolean(false), adjusted),
+    Value::UnaryEqual(value) => match property {
+      Bip::Start => adjust(*value, adjusted),
+      Bip::End => adjust(*value, adjusted),
+      Bip::StartIncluded | Bip::EndIncluded => adjust(Value::Boolean(true), adjusted),
+      other => adjust(value_null!("no such property in unary equal: {}", other), adjusted),
+    },
+    Value::UnaryGreater(value) => match property {
+      Bip::Start => adjust(*value, adjusted),
+      Bip::StartIncluded | Bip::EndIncluded => adjust(Value::Boolean(false), adjusted),
       other => adjust(value_null!("no such property in unary greater: {}", other), adjusted),
     },
-    Value::UnaryGreaterOrEqual(value) => match property_name.as_str() {
-      "start" => adjust(*value, adjusted),
-      "start included" => adjust(Value::Boolean(true), adjusted),
-      "end included" => adjust(Value::Boolean(false), adjusted),
+    Value::UnaryGreaterOrEqual(value) => match property {
+      Bip::Start => adjust(*value, adjusted),
+      Bip::StartIncluded => adjust(Value::Boolean(true), adjusted),
+      Bip::EndIncluded => adjust(Value::Boolean(false), adjusted),
       other => adjust(value_null!("no such property in unary greater or equal: {}", other), adjusted),
     },
-    Value::UnaryLess(value) => match property_name.as_str() {
-      "end" => adjust(*value, adjusted),
-      "start included" | "end included" => adjust(Value::Boolean(false), adjusted),
+    Value::UnaryLess(value) => match property {
+      Bip::End => adjust(*value, adjusted),
+      Bip::StartIncluded | Bip::EndIncluded => adjust(Value::Boolean(false), adjusted),
       other => adjust(value_null!("no such property in unary less: {}", other), adjusted),
     },
-    Value::UnaryLessOrEqual(value) => match property_name.as_str() {
-      "end" => adjust(*value, adjusted),
-      "start included" => adjust(Value::Boolean(false), adjusted),
-      "end included" => adjust(Value::Boolean(true), adjusted),
+    Value::UnaryLessOrEqual(value) => match property {
+      Bip::End => adjust(*value, adjusted),
+      Bip::StartIncluded => adjust(Value::Boolean(false), adjusted),
+      Bip::EndIncluded => adjust(Value::Boolean(true), adjusted),
       other => adjust(value_null!("no such property in unary less or equal: {}", other), adjusted),
     },
     v @ Value::Null(_) => v,
-    other => value_null!("unexpected type: {}, for property: {}", other.type_of(), property_name),
+    other => value_null!("unexpected type: {}, for property: {}", other.type_of(), property),
   }
 }
 
 /// Evaluates ternary equality of two values.
 pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
-  //TODO Maybe this function should be defined in dsntk-feel crate?
   match lhs {
     Value::Boolean(ls) => match rhs {
       Value::Boolean(rs) => Some(*ls == *rs),
@@ -2070,7 +2080,7 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
     },
     Value::UnaryGreater(l_end) => match rhs {
       Value::Range(rs, cs, re, ce) => {
-        if !*cs && !*ce && !re.is_null() {
+        if cs.opened() && ce.opened() && !re.is_null() {
           eval_ternary_equality(l_end, rs)
         } else {
           Some(false)
@@ -2081,7 +2091,7 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
     },
     Value::UnaryLess(l_end) => match rhs {
       Value::Range(rs, cs, re, ce) => {
-        if !*cs && !*ce && !rs.is_null() {
+        if cs.opened() && ce.opened() && !rs.is_null() {
           eval_ternary_equality(l_end, re)
         } else {
           Some(false)
@@ -2092,7 +2102,7 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
     },
     Value::UnaryGreaterOrEqual(l_end) => match rhs {
       Value::Range(rs, cs, re, ce) => {
-        if *cs && !*ce && !re.is_null() {
+        if cs.closed() && ce.opened() && !re.is_null() {
           eval_ternary_equality(l_end, rs)
         } else {
           Some(false)
@@ -2103,7 +2113,7 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
     },
     Value::UnaryLessOrEqual(l_end) => match rhs {
       Value::Range(rs, cs, re, ce) => {
-        if !*cs && *ce && !rs.is_null() {
+        if cs.closed() && ce.opened() && !rs.is_null() {
           eval_ternary_equality(l_end, re)
         } else {
           Some(false)
@@ -2260,20 +2270,31 @@ fn eval_in_negated_list(left: &Value, items: &[Value]) -> Value {
   Value::Boolean(true)
 }
 
-fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, end_closed: bool) -> Value {
+fn eval_in_range(lhv: &Value, start: &Value, start_type: IntervalType, end: &Value, end_type: IntervalType) -> Value {
   match lhv {
     Value::Number(value) => match start {
       Value::Number(lv) => match end {
         Value::Number(rv) => {
-          let start_ok = if start_closed { value >= lv } else { value > lv };
-          let end_ok = if end_closed { value <= rv } else { value < rv };
+          let start_ok = if start_type.closed() { value >= lv } else { value > lv };
+          let end_ok = if end_type.closed() { value <= rv } else { value < rv };
           Value::Boolean(start_ok && end_ok)
         }
-        Value::Null(_) if !end_closed => Value::Boolean(if start_closed { value >= lv } else { value > lv }),
+        Value::Null(_) if end_type.undefined() => {
+          let start_in_range = if start_type.closed() { value >= lv } else { value > lv };
+          Value::Boolean(start_in_range)
+        }
+        Value::Null(_) => value_null!(),
         _ => value_null!("eval_in_range"),
       },
-      Value::Null(_) if !start_closed => match end {
-        Value::Number(rv) => Value::Boolean(if end_closed { value <= rv } else { value < rv }),
+      Value::Null(_) if start_type.undefined() => match end {
+        Value::Number(rv) => {
+          let end_in_range = if end_type.closed() { value <= rv } else { value < rv };
+          Value::Boolean(end_in_range)
+        }
+        _ => value_null!("eval_in_range"),
+      },
+      Value::Null(_) => match end {
+        Value::Number(_) => value_null!(),
         _ => value_null!("eval_in_range"),
       },
       _ => value_null!("eval_in_range"),
@@ -2281,15 +2302,15 @@ fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, en
     Value::String(value) => match start {
       Value::String(lv) => match end {
         Value::String(rv) => {
-          let start_ok = if start_closed { value >= lv } else { value > lv };
-          let end_ok = if end_closed { value <= rv } else { value < rv };
+          let start_ok = if start_type.closed() { value >= lv } else { value > lv };
+          let end_ok = if end_type.closed() { value <= rv } else { value < rv };
           Value::Boolean(start_ok && end_ok)
         }
-        Value::Null(_) if !end_closed => Value::Boolean(if start_closed { value >= lv } else { value > lv }),
+        Value::Null(_) if end_type.opened() => Value::Boolean(if start_type.closed() { value >= lv } else { value > lv }),
         _ => value_null!("eval_in_range"),
       },
-      Value::Null(_) if !start_closed => match end {
-        Value::String(rv) => Value::Boolean(if end_closed { value <= rv } else { value < rv }),
+      Value::Null(_) if start_type.opened() => match end {
+        Value::String(rv) => Value::Boolean(if end_type.closed() { value <= rv } else { value < rv }),
         _ => value_null!("eval_in_range"),
       },
       _ => value_null!("eval_in_range"),
@@ -2297,15 +2318,15 @@ fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, en
     Value::Date(value) => match start {
       Value::Date(lv) => match end {
         Value::Date(rv) => {
-          let start_ok = if start_closed { value >= lv } else { value > lv };
-          let end_ok = if end_closed { value <= rv } else { value < rv };
+          let start_ok = if start_type.closed() { value >= lv } else { value > lv };
+          let end_ok = if end_type.closed() { value <= rv } else { value < rv };
           Value::Boolean(start_ok && end_ok)
         }
-        Value::Null(_) if !end_closed => Value::Boolean(if start_closed { value >= lv } else { value > lv }),
+        Value::Null(_) if end_type.opened() => Value::Boolean(if start_type.closed() { value >= lv } else { value > lv }),
         _ => value_null!("eval_in_range"),
       },
-      Value::Null(_) if !start_closed => match end {
-        Value::Date(rv) => Value::Boolean(if end_closed { value <= rv } else { value < rv }),
+      Value::Null(_) if start_type.opened() => match end {
+        Value::Date(rv) => Value::Boolean(if end_type.closed() { value <= rv } else { value < rv }),
         _ => value_null!("eval_in_range"),
       },
       _ => value_null!("eval_in_range"),
@@ -2313,15 +2334,15 @@ fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, en
     Value::Time(value) => match start {
       Value::Time(lv) => match end {
         Value::Time(rv) => {
-          let start_ok = if start_closed { value >= lv } else { value > lv };
-          let end_ok = if end_closed { value <= rv } else { value < rv };
+          let start_ok = if start_type.closed() { value >= lv } else { value > lv };
+          let end_ok = if end_type.closed() { value <= rv } else { value < rv };
           Value::Boolean(start_ok && end_ok)
         }
-        Value::Null(_) if !end_closed => Value::Boolean(if start_closed { value >= lv } else { value > lv }),
+        Value::Null(_) if end_type.opened() => Value::Boolean(if start_type.closed() { value >= lv } else { value > lv }),
         _ => value_null!("eval_in_range"),
       },
-      Value::Null(_) if !start_closed => match end {
-        Value::Time(rv) => Value::Boolean(if end_closed { value <= rv } else { value < rv }),
+      Value::Null(_) if start_type.opened() => match end {
+        Value::Time(rv) => Value::Boolean(if end_type.closed() { value <= rv } else { value < rv }),
         _ => value_null!("eval_in_range"),
       },
       _ => value_null!("eval_in_range"),
@@ -2329,15 +2350,15 @@ fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, en
     Value::DateTime(value) => match start {
       Value::DateTime(lv) => match end {
         Value::DateTime(rv) => {
-          let start_ok = if start_closed { value >= lv } else { value > lv };
-          let end_ok = if end_closed { value <= rv } else { value < rv };
+          let start_ok = if start_type.closed() { value >= lv } else { value > lv };
+          let end_ok = if end_type.closed() { value <= rv } else { value < rv };
           Value::Boolean(start_ok && end_ok)
         }
-        Value::Null(_) if !end_closed => Value::Boolean(if start_closed { value >= lv } else { value > lv }),
+        Value::Null(_) if end_type.opened() => Value::Boolean(if start_type.closed() { value >= lv } else { value > lv }),
         _ => value_null!("eval_in_range"),
       },
-      Value::Null(_) if !start_closed => match end {
-        Value::DateTime(rv) => Value::Boolean(if end_closed { value <= rv } else { value < rv }),
+      Value::Null(_) if start_type.opened() => match end {
+        Value::DateTime(rv) => Value::Boolean(if end_type.closed() { value <= rv } else { value < rv }),
         _ => value_null!("eval_in_range"),
       },
       _ => value_null!("eval_in_range"),
@@ -2345,15 +2366,15 @@ fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, en
     Value::YearsAndMonthsDuration(value) => match start {
       Value::YearsAndMonthsDuration(lv) => match end {
         Value::YearsAndMonthsDuration(rv) => {
-          let start_ok = if start_closed { value >= lv } else { value > lv };
-          let end_ok = if end_closed { value <= rv } else { value < rv };
+          let start_ok = if start_type.closed() { value >= lv } else { value > lv };
+          let end_ok = if end_type.closed() { value <= rv } else { value < rv };
           Value::Boolean(start_ok && end_ok)
         }
-        Value::Null(_) if !end_closed => Value::Boolean(if start_closed { value >= lv } else { value > lv }),
+        Value::Null(_) if end_type.opened() => Value::Boolean(if start_type.closed() { value >= lv } else { value > lv }),
         _ => value_null!("eval_in_range"),
       },
-      Value::Null(_) if !start_closed => match end {
-        Value::YearsAndMonthsDuration(rv) => Value::Boolean(if end_closed { value <= rv } else { value < rv }),
+      Value::Null(_) if start_type.opened() => match end {
+        Value::YearsAndMonthsDuration(rv) => Value::Boolean(if end_type.closed() { value <= rv } else { value < rv }),
         _ => value_null!("eval_in_range"),
       },
       _ => value_null!("eval_in_range"),
@@ -2361,15 +2382,15 @@ fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, en
     Value::DaysAndTimeDuration(value) => match start {
       Value::DaysAndTimeDuration(lv) => match end {
         Value::DaysAndTimeDuration(rv) => {
-          let start_ok = if start_closed { value >= lv } else { value > lv };
-          let end_ok = if end_closed { value <= rv } else { value < rv };
+          let start_ok = if start_type.closed() { value >= lv } else { value > lv };
+          let end_ok = if end_type.closed() { value <= rv } else { value < rv };
           Value::Boolean(start_ok && end_ok)
         }
-        Value::Null(_) if !end_closed => Value::Boolean(if start_closed { value >= lv } else { value > lv }),
+        Value::Null(_) if end_type.opened() => Value::Boolean(if start_type.closed() { value >= lv } else { value > lv }),
         _ => value_null!("eval_in_range"),
       },
-      Value::Null(_) if !start_closed => match end {
-        Value::DaysAndTimeDuration(rv) => Value::Boolean(if end_closed { value <= rv } else { value < rv }),
+      Value::Null(_) if start_type.opened() => match end {
+        Value::DaysAndTimeDuration(rv) => Value::Boolean(if end_type.closed() { value <= rv } else { value < rv }),
         _ => value_null!("eval_in_range"),
       },
       _ => value_null!("eval_in_range"),
@@ -2380,6 +2401,14 @@ fn eval_in_range(lhv: &Value, start: &Value, start_closed: bool, end: &Value, en
 
 fn eval_in_equal(left: &Value, right: &Value) -> Value {
   if let Some(true) = eval_ternary_equality(left, right) { VALUE_TRUE } else { VALUE_FALSE }
+}
+
+fn eval_in_not_equal(left: &Value, right: &Value) -> Value {
+  if let Some(false) = eval_ternary_equality(left, right) {
+    VALUE_TRUE
+  } else {
+    VALUE_FALSE
+  }
 }
 
 fn eval_in_unary_less(left: &Value, right: &Value) -> Value {

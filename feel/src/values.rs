@@ -6,6 +6,7 @@ use crate::closure::Closure;
 use crate::context::FeelContext;
 use crate::errors::*;
 use crate::names::Name;
+use crate::ranges::IntervalType;
 use crate::strings::ToFeelString;
 use crate::types::FeelType;
 use dsntk_common::{Jsonify, Result};
@@ -128,7 +129,7 @@ pub enum Value {
     String,
   ),
 
-  /// Value representing the `FEEL` type of a value.
+  /// Value representing the `FEEL` type of the value.
   FeelType(FeelType),
 
   /// Value representing function's formal parameter with name and type.
@@ -163,10 +164,20 @@ pub enum Value {
   ),
 
   /// Value representing interval end.
-  IntervalEnd(Box<Value>, bool),
+  IntervalEnd(
+    /// Value at the end of the interval.
+    Box<Value>,
+    /// Type of the interval end: opened or closed.
+    IntervalType,
+  ),
 
   /// Value representing interval start.
-  IntervalStart(Box<Value>, bool),
+  IntervalStart(
+    /// Value at the start of the interval.
+    Box<Value>,
+    /// Type of the interval start: opened or closed.
+    IntervalType,
+  ),
 
   /// Value representing `FEEL` `irrelevant` value.
   Irrelevant,
@@ -202,7 +213,16 @@ pub enum Value {
   QualifiedNameSegment(Name),
 
   /// Value representing a `range`.
-  Range(Box<Value>, bool, Box<Value>, bool),
+  Range(
+    /// Value at the start of the range.
+    Box<Value>,
+    /// Type of the interval at the start of the range: closed or opened.
+    IntervalType,
+    /// Value at the end of the range.
+    Box<Value>,
+    /// Type of the interval at the end of the range: closed or opened.
+    IntervalType,
+  ),
 
   /// `String` value...
   String(String),
@@ -291,13 +311,13 @@ impl Display for Value {
       Value::ParameterTypes(_) => write!(f, "ParameterTypes"),
       Value::PositionalParameters(_) => write!(f, "PositionalParameters"),
       Value::QualifiedNameSegment(_) => write!(f, "QualifiedNameSegment"),
-      Value::Range(v1, c1, v2, c2) => write!(
+      Value::Range(start, start_type, end, end_type) => write!(
         f,
         "{}{}..{}{}",
-        if *c1 { '[' } else { '(' },
-        if v1.is_null() { "".to_string() } else { v1.to_string() },
-        if v2.is_null() { "".to_string() } else { v2.to_string() },
-        if *c2 { ']' } else { ')' }
+        if start_type.closed() { '[' } else { '(' },
+        if start_type.undefined() { "".to_string() } else { start.to_string() },
+        if end_type.undefined() { "".to_string() } else { end.to_string() },
+        if end_type.closed() { ']' } else { ')' }
       ),
       Value::String(s) => write!(f, "\"{s}\""),
       Value::Time(time) => write!(f, "{time}"),
@@ -392,46 +412,50 @@ impl Value {
 
   /// Returns `true` when the value is a valid range.
   pub fn is_valid_range(&self) -> bool {
-    if let Value::Range(start, start_closed, end, end_closed) = self {
+    if let Value::Range(start, start_type, end, end_type) = self {
+      if (start_type.undefined() && start_type.closed()) || (end_type.undefined() && end_type.closed()) {
+        // Ranges with undefined interval values can not be closed.
+        return false;
+      }
       match start.borrow() {
         Value::String(start) => match end.borrow() {
           Value::String(end) => start <= end,
-          Value::Null(_) => !*end_closed,
+          Value::Null(_) => end_type.opened(),
           _ => false,
         },
         Value::Number(start) => match end.borrow() {
           Value::Number(end) => start <= end,
-          Value::Null(_) => !*end_closed,
+          Value::Null(_) => end_type.opened(),
           _ => false,
         },
         Value::Date(start) => match end.borrow() {
           Value::Date(end) => start <= end,
-          Value::Null(_) => !*end_closed,
+          Value::Null(_) => end_type.opened(),
           _ => false,
         },
         Value::DateTime(start) => match end.borrow() {
           Value::DateTime(end) => start <= end,
-          Value::Null(_) => !*end_closed,
+          Value::Null(_) => end_type.opened(),
           _ => false,
         },
         Value::Time(start) => match end.borrow() {
           Value::Time(end) => start <= end,
-          Value::Null(_) => !*end_closed,
+          Value::Null(_) => end_type.opened(),
           _ => false,
         },
         Value::YearsAndMonthsDuration(start) => match end.borrow() {
           Value::YearsAndMonthsDuration(end) => start <= end,
-          Value::Null(_) => !*end_closed,
+          Value::Null(_) => end_type.opened(),
           _ => false,
         },
         Value::DaysAndTimeDuration(start) => match end.borrow() {
           Value::DaysAndTimeDuration(end) => start <= end,
-          Value::Null(_) => !*end_closed,
+          Value::Null(_) => end_type.opened(),
           _ => false,
         },
         Value::Null(_) => match end.borrow() {
           Value::Null(_) => false,
-          _ => !*start_closed,
+          _ => start_type.opened(),
         },
         _ => false,
       }

@@ -3,7 +3,7 @@ use crate::closure::Closure;
 use crate::context::FeelContext;
 use crate::types::is_built_in_type_name;
 use crate::values::Value;
-use crate::{FeelScope, FunctionBody, value_null, value_number};
+use crate::{FeelScope, FunctionBody, IntervalType, value_null, value_number};
 use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelTime, FeelYearsAndMonthsDuration};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -451,8 +451,8 @@ fn test_type_get_conformant_value() {
     T_STRING.clone(),
   );
   // ranges
-  let v_range_a = Value::Range(Box::new(v_number_1.clone()), false, Box::new(v_number_2), false);
-  let v_range_b = Value::Range(Box::new(v_date.clone()), false, Box::new(v_date_b), false);
+  let v_range_a = Value::Range(Box::new(v_number_1.clone()), IntervalType::Opened, Box::new(v_number_2), IntervalType::Opened);
+  let v_range_b = Value::Range(Box::new(v_date.clone()), IntervalType::Opened, Box::new(v_date_b), IntervalType::Opened);
   // any
   gcv_ok!(T_ANY, v_boolean_true);
   gcv_ok!(T_ANY, v_context_a);

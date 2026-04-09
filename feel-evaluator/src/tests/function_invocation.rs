@@ -31,7 +31,7 @@ fn _0004() {
       a: {
         b: {
           c: 10
-        } 
+        }
       },
       add: function (x: number, y: number) x + y + a.b.c
     }"#,
@@ -43,6 +43,25 @@ fn _0004() {
 fn _0005() {
   let scope = &te_scope(
     r#"{
+      a: {
+        date: {
+          time: {
+            duration: {
+              date and time: 10
+            }
+          }
+        }
+      },
+      add: function (date: number, time: number) date + time + a.date.time.duration.date and time
+    }"#,
+  );
+  te_number(false, scope, r#"add(17.82,32.18)"#, 60, 0);
+}
+
+#[test]
+fn _0006() {
+  let scope = &te_scope(
+    r#"{
       a: @"2023-01-07",
       add: function (x: number, y: number) x + y + a.year
     }"#,
@@ -51,31 +70,31 @@ fn _0005() {
 }
 
 #[test]
-fn _0006() {
+fn _0007() {
   let scope = &te_scope(r#"{add: function(x: number, y: number) x + y }"#);
   te_number(false, scope, r#"add(x: 17.82, y: 32.18)"#, 50, 0);
 }
 
 #[test]
-fn _0007() {
+fn _0008() {
   let scope = &te_scope(r#"{add: function(x: number, y: number) x + y }"#);
   te_null(false, scope, r#"add(k: 17.82,l: 32.18)"#, "parameter with name x not found in arguments");
 }
 
 #[test]
-fn _0008() {
+fn _0009() {
   let scope = &te_scope(r#"{add: function(x: number, y: number) x + y }"#);
   te_null(false, scope, r#"add(x: 17.82,y: 32.18, z:11.2)"#, "invalid number of arguments");
 }
 
 #[test]
-fn _0009() {
+fn _0010() {
   let scope = &te_scope(r#"{add: function(x, y) x + y }"#);
   te_null(false, scope, r#"add(17.82, 32.18, 11.2)"#, "invalid number of arguments");
 }
 
 #[test]
-fn _0010() {
+fn _0011() {
   te_null(
     false,
     &scope!(),
@@ -85,7 +104,7 @@ fn _0010() {
 }
 
 #[test]
-fn _0011() {
+fn _0012() {
   te_null(
     false,
     &scope!(),

@@ -181,51 +181,56 @@ impl WorkspaceBuilder {
   /// Displays the summary of the loading process.
   fn display_summary(&self) {
     // display the number of found files
-    Text::new(self.cm)
-      .color(if self.file_count > 0 { Color::Green } else { Color::Red })
-      .s("Found ")
-      .s(self.file_count)
-      .plural(" model", self.file_count)
-      .dot()
-      .cprintln();
+    println!(
+      "{}",
+      Text::new(self.cm)
+        .color(if self.file_count > 0 { Color::Green } else { Color::Red })
+        .s("Found ")
+        .s(self.file_count)
+        .plural(" model", self.file_count)
+        .s('.')
+    );
     // display the number of successfully loaded files
     if self.loaded_count > 0 {
-      Text::new(self.cm)
-        .green()
-        .s("Loaded ")
-        .s(self.loaded_count)
-        .plural(" model", self.loaded_count)
-        .dot()
-        .cprintln();
+      println!(
+        "{}",
+        Text::new(self.cm).green().s("Loaded ").s(self.loaded_count).plural(" model", self.loaded_count).s('.')
+      );
     }
     // display the number of failed loads
     if self.failed_loads_count > 0 {
-      Text::new(self.cm)
-        .red()
-        .s("Failed to load ")
-        .s(self.failed_loads_count)
-        .plural(" model", self.failed_loads_count)
-        .dot()
-        .cprintln();
+      println!(
+        "{}",
+        Text::new(self.cm)
+          .red()
+          .s("Failed to load ")
+          .s(self.failed_loads_count)
+          .plural(" model", self.failed_loads_count)
+          .s('.')
+      );
     }
     // display the number of successfully deployed invocables
     let deployed_count = self.evaluators.values().map(|evaluator| evaluator.invocables().len()).sum();
-    Text::new(self.cm)
-      .color(if deployed_count > 0 { Color::Green } else { Color::Red })
-      .s("Deployed ")
-      .s(deployed_count)
-      .plural(" invocable", deployed_count)
-      .dot()
-      .cprintln();
+    println!(
+      "{}",
+      Text::new(self.cm)
+        .color(if deployed_count > 0 { Color::Green } else { Color::Red })
+        .s("Deployed ")
+        .s(deployed_count)
+        .plural(" invocable", deployed_count)
+        .s('.')
+    );
     // display the number of failed deployments
     if self.failed_deployments_count > 0 {
-      Text::new(self.cm)
-        .red()
-        .s("Failed to deploy ")
-        .s(self.failed_deployments_count)
-        .plural(" workspace", self.failed_deployments_count)
-        .dot()
-        .cprintln();
+      println!(
+        "{}",
+        Text::new(self.cm)
+          .red()
+          .s("Failed to deploy ")
+          .s(self.failed_deployments_count)
+          .plural(" workspace", self.failed_deployments_count)
+          .s('.')
+      );
     }
     if self.verbose {
       self.display_deployed_invocables();
@@ -238,7 +243,7 @@ impl WorkspaceBuilder {
     invocable_paths.sort();
     let invocable_count = invocable_paths.len();
     if invocable_count > 0 {
-      self.text().nl().yellow().s("Deployed ").plural("invocable", invocable_count).colon().cprintln();
+      println!("{}", self.text().s('\n').yellow().s("Deployed ").plural("invocable", invocable_count).s(':'));
     }
     for key in invocable_paths {
       if let Some((workspace_name, model_namespace, model_name, invocable_name)) = self.invocables.get(&key) {
@@ -246,23 +251,23 @@ impl WorkspaceBuilder {
         // print workspace name containing the directory structure (URL encoded)
         let segment_1 = encode_segments(workspace_name);
         if !segment_1.is_empty() {
-          self.text().magenta().s(segment_1).clear().slash().print();
+          print!("{}", self.text().magenta().s(segment_1).reset().s('/'));
         }
         // print model namespace converted to DNN (URL encoded)
         let rdnn = to_rdnn(model_namespace).unwrap_or_default();
         let segment_2 = encode_segments(&rdnn);
         if !segment_2.is_empty() {
-          self.text().cyan().s(segment_2).clear().slash().print();
+          print!("{}", self.text().cyan().s(segment_2).reset().s('/'));
         }
         // print model name (URL encoded)
         let segment_3 = encode_segments(model_name);
         if !segment_3.is_empty() {
-          self.text().magenta().s(segment_3).clear().slash().print();
+          print!("{}", self.text().magenta().s(segment_3).reset().s('/'));
         }
         // print invocable name (URL encoded)
         let segment_4 = encode_segments(invocable_name);
         if !segment_4.is_empty() {
-          self.text().cyan().s(segment_4).clear().print();
+          print!("{}", self.text().cyan().s(segment_4).reset());
         }
         println!();
       }
@@ -328,26 +333,12 @@ impl WorkspaceBuilder {
 
   /// Utility function for printing styled error message with one argument.
   fn error_1<T: Display>(&self, s1: T) {
-    self.text().s('[').red().s("error").clear().s(']').space().red().s(s1).cprintln();
+    println!("{}", self.text().s('[').red().s("error").reset().s("] ").red().s(s1));
   }
 
   /// Utility function for printing styled error message with two arguments.
   fn error_2<A: Display, B: Display>(&self, s1: A, s2: B) {
-    self
-      .text()
-      .s('[')
-      .red()
-      .s("error")
-      .clear()
-      .s("][")
-      .blue()
-      .s(s1)
-      .clear()
-      .s(']')
-      .space()
-      .red()
-      .s(s2)
-      .cprintln();
+    println!("{}", self.text().s('[').red().s("error").reset().s("][").blue().s(s1).reset().s("] ").red().s(s2).reset());
   }
 
   /// Utility function for instantiating a styled text with preset color mode.

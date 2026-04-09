@@ -75,7 +75,7 @@ impl ParsingScope {
   }
 
   /// Adds a name to a set of already parsed names.
-  pub fn add_name(&self, name: Name) {
+  pub fn add_parsed_name(&self, name: Name) {
     self.names.borrow_mut().insert(name);
   }
 
