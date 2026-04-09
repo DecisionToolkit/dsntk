@@ -285,3 +285,74 @@ fn _0014() {
     Err(_) => {} // Parser rejection is also acceptable
   }
 }
+
+// ---------------------------------------------------------------------------
+// Downstream decision consuming expression BKM output
+// ---------------------------------------------------------------------------
+
+const COLLATERAL_ADEQUACY_TABLE: &str = r#"
+> # Collateral Adequacy
+> Collateral Grade
+
+| F  | LTV          | Property Risk    | Purpose            | Collateral Grade                                 |
+|:--:|:------------:|:----------------:|:------------------:|:------------------------------------------------:|
+|    |              |                  |                    | "Strong","Adequate","Marginal","Weak","Decline"  |
+|    | `in`         | `in`             | `in`               | `out`                                            |
+|  1 | -            | "Unacceptable"   | -                  | "Decline"                                        |
+|  2 | >0.85        | -                | -                  | "Decline"                                        |
+|  3 | >0.65        | -                | "Development"      | "Decline"                                        |
+|  4 | <=0.50       | "Low"            | -                  | "Strong"                                         |
+|  5 | (0.50..0.65] | "Low"            | -                  | "Adequate"                                       |
+|  6 | (0.65..0.75] | "Low"            | -                  | "Marginal"                                       |
+|  7 | (0.75..0.85] | "Low"            | -                  | "Weak"                                           |
+|  8 | <=0.50       | "Medium"         | -                  | "Adequate"                                       |
+|  9 | (0.50..0.65] | "Medium"         | -                  | "Marginal"                                       |
+| 10 | (0.65..0.75] | "Medium"         | -                  | "Weak"                                           |
+| 11 | (0.75..0.85] | "Medium"         | -                  | "Decline"                                        |
+| 12 | <=0.50       | "High"           | -                  | "Marginal"                                       |
+| 13 | (0.50..0.65] | "High"           | -                  | "Weak"                                           |
+| 14 | >0.65        | "High"           | -                  | "Decline"                                        |
+"#;
+
+/// Downstream: LTV ~0.47 + Low risk + Purchase → "Strong" (rule 4).
+#[test]
+fn _0015() {
+  let scope = scope_with(&[("LTV", num("0.47")), ("Property Risk", str_val("Low")), ("Purpose", str_val("Purchase"))]);
+  let result = eval_markdown(COLLATERAL_ADEQUACY_TABLE, &scope);
+  assert_eq!(result.value, str_val("Strong"));
+  assert!(result.matched_rules.contains(&3), "rule index 3 (row 4) should match");
+}
+
+/// Downstream: LTV 0.71 + Medium risk → "Weak" (rule 10).
+#[test]
+fn _0016() {
+  let scope = scope_with(&[("LTV", num("0.71")), ("Property Risk", str_val("Medium")), ("Purpose", str_val("Refinance"))]);
+  let result = eval_markdown(COLLATERAL_ADEQUACY_TABLE, &scope);
+  assert_eq!(result.value, str_val("Weak"));
+  assert!(result.matched_rules.contains(&9), "rule index 9 (row 10) should match");
+}
+
+/// FIRST hit policy: Unacceptable property always declines regardless of LTV (rule 1 wins).
+#[test]
+fn _0017() {
+  let scope = scope_with(&[("LTV", num("0.30")), ("Property Risk", str_val("Unacceptable")), ("Purpose", str_val("Purchase"))]);
+  let result = eval_markdown(COLLATERAL_ADEQUACY_TABLE, &scope);
+  assert_eq!(result.value, str_val("Decline"));
+  assert!(result.matched_rules.contains(&0), "rule index 0 (row 1) should match first");
+}
+
+/// FIRST hit policy: LTV > 0.85 always declines (rule 2 wins over lower rules).
+#[test]
+fn _0018() {
+  let scope = scope_with(&[("LTV", num("0.90")), ("Property Risk", str_val("Low")), ("Purpose", str_val("Purchase"))]);
+  let result = eval_markdown(COLLATERAL_ADEQUACY_TABLE, &scope);
+  assert_eq!(result.value, str_val("Decline"));
+}
+
+/// Development purpose with LTV > 0.65 declines (rule 3).
+#[test]
+fn _0019() {
+  let scope = scope_with(&[("LTV", num("0.70")), ("Property Risk", str_val("Low")), ("Purpose", str_val("Development"))]);
+  let result = eval_markdown(COLLATERAL_ADEQUACY_TABLE, &scope);
+  assert_eq!(result.value, str_val("Decline"));
+}

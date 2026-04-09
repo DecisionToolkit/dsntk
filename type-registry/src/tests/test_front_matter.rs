@@ -160,3 +160,44 @@ fn _0010() {
   assert_eq!(DmnNodeType::from_str("knowledge-source").unwrap(), DmnNodeType::KnowledgeSource);
   assert!(DmnNodeType::from_str("unknown").is_err());
 }
+
+#[test]
+fn _0011() {
+  // Parses feel-expression and output-name fields
+  let content = r#"---
+dmn:
+  id: BKM2
+  type: bkm
+  name: LTV Calculation
+  feel-expression: Requested Amount / Valuation Amount
+  output-name: LTV
+  requires:
+    - loan_request
+    - property_data
+---
+"#;
+  let fm = parse_front_matter(content).unwrap();
+  assert_eq!(fm.dmn.feel_expression.as_deref(), Some("Requested Amount / Valuation Amount"));
+  assert_eq!(fm.dmn.output_name.as_deref(), Some("LTV"));
+  assert_eq!(fm.dmn.requires.as_ref().unwrap().len(), 2);
+}
+
+#[test]
+fn _0012() {
+  // BKM without feel-expression still parses (fields are optional)
+  let content = r#"---
+dmn:
+  id: BKM3
+  type: bkm
+  name: Risk Table
+  signature:
+    parameters:
+      - name: score
+        type: number
+---
+"#;
+  let fm = parse_front_matter(content).unwrap();
+  assert!(fm.dmn.feel_expression.is_none());
+  assert!(fm.dmn.output_name.is_none());
+  assert!(fm.dmn.signature.is_some());
+}
