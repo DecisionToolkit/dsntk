@@ -195,7 +195,7 @@ pub fn required_content(node: &Node) -> Result<String> {
 
 /// Returns optional text content of the node with specified name.
 pub fn opt_content(node: &Node) -> Option<String> {
-  node.text().map(|text| text.to_owned())
+  node.text().map(|text| text.trim().to_string())
 }
 
 /// Returns required child node or raises an error when there is no child with given name.

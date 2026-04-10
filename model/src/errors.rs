@@ -69,6 +69,7 @@ pub fn err_number_of_elements_in_row_differs_from_number_of_columns() -> DsntkEr
   ModelParserError("number of elements in a row differs from the number of columns defined in a relation".to_string()).into()
 }
 
+/// Raised when parsing XML model fails.
 pub fn err_xml_parsing_model_failed(s: &str) -> DsntkError {
   ModelParserError(format!("parsing model from XML failed with reason: {s}")).into()
 }
@@ -92,6 +93,16 @@ pub fn err_xml_expected_mandatory_child_node(s1: &str, s2: &str) -> DsntkError {
 
 pub fn err_xml_expected_mandatory_text_content(s: &str) -> DsntkError {
   ModelParserError(format!("expected mandatory text content in node '{s}'")).into()
+}
+
+/// Raised when parsing IDML model fails.
+pub fn err_idml_parsing_model_failed(reason: &str) -> DsntkError {
+  ModelParserError(format!("parsing model from IDML failed with reason: {reason}")).into()
+}
+
+/// Raised when a node has no mandatory child value.
+pub fn err_idml_expected_mandatory_value(node_name: &str, child_name: &str) -> DsntkError {
+  ModelParserError(format!("expected value for mandatory value '{child_name}' in node {node_name}")).into()
 }
 
 /// Errors related with validating the decision model.

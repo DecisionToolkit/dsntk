@@ -19,3 +19,5 @@ dsntk-feel = { workspace = true }
 dsntk-feel-parser = { workspace = true }
 dsntk-macros = { workspace = true }
 dsntk-recognizer = { workspace = true }
+# this is just experimental
+idml = { path = "../../../EngosSoftware/idml" }
