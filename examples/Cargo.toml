@@ -2,7 +2,7 @@
 name = "dsntk-examples"
 version = { workspace = true }
 authors = { workspace = true }
-description = "dsntk | DecisionToolkit | Examples"
+description = "ÐecisionToolkit | Examples"
 categories = ["development-tools", "command-line-utilities", "finance", "parsing"]
 keywords = ["dmn", "decision", "toolkit", "examples"]
 documentation = "https://docs.rs/dsntk-examples"

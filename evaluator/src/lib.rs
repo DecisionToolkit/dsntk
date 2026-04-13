@@ -1,8 +1,4 @@
 //! # Evaluator
-//!
-//! FEEL expressions and DMN models evaluator used by components of [**dsntk**][dsntk-url] crate.
-//!
-//! [dsntk-url]: https://crates.io/crates/dsntk
 
 #[macro_use]
 extern crate dsntk_macros;

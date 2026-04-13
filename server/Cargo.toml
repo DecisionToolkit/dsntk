@@ -2,7 +2,7 @@
 name = "dsntk-server"
 version = { workspace = true }
 authors = { workspace = true }
-description = "dsntk | DecisionToolkit | API server"
+description = "ÐecisionToolkit | API server"
 categories = ["development-tools", "command-line-utilities", "finance", "parsing"]
 keywords = ["dmn", "decision", "toolkit", "server"]
 documentation = "https://docs.rs/dsntk-server"

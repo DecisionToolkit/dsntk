@@ -1,8 +1,8 @@
-[dsntk][dsntk-url] | [DecisionToolkit][github-url]
+[dsntk] | [ÐecisionToolkit]
 
-[github-url]: https://github.com/DecisionToolkit
+[ÐecisionToolkit]: https://github.com/DecisionToolkit
 
-[dsntk-url]: https://crates.io/crates/dsntk
+[dsntk]: https://crates.io/crates/dsntk
 
 [DMN 1.3]: https://www.omg.org/spec/DMN/1.3/PDF
 

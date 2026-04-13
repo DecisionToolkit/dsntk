@@ -1,4 +1,4 @@
-[dsntk][dsntk-url] | [DecisionToolkit][github-url]
+[dsntk] | [ÐecisionToolkit]
 
 # Decision table recognizer
 
@@ -29,12 +29,12 @@
 [apache-notice-url]: https://github.com/DecisionToolkit/dsntk/blob/main/NOTICE
 [cc-badge]: https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg
 [cc-url]: https://github.com/DecisionToolkit/dsntk/blob/main/CODE_OF_CONDUCT.md
-[github-url]: https://github.com/DecisionToolkit
-[dsntk-url]: https://crates.io/crates/dsntk
+[ÐecisionToolkit]: https://github.com/DecisionToolkit
+[dsntk]: https://crates.io/crates/dsntk
 
 ## Overview
 
-Decision table recognizer used by components of [**dsntk**][dsntk-url] crate.
+Decision table recognizer used by **[dsntk]** crate.
 
 Recognizes decision tables defined as Unicode or Markdown text.
 To be properly recognized, the structure of the decision table must be conformant to DMN™ standard.
@@ -73,6 +73,6 @@ at your option.
 
 ## Contribution
 
-Any contributions to [**DecisionToolkit**][github-url] are greatly appreciated.
+Any contributions to **[ÐecisionToolkit]** are greatly appreciated.
 All contributions intentionally submitted for inclusion in the work by you,
 shall be dual licensed as above, without any additional terms or conditions.

@@ -2,7 +2,7 @@
 name = "dsntk-feel-evaluator"
 version = { workspace = true }
 authors = { workspace = true }
-description = "dsntk | DecisionToolkit | FEEL expressions evaluator"
+description = "ÐecisionToolkit | FEEL expressions evaluator"
 categories = ["development-tools", "command-line-utilities", "finance", "parsing"]
 keywords = ["dmn", "decision", "toolkit", "feel"]
 documentation = "https://docs.rs/dsntk-feel-evaluator"
