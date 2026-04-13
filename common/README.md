@@ -1,6 +1,6 @@
 [dsntk] | [ÐecisionToolkit]
 
-## Common definitions
+### dsntk-common
 
 [![Crates.io][crates-badge]][crates-url]
 [![docs][docs-badge]][docs-url]
@@ -31,6 +31,8 @@
 [cc-url]: https://github.com/DecisionToolkit/dsntk/blob/main/CODE_OF_CONDUCT.md
 [ÐecisionToolkit]: https://github.com/DecisionToolkit
 [dsntk]: https://crates.io/crates/dsntk
+
+# Common definitions
 
 ## Overview
 

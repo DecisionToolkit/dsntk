@@ -1,6 +1,6 @@
 [dsntk] | [ÐecisionToolkit]
 
-# DMN models, decision tables and FEEL expressions evaluator
+### dsntk-evaluator
 
 [![Crates.io][crates-badge]][crates-url]
 [![docs][docs-badge]][docs-url]
@@ -32,9 +32,11 @@
 [ÐecisionToolkit]: https://github.com/DecisionToolkit
 [dsntk]: https://crates.io/crates/dsntk
 
+# Evaluator
+
 ## Overview
 
-DMN models, decision tables and FEEL expressions evaluator used by **[dsntk]** crate.
+DMN decision models, decision tables and FEEL expressions evaluator used by **[dsntk]** crate.
 
 ## License
 

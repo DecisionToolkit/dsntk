@@ -1,5 +1,7 @@
 # ÐecisionToolkit
 
+**Design and execute decisions**
+
 [![Crates.io][crates-badge]][crates-url]
 [![docs][docs-badge]][docs-url]
 ![Code coverage][coverage-badge]<br/>
