@@ -72,6 +72,30 @@ tasks:
       - cmd: cargo +stable llvm-cov clean
       - cmd: cargo +stable llvm-cov --no-cfg-coverage --workspace
 
+  cov-dsntk-common:
+    desc: Generates code coverage report in text format for dsntk-common
+    cmds:
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov --no-cfg-coverage -p dsntk-common
+
+  cov-dsntk-common-badge:
+    desc: Generates code coverage report in text format for dsntk-common
+    cmds:
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov --no-cfg-coverage -p dsntk-common --json --summary-only | coverio -c --tag cov-badge -f common/README.md
+
+  cov-dsntk-model-evaluator:
+    desc: Generates code coverage report in text format for dsntk-model-evaluator
+    cmds:
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov --no-cfg-coverage -p dsntk-model-evaluator
+
+  cov-dsntk-model-evaluator-badge:
+    desc: Generates code coverage report in text format for dsntk-model-evaluator
+    cmds:
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov --no-cfg-coverage -p dsntk-model-evaluator --json --summary-only | coverio -c --tag cov-badge -f model-evaluator/README.md
+
   doc:
     desc: Generates documentation
     cmds:

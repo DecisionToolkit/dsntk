@@ -18,7 +18,7 @@
 [crates-url]: https://crates.io/crates/dsntk-model-evaluator
 [docs-badge]: https://docs.rs/dsntk-model-evaluator/badge.svg
 [docs-url]: https://crates.io/crates/dsntk-model-evaluator
-[cov-badge]: https://img.shields.io/badge/coverage-0%25-21b577.svg
+[cov-badge]: https://img.shields.io/badge/cov-89%25%20%E2%94%82%2092%25%20%E2%94%82%2086%25-21b577.svg
 [cov-url]: https://crates.io/crates/coverio
 [build-badge-linux-gnu]: https://github.com/DecisionToolkit/dsntk/actions/workflows/build-linux-gnu.yml/badge.svg
 [build-badge-linux-musl]: https://github.com/DecisionToolkit/dsntk/actions/workflows/build-linux-musl.yml/badge.svg
