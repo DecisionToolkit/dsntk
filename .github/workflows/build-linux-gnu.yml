@@ -1,4 +1,4 @@
-name: build Windows
+name: build GNU/Linux
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v6
@@ -18,11 +18,10 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-pc-windows-msvc
+          targets: x86_64-unknown-linux-gnu
 
       - name: Get package name and version
         id: metadata
-        shell: bash
         run: |
           NAME=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].name')
           echo "name=$NAME" >> $GITHUB_OUTPUT
@@ -30,10 +29,10 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build release binary
-        run: cargo build --release --target=x86_64-pc-windows-msvc
+        run: cargo build --release --target=x86_64-unknown-linux-gnu
 
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ steps.metadata.outputs.name }}-v${{ steps.metadata.outputs.version }}-x86_64-pc-windows-msvc
-          path: target/x86_64-pc-windows-msvc/release/${{ steps.metadata.outputs.name }}.exe
+          name: ${{ steps.metadata.outputs.name }}-v${{ steps.metadata.outputs.version }}-x86_64-unknown-linux-gnu
+          path: target/x86_64-unknown-linux-gnu/release/${{ steps.metadata.outputs.name }}
