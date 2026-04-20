@@ -1,4 +1,4 @@
-[dsntk][dsntk-url] | [DecisionToolkit][github-url]
+[dsntk] | [ÐecisionToolkit]
 
 # Black-box tests
 
@@ -15,13 +15,13 @@
 [apache-notice-url]: https://github.com/DecisionToolkit/dsntk/blob/main/NOTICE
 [cc-badge]: https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg
 [cc-url]: https://github.com/DecisionToolkit/dsntk/blob/main/CODE_OF_CONDUCT.md
-[DecisionToolkit]: https://github.com/DecisionToolkit
-[github-url]: https://github.com/DecisionToolkit
-[dsntk-url]: https://crates.io/crates/dsntk
+[ÐecisionToolkit]: https://github.com/DecisionToolkit
+[ÐecisionToolkit]: https://github.com/DecisionToolkit
+[dsntk]: https://crates.io/crates/dsntk
 
 ## Overview
 
-Black-box tests for **DecisionToolkit** project.
+Black-box tests for **[DecisionToolkit]** project.
 
 The **DecisionToolkit** project is tested automatically with all types of tests provided by Rust,
 and additionally with test runner that executes all available compatibility tests.
@@ -31,7 +31,7 @@ Nevertheless, this set of black-box tests is maintained in the following purpose
 - testing the edge cases,
 - diagnostics of reported issues,
 - visualization of functionalities provided by **DecisionToolkit**,
-- preparing documentation ([decision-toolkit.org][DecisionToolkit]).
+- preparing documentation ([decision-toolkit.org][ÐecisionToolkit]).
 
 ## Running black-box tests
 
@@ -81,6 +81,6 @@ at your option.
 
 ## Contribution
 
-Any contributions to **[DecisionToolkit]** are greatly appreciated.
+Any contributions to **[ÐecisionToolkit]** are greatly appreciated.
 All contributions intentionally submitted for inclusion in the work by you,
 shall be dual licensed as above, without any additional terms or conditions.

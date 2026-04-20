@@ -1,4 +1,5 @@
-//! # Examples of decision models and decision tables
+#![doc = include_str!("../docs/README.md")]
+#![deny(rustdoc::broken_intra_doc_links)]
 
 mod compatibility;
 pub mod decision_logic;

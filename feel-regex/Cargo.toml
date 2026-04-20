@@ -2,7 +2,7 @@
 name = "dsntk-feel-regex"
 version = { workspace = true }
 authors = { workspace = true }
-description = "dsntk | DecisionToolkit | FEEL regular expressions"
+description = "ÐecisionToolkit | FEEL regular expressions"
 categories = ["development-tools", "command-line-utilities", "finance", "parsing"]
 keywords = ["dmn", "decision", "toolkit", "regex"]
 documentation = "https://docs.rs/dsntk-feel-regex"

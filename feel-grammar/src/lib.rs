@@ -1,4 +1,5 @@
-//! `FEEL` grammar definition and `LALR` parsing tables generator.
+#![doc = include_str!("../docs/README.md")]
+#![deny(rustdoc::broken_intra_doc_links)]
 
 mod extractor;
 mod generator;

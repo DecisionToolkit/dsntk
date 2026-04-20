@@ -1,6 +1,5 @@
-//! # FEEL regex
-//!
-//! Functions that extensively operate on regular expressions.
+#![doc = include_str!("../docs/README.md")]
+#![deny(rustdoc::broken_intra_doc_links)]
 
 mod errors;
 mod impl_regex;

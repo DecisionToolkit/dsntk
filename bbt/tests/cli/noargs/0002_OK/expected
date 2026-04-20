@@ -4,4 +4,4 @@ dsntk 0.0.0.0:22022
 Found 0 models.
 Deployed 0 invocables.
 dsntk 0.0.0.0:22022
-Error: Os { code: 98, kind: AddrInUse, message: "Address already in use" }
+Error: Os { code: 48, kind: AddrInUse, message: "Address already in use" }

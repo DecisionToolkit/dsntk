@@ -2,7 +2,7 @@
 name = "dsntk-recognizer"
 version = { workspace = true }
 authors = { workspace = true }
-description = "dsntk | DecisionToolkit | Decision table recognizer"
+description = "ÐecisionToolkit | Decision table recognizer"
 categories = ["development-tools", "command-line-utilities", "finance", "parsing"]
 keywords = ["dmn", "decision", "toolkit", "recognizer"]
 documentation = "https://docs.rs/dsntk-recognizer"

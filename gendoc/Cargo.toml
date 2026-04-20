@@ -2,7 +2,7 @@
 name = "dsntk-gendoc"
 version = { workspace = true }
 authors = { workspace = true }
-description = "dsntk | DecisionToolkit | Documentation generator"
+description = "ÐecisionToolkit | Documentation generator"
 categories = ["development-tools", "command-line-utilities", "finance", "parsing"]
 keywords = ["dmn", "decision", "toolkit", "documentation"]
 documentation = "https://docs.rs/dsntk-gendoc"

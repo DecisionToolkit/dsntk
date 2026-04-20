@@ -112,6 +112,28 @@ tasks:
     cmds:
       - cmd: cargo +stable build --release --target=x86_64-unknown-linux-musl
 
+  readme:
+    desc: Builds README files
+    cmds:
+      - cmd: cd dsntk && magg readme-dt && cd ..
+      - cmd: cd common && magg readme-dt && cd ..
+      - cmd: cd evaluator && magg readme-dt && cd ..
+      - cmd: cd examples && magg readme-dt && cd ..
+      - cmd: cd feel && magg readme-dt && cd ..
+      - cmd: cd feel-evaluator && magg readme-dt && cd ..
+      - cmd: cd feel-grammar && magg readme-dt && cd ..
+      - cmd: cd feel-number && magg readme-dt && cd ..
+      - cmd: cd feel-parser && magg readme-dt && cd ..
+      - cmd: cd feel-regex && magg readme-dt && cd ..
+      - cmd: cd feel-temporal && magg readme-dt && cd ..
+      - cmd: cd gendoc && magg readme-dt && cd ..
+      - cmd: cd macros && magg readme-dt && cd ..
+      - cmd: cd model && magg readme-dt && cd ..
+      - cmd: cd model-evaluator && magg readme-dt && cd ..
+      - cmd: cd recognizer && magg readme-dt && cd ..
+      - cmd: cd server && magg readme-dt && cd ..
+      - cmd: cd workspace && magg readme-dt && cd ..
+
   release:
     desc: Builds in release mode
     cmds:

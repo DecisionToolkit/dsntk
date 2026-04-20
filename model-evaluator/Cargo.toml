@@ -2,7 +2,7 @@
 name = "dsntk-model-evaluator"
 version = { workspace = true }
 authors = { workspace = true }
-description = "dsntk | DecisionToolkit | DMN model evaluator"
+description = "ÐecisionToolkit | DMN model evaluator"
 categories = ["development-tools", "command-line-utilities", "finance", "parsing"]
 keywords = ["dmn", "decision", "toolkit", "evaluator"]
 documentation = "https://docs.rs/dsntk-model-evaluator"

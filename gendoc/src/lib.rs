@@ -1,3 +1,6 @@
+#![doc = include_str!("../docs/README.md")]
+#![deny(rustdoc::broken_intra_doc_links)]
+
 mod ascii_model;
 mod auto_size;
 mod defs;

@@ -1169,5 +1169,5 @@ fn display_test_summary(passed: usize, failed: usize, summary_only: bool, cm: Co
   } else {
     text = text.green().s("ok");
   }
-  println!("{}\n", text.reset().s(". ").s(passed).s(" passed; ").s(failed).s(" failed.").reset());
+  println!("{}\n", text.reset().s(". ").s(passed).s(" passed; ").s(failed).s(" failed."));
 }

@@ -189,12 +189,19 @@ impl WorkspaceBuilder {
         .s(self.file_count)
         .plural(" model", self.file_count)
         .s('.')
+        .reset()
     );
     // display the number of successfully loaded files
     if self.loaded_count > 0 {
       println!(
         "{}",
-        Text::new(self.cm).green().s("Loaded ").s(self.loaded_count).plural(" model", self.loaded_count).s('.')
+        Text::new(self.cm)
+          .green()
+          .s("Loaded ")
+          .s(self.loaded_count)
+          .plural(" model", self.loaded_count)
+          .s('.')
+          .reset()
       );
     }
     // display the number of failed loads
@@ -207,6 +214,7 @@ impl WorkspaceBuilder {
           .s(self.failed_loads_count)
           .plural(" model", self.failed_loads_count)
           .s('.')
+          .reset()
       );
     }
     // display the number of successfully deployed invocables
@@ -219,6 +227,7 @@ impl WorkspaceBuilder {
         .s(deployed_count)
         .plural(" invocable", deployed_count)
         .s('.')
+        .reset()
     );
     // display the number of failed deployments
     if self.failed_deployments_count > 0 {
@@ -230,6 +239,7 @@ impl WorkspaceBuilder {
           .s(self.failed_deployments_count)
           .plural(" workspace", self.failed_deployments_count)
           .s('.')
+          .reset()
       );
     }
     if self.verbose {
@@ -243,7 +253,7 @@ impl WorkspaceBuilder {
     invocable_paths.sort();
     let invocable_count = invocable_paths.len();
     if invocable_count > 0 {
-      println!("{}", self.text().s('\n').yellow().s("Deployed ").plural("invocable", invocable_count).s(':'));
+      println!("{}", self.text().s('\n').yellow().s("Deployed ").plural("invocable", invocable_count).s(':').reset());
     }
     for key in invocable_paths {
       if let Some((workspace_name, model_namespace, model_name, invocable_name)) = self.invocables.get(&key) {
