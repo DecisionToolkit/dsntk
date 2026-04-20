@@ -24,9 +24,9 @@ jobs:
         id: metadata
         shell: bash
         run: |
-          NAME=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].name')
+          NAME=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.name == "dsntk") | .name')
           echo "name=$NAME" >> $GITHUB_OUTPUT
-          VERSION=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].version')
+          VERSION=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.name == "dsntk") | .version')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build release binary
