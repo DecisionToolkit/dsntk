@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<definitions namespace="https://dsntk.io"
+<definitions namespace="https://decision-toolkit.org"
              name="compliance-level-2-test-0004"
-             id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c"
+             id="_3859fe63-c8a7-4fc7-8a10-f27830e9d2ac"
              xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
              xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
              xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
              xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/">
     <decision name="Approval Status" id="_3b2953a3-745f-4d2e-b55d-75c8c5ae653c">
-        <variable typeRef="string" name="Approval Status"/>
-        <informationRequirement id="c565bfc1-53ae-4e25-ad35-b26767a9b1d9">
+        <variable typeRef="string" name="Approval Status" id="_8ee5dd22-4857-4ccf-97dd-b3f87cabf05f"/>
+        <informationRequirement id="_c565bfc1-53ae-4e25-ad35-b26767a9b1d9">
             <requiredInput href="#_5a4bdb64-f0ef-4978-9e03-6f1ae64a1f17"/>
         </informationRequirement>
-        <informationRequirement id="ac23f1ad-562f-47e9-a369-d9cc01f8b415">
+        <informationRequirement id="_ac23f1ad-562f-47e9-a369-d9cc01f8b415">
             <requiredInput href="#_41effb45-b3c4-46ac-b1da-122b3e428a98"/>
         </informationRequirement>
-        <informationRequirement id="ae239e86-d326-4513-a01b-24e18269de29">
+        <informationRequirement id="_ae239e86-d326-4513-a01b-24e18269de29">
             <requiredInput href="#_8ff18665-84e9-49f2-a8df-8981b1844549"/>
         </informationRequirement>
-        <decisionTable outputLabel="Approval Status">
+        <decisionTable outputLabel="Approval Status" id="_73ec5c56-978c-45ee-a0b7-9585fb48008e">
             <input id="_bf7fc56f-ea82-464e-a541-f3221dc07e78" label="Age">
                 <inputExpression typeRef="number">
                     <text>Age</text>
@@ -42,7 +42,7 @@
                     <text>false, true</text>
                 </inputValues>
             </input>
-            <output id="_bffba7a1-f0a2-4679-b6e2-50e27bb27968">
+            <output id="_bffba7a1-f0a2-4679-b6e2-50e27bb27968" name="Approval Status">
                 <outputValues>
                     <text>"Approved", "Declined"</text>
                 </outputValues>
@@ -52,7 +52,7 @@
                     <text>&gt;=18</text>
                 </inputEntry>
                 <inputEntry id="_7f03803d-2636-40ab-8346-7fd7f38ab695-1">
-                    <text>"Medium","Low"</text>
+                    <text>"Medium", "Low"</text>
                 </inputEntry>
                 <inputEntry id="_7f03803d-2636-40ab-8346-7fd7f38ab695-2">
                     <text>true</text>
@@ -66,7 +66,7 @@
                     <text>&lt;18</text>
                 </inputEntry>
                 <inputEntry id="_887acecd-40fc-42da-9443-eeba476f5516-1">
-                    <text>"Medium","Low"</text>
+                    <text>"Medium", "Low"</text>
                 </inputEntry>
                 <inputEntry id="_887acecd-40fc-42da-9443-eeba476f5516-2">
                     <text>true</text>
@@ -106,41 +106,41 @@
         </decisionTable>
     </decision>
     <inputData name="Age" id="_41effb45-b3c4-46ac-b1da-122b3e428a98">
-        <variable typeRef="number" name="Age"/>
+        <variable typeRef="number" name="Age" id="_e073557f-c20f-42e4-ba1a-b98c15daec50"/>
     </inputData>
     <inputData name="RiskCategory" id="_5a4bdb64-f0ef-4978-9e03-6f1ae64a1f17">
-        <variable typeRef="string" name="RiskCategory"/>
+        <variable typeRef="string" name="RiskCategory" id="_7c9ecedf-0010-488d-9b93-122520ddaab5"/>
     </inputData>
     <inputData name="isAffordable" id="_8ff18665-84e9-49f2-a8df-8981b1844549">
-        <variable typeRef="boolean" name="isAffordable"/>
+        <variable typeRef="boolean" name="isAffordable" id="_2af698d7-017a-40b9-bea5-94ee748e4a30"/>
     </inputData>
-    <dmndi:DMNDI>
-        <dmndi:DMNDiagram  name="Decision Requirement Diagram" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_D1">
-            <dmndi:Size width="550.0" height="240.0"/>
-            <dmndi:DMNShape dmnElementRef="_3b2953a3-745f-4d2e-b55d-75c8c5ae653c" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_s1">
-                <dc:Bounds height="60.0" width="150.0" x="200.0" y="20.0"/>
-            </dmndi:DMNShape>
-            <dmndi:DMNShape dmnElementRef="_41effb45-b3c4-46ac-b1da-122b3e428a98" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_s2">
-                <dc:Bounds height="60.0" width="150.0" x="20.0" y="160.0"/>
-            </dmndi:DMNShape>
-            <dmndi:DMNShape dmnElementRef="_5a4bdb64-f0ef-4978-9e03-6f1ae64a1f17" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_s3">
-                <dc:Bounds height="60.0" width="150.0" x="200.0" y="160.0"/>
-            </dmndi:DMNShape>
-            <dmndi:DMNShape dmnElementRef="_8ff18665-84e9-49f2-a8df-8981b1844549" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_s4">
-                <dc:Bounds height="60.0" width="150.0" x="380.0" y="160.0"/>
-            </dmndi:DMNShape>
-            <dmndi:DMNEdge dmnElementRef="ac23f1ad-562f-47e9-a369-d9cc01f8b415" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_e2">
-                <di:waypoint x="95.0" y="160.0"/>
-                <di:waypoint x="225.0" y="80.0"/>
-            </dmndi:DMNEdge>
-            <dmndi:DMNEdge dmnElementRef="c565bfc1-53ae-4e25-ad35-b26767a9b1d9" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_e1">
-                <di:waypoint x="275.0" y="160.0"/>
-                <di:waypoint x="275.0" y="80.0"/>
-            </dmndi:DMNEdge>
-            <dmndi:DMNEdge dmnElementRef="ae239e86-d326-4513-a01b-24e18269de29" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_e3">
-                <di:waypoint x="455.0" y="160.0"/>
-                <di:waypoint x="325.0" y="80.0"/>
-            </dmndi:DMNEdge>
-        </dmndi:DMNDiagram>
-    </dmndi:DMNDI>
+    <!--    <dmndi:DMNDI>-->
+    <!--        <dmndi:DMNDiagram name="Decision Requirement Diagram" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_D1">-->
+    <!--            <dmndi:Size width="550.0" height="240.0"/>-->
+    <!--            <dmndi:DMNShape dmnElementRef="_3b2953a3-745f-4d2e-b55d-75c8c5ae653c" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_s1">-->
+    <!--                <dc:Bounds height="60.0" width="150.0" x="200.0" y="20.0"/>-->
+    <!--            </dmndi:DMNShape>-->
+    <!--            <dmndi:DMNShape dmnElementRef="_41effb45-b3c4-46ac-b1da-122b3e428a98" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_s2">-->
+    <!--                <dc:Bounds height="60.0" width="150.0" x="20.0" y="160.0"/>-->
+    <!--            </dmndi:DMNShape>-->
+    <!--            <dmndi:DMNShape dmnElementRef="_5a4bdb64-f0ef-4978-9e03-6f1ae64a1f17" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_s3">-->
+    <!--                <dc:Bounds height="60.0" width="150.0" x="200.0" y="160.0"/>-->
+    <!--            </dmndi:DMNShape>-->
+    <!--            <dmndi:DMNShape dmnElementRef="_8ff18665-84e9-49f2-a8df-8981b1844549" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_s4">-->
+    <!--                <dc:Bounds height="60.0" width="150.0" x="380.0" y="160.0"/>-->
+    <!--            </dmndi:DMNShape>-->
+    <!--            <dmndi:DMNEdge dmnElementRef="ac23f1ad-562f-47e9-a369-d9cc01f8b415" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_e2">-->
+    <!--                <di:waypoint x="95.0" y="160.0"/>-->
+    <!--                <di:waypoint x="225.0" y="80.0"/>-->
+    <!--            </dmndi:DMNEdge>-->
+    <!--            <dmndi:DMNEdge dmnElementRef="c565bfc1-53ae-4e25-ad35-b26767a9b1d9" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_e1">-->
+    <!--                <di:waypoint x="275.0" y="160.0"/>-->
+    <!--                <di:waypoint x="275.0" y="80.0"/>-->
+    <!--            </dmndi:DMNEdge>-->
+    <!--            <dmndi:DMNEdge dmnElementRef="ae239e86-d326-4513-a01b-24e18269de29" id="_edbd2d8e-a5a8-4660-9bb9-adaa792d900c_e3">-->
+    <!--                <di:waypoint x="455.0" y="160.0"/>-->
+    <!--                <di:waypoint x="325.0" y="80.0"/>-->
+    <!--            </dmndi:DMNEdge>-->
+    <!--        </dmndi:DMNDiagram>-->
+    <!--    </dmndi:DMNDI>-->
 </definitions>

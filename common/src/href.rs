@@ -10,7 +10,7 @@ use crate::DsntkError;
 use uriparse::URIReference;
 
 /// URI reference used for utilizing `href` attribute.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct HRef {
   /// Namespace built from URI's path components.
   namespace: Option<String>,
