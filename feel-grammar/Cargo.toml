@@ -7,6 +7,7 @@ categories = ["development-tools", "command-line-utilities", "finance", "parsing
 keywords = ["dmn", "decision", "toolkit", "feel"]
 documentation = "https://docs.rs/dsntk-feel-grammar"
 repository = { workspace = true }
+homepage = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
 

@@ -271,3 +271,43 @@ fn _0050() {
     r#"unexpected type in negated list: function<>->Any"#,
   );
 }
+
+#[test]
+fn _0051() {
+  satisfies(false, &scope!(), "5", "", "not(=4,=5,=6)", false);
+}
+
+#[test]
+fn _0052() {
+  satisfies(false, &scope!(), "5", "", "not(!=4,!=5,!=6)", true);
+}
+
+#[test]
+fn _0053() {
+  satisfies(false, &scope!(), "5", "", "not(!=4,=5,!=6)", false);
+}
+
+#[test]
+fn _0054() {
+  satisfies(false, &scope!(), "5", "", "not(!=5,=5)", false);
+}
+
+#[test]
+fn _0055() {
+  satisfies(false, &scope!(), "4", "", "not(!=5)", false);
+}
+
+#[test]
+fn _0056() {
+  satisfies(false, &scope!(), "5", "", "not(!=5)", true);
+}
+
+#[test]
+fn _0057() {
+  satisfies(false, &scope!(), "5", "", "not(=5)", false);
+}
+
+#[test]
+fn _0058() {
+  satisfies(false, &scope!(), "4", "", "not(=5)", true);
+}
