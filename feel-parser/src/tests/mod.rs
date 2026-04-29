@@ -64,7 +64,7 @@ macro_rules! b_bool {
 }
 
 use crate::lalr::TokenType;
-use crate::lalr::TokenType::StartExpression;
+use crate::lalr::TokenType::*;
 use crate::parser::Parser;
 use crate::{AstNode, ParsingScope};
 pub(crate) use __name;

@@ -169,7 +169,7 @@ fn _0010() {
   accept(
     &scope,
     StartBoxedExpression,
-    r#" { name: "John", addres: { street: "Bourbon Street" , house no: 15} , married: false } "#,
+    r#" { name: "John", address: { street: "Bourbon Street" , house no: 15} , married: false } "#,
     r#"
        Context
        ├─ ContextEntry
@@ -179,7 +179,7 @@ fn _0010() {
        │     └─ `John`
        ├─ ContextEntry
        │  ├─ ContextEntryKey
-       │  │  └─ `addres`
+       │  │  └─ `address`
        │  └─ Context
        │     ├─ ContextEntry
        │     │  ├─ ContextEntryKey

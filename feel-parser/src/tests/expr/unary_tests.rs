@@ -173,10 +173,130 @@ fn _0009() {
 }
 
 #[test]
-fn _00010() {
+fn _0010() {
   let scope = scope!();
   assert_eq!(
     Err(DsntkError::new(r#"ParserError"#, r#"syntax error: (1,2,3,4)"#)),
     Parser::new(&scope, StartUnaryTests, "(1,2,3,4)", false).parse()
+  );
+}
+
+#[test]
+fn _0011() {
+  let scope = scope!();
+  accept(
+    &scope,
+    StartUnaryTests,
+    r#" < today() "#,
+    r#"
+       ExpressionList
+       └─ UnaryLt
+          └─ FunctionInvocation
+             ├─ Name
+             │  └─ `today`
+             └─ PositionalParameters
+                └─ (empty)
+    "#,
+    false,
+  );
+}
+
+#[test]
+fn _0012() {
+  let scope = scope!();
+  accept(
+    &scope,
+    StartUnaryTests,
+    r#" = today() "#,
+    r#"
+       ExpressionList
+       └─ UnaryEq
+          └─ FunctionInvocation
+             ├─ Name
+             │  └─ `today`
+             └─ PositionalParameters
+                └─ (empty)
+    "#,
+    false,
+  );
+}
+
+#[test]
+fn _0013() {
+  let scope = scope!();
+  accept(
+    &scope,
+    StartUnaryTests,
+    r#" > today() "#,
+    r#"
+       ExpressionList
+       └─ UnaryGt
+          └─ FunctionInvocation
+             ├─ Name
+             │  └─ `today`
+             └─ PositionalParameters
+                └─ (empty)
+    "#,
+    false,
+  );
+}
+
+#[test]
+fn _0014() {
+  let scope = scope!();
+  accept(
+    &scope,
+    StartUnaryTests,
+    r#" != today() "#,
+    r#"
+       ExpressionList
+       └─ UnaryNe
+          └─ FunctionInvocation
+             ├─ Name
+             │  └─ `today`
+             └─ PositionalParameters
+                └─ (empty)
+    "#,
+    false,
+  );
+}
+
+#[test]
+fn _0015() {
+  let scope = scope!();
+  accept(
+    &scope,
+    StartUnaryTests,
+    r#" >= today() "#,
+    r#"
+       ExpressionList
+       └─ UnaryGe
+          └─ FunctionInvocation
+             ├─ Name
+             │  └─ `today`
+             └─ PositionalParameters
+                └─ (empty)
+    "#,
+    false,
+  );
+}
+
+#[test]
+fn _0016() {
+  let scope = scope!();
+  accept(
+    &scope,
+    StartUnaryTests,
+    r#" <= today() "#,
+    r#"
+       ExpressionList
+       └─ UnaryLe
+          └─ FunctionInvocation
+             ├─ Name
+             │  └─ `today`
+             └─ PositionalParameters
+                └─ (empty)
+    "#,
+    false,
   );
 }

@@ -1102,7 +1102,7 @@ impl<'b> EvaluatorBuilder<'b> {
       let lhv = lhe(scope);
       let rhv = rhe(scope);
       match rhv {
-        inner @ Value::Null(_)
+        inner @ Value::Null(None)
         | inner @ Value::Number(_)
         | inner @ Value::String(_)
         | inner @ Value::Boolean(_)
@@ -1129,6 +1129,7 @@ impl<'b> EvaluatorBuilder<'b> {
         Value::UnaryGreater(inner) => eval_in_unary_greater(&lhv, inner.borrow()),
         Value::UnaryGreaterOrEqual(inner) => eval_in_unary_greater_or_equal(&lhv, inner.borrow()),
         Value::Irrelevant => VALUE_TRUE,
+        Value::Null(Some(message)) => value_null!(message),
         _ => value_null!("unexpected argument type in 'in' operator: {}", rhv.type_of()),
       }
     })
@@ -1605,10 +1606,10 @@ impl<'b> EvaluatorBuilder<'b> {
     let fn_adjust = match self.parent_node() {
       Some(AstNode::UnaryEq(_)) => |value: Value| (Value::UnaryEqual(value.into()), true),
       Some(AstNode::UnaryNe(_)) => |value: Value| (Value::UnaryNotEqual(value.into()), true),
-      Some(AstNode::UnaryGt(_)) => |value: Value| (Value::UnaryGreater(value.into()), true),
-      Some(AstNode::UnaryGe(_)) => |value: Value| (Value::UnaryGreaterOrEqual(value.into()), true),
       Some(AstNode::UnaryLt(_)) => |value: Value| (Value::UnaryLess(value.into()), true),
       Some(AstNode::UnaryLe(_)) => |value: Value| (Value::UnaryLessOrEqual(value.into()), true),
+      Some(AstNode::UnaryGt(_)) => |value: Value| (Value::UnaryGreater(value.into()), true),
+      Some(AstNode::UnaryGe(_)) => |value: Value| (Value::UnaryGreaterOrEqual(value.into()), true),
       _ => |value: Value| (value, false),
     };
     let lhe = self.build(lhs);
@@ -1796,15 +1797,6 @@ impl<'b> EvaluatorBuilder<'b> {
     })
   }
 
-  /// Returns an evaluator for unary `>=` (greater or equal) operator.
-  fn build_unary_ge(&mut self, lhs: &'b AstNode) -> Evaluator {
-    let lhe = self.build(lhs);
-    Box::new(move |scope: &FeelScope| match lhe(scope) {
-      Value::Transparent(value) => *value,
-      other => Value::UnaryGreaterOrEqual(other.into()),
-    })
-  }
-
   /// Returns an evaluator for unary `=` (equal) operator.
   fn build_unary_eq(&mut self, lhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
@@ -1814,21 +1806,12 @@ impl<'b> EvaluatorBuilder<'b> {
     })
   }
 
-  /// Returns an evaluator for unary `>` (greater) operator.
-  fn build_unary_gt(&mut self, lhs: &'b AstNode) -> Evaluator {
+  /// Returns an evaluator for unary `!=` (not equal) operator.
+  fn build_unary_ne(&mut self, lhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
     Box::new(move |scope: &FeelScope| match lhe(scope) {
       Value::Transparent(value) => *value,
-      other => Value::UnaryGreater(other.into()),
-    })
-  }
-
-  /// Returns an evaluator for unary `<=` (less or equal) operator.
-  fn build_unary_le(&mut self, lhs: &'b AstNode) -> Evaluator {
-    let lhe = self.build(lhs);
-    Box::new(move |scope: &FeelScope| match lhe(scope) {
-      Value::Transparent(value) => *value,
-      other => Value::UnaryLessOrEqual(other.into()),
+      other => Value::UnaryNotEqual(other.into()),
     })
   }
 
@@ -1841,21 +1824,39 @@ impl<'b> EvaluatorBuilder<'b> {
     })
   }
 
-  /// Returns an evaluator for unary `!=` (not equal) operator.
-  fn build_unary_ne(&mut self, lhs: &'b AstNode) -> Evaluator {
+  /// Returns an evaluator for unary `<=` (less or equal) operator.
+  fn build_unary_le(&mut self, lhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
     Box::new(move |scope: &FeelScope| match lhe(scope) {
       Value::Transparent(value) => *value,
-      other => Value::UnaryNotEqual(other.into()),
+      other => Value::UnaryLessOrEqual(other.into()),
+    })
+  }
+
+  /// Returns an evaluator for unary `>` (greater) operator.
+  fn build_unary_gt(&mut self, lhs: &'b AstNode) -> Evaluator {
+    let lhe = self.build(lhs);
+    Box::new(move |scope: &FeelScope| match lhe(scope) {
+      Value::Transparent(value) => *value,
+      other => Value::UnaryGreater(other.into()),
+    })
+  }
+
+  /// Returns an evaluator for unary `>=` (greater or equal) operator.
+  fn build_unary_ge(&mut self, lhs: &'b AstNode) -> Evaluator {
+    let lhe = self.build(lhs);
+    Box::new(move |scope: &FeelScope| match lhe(scope) {
+      Value::Transparent(value) => *value,
+      other => Value::UnaryGreaterOrEqual(other.into()),
     })
   }
 }
 
-fn adjust(value: Value, adjusted: bool) -> Value {
-  if adjusted { Value::Transparent(value.into()) } else { value }
+fn set_transparency(value: Value, transparent: bool) -> Value {
+  if transparent { Value::Transparent(value.into()) } else { value }
 }
 
-fn get_property_from_value(value: Value, adjusted: bool, name: &Name) -> Value {
+fn get_property_from_value(value: Value, transparent: bool, name: &Name) -> Value {
   let property = Bip::new(name.as_str());
   match value {
     Value::Date(date) => match property {
@@ -1941,32 +1942,38 @@ fn get_property_from_value(value: Value, adjusted: bool, name: &Name) -> Value {
       other => value_null!("no such property in range: {}", other),
     },
     Value::UnaryEqual(value) => match property {
-      Bip::Start => adjust(*value, adjusted),
-      Bip::End => adjust(*value, adjusted),
-      Bip::StartIncluded | Bip::EndIncluded => adjust(Value::Boolean(true), adjusted),
-      other => adjust(value_null!("no such property in unary equal: {}", other), adjusted),
+      Bip::Start => set_transparency(*value, transparent),
+      Bip::End => set_transparency(*value, transparent),
+      Bip::StartIncluded | Bip::EndIncluded => set_transparency(Value::Boolean(true), transparent),
+      other => set_transparency(value_null!("no such property in unary equal: {}", other), transparent),
     },
-    Value::UnaryGreater(value) => match property {
-      Bip::Start => adjust(*value, adjusted),
-      Bip::StartIncluded | Bip::EndIncluded => adjust(Value::Boolean(false), adjusted),
-      other => adjust(value_null!("no such property in unary greater: {}", other), adjusted),
-    },
-    Value::UnaryGreaterOrEqual(value) => match property {
-      Bip::Start => adjust(*value, adjusted),
-      Bip::StartIncluded => adjust(Value::Boolean(true), adjusted),
-      Bip::EndIncluded => adjust(Value::Boolean(false), adjusted),
-      other => adjust(value_null!("no such property in unary greater or equal: {}", other), adjusted),
+    Value::UnaryNotEqual(value) => match property {
+      Bip::Start => set_transparency(*value, transparent),
+      Bip::End => set_transparency(*value, transparent),
+      Bip::StartIncluded | Bip::EndIncluded => set_transparency(Value::Boolean(true), transparent),
+      other => set_transparency(value_null!("no such property in unary not equal: {}", other), transparent),
     },
     Value::UnaryLess(value) => match property {
-      Bip::End => adjust(*value, adjusted),
-      Bip::StartIncluded | Bip::EndIncluded => adjust(Value::Boolean(false), adjusted),
-      other => adjust(value_null!("no such property in unary less: {}", other), adjusted),
+      Bip::End => set_transparency(*value, transparent),
+      Bip::StartIncluded | Bip::EndIncluded => set_transparency(Value::Boolean(false), transparent),
+      other => set_transparency(value_null!("no such property in unary less: {}", other), transparent),
     },
     Value::UnaryLessOrEqual(value) => match property {
-      Bip::End => adjust(*value, adjusted),
-      Bip::StartIncluded => adjust(Value::Boolean(false), adjusted),
-      Bip::EndIncluded => adjust(Value::Boolean(true), adjusted),
-      other => adjust(value_null!("no such property in unary less or equal: {}", other), adjusted),
+      Bip::End => set_transparency(*value, transparent),
+      Bip::StartIncluded => set_transparency(Value::Boolean(false), transparent),
+      Bip::EndIncluded => set_transparency(Value::Boolean(true), transparent),
+      other => set_transparency(value_null!("no such property in unary less or equal: {}", other), transparent),
+    },
+    Value::UnaryGreater(value) => match property {
+      Bip::Start => set_transparency(*value, transparent),
+      Bip::StartIncluded | Bip::EndIncluded => set_transparency(Value::Boolean(false), transparent),
+      other => set_transparency(value_null!("no such property in unary greater: {}", other), transparent),
+    },
+    Value::UnaryGreaterOrEqual(value) => match property {
+      Bip::Start => set_transparency(*value, transparent),
+      Bip::StartIncluded => set_transparency(Value::Boolean(true), transparent),
+      Bip::EndIncluded => set_transparency(Value::Boolean(false), transparent),
+      other => set_transparency(value_null!("no such property in unary greater or equal: {}", other), transparent),
     },
     v @ Value::Null(_) => v,
     other => value_null!("unexpected type: {}, for property: {}", other.type_of(), property),
@@ -2078,17 +2085,6 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
       Value::UnaryNotEqual(r_end) => eval_ternary_equality(l_end, r_end),
       _ => Some(false),
     },
-    Value::UnaryGreater(l_end) => match rhs {
-      Value::Range(rs, cs, re, ce) => {
-        if cs.opened() && ce.opened() && !re.is_null() {
-          eval_ternary_equality(l_end, rs)
-        } else {
-          Some(false)
-        }
-      }
-      Value::UnaryGreater(r_end) => eval_ternary_equality(l_end, r_end),
-      _ => None,
-    },
     Value::UnaryLess(l_end) => match rhs {
       Value::Range(rs, cs, re, ce) => {
         if cs.opened() && ce.opened() && !rs.is_null() {
@@ -2100,17 +2096,6 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
       Value::UnaryLess(r_end) => eval_ternary_equality(l_end, r_end),
       _ => None,
     },
-    Value::UnaryGreaterOrEqual(l_end) => match rhs {
-      Value::Range(rs, cs, re, ce) => {
-        if cs.closed() && ce.opened() && !re.is_null() {
-          eval_ternary_equality(l_end, rs)
-        } else {
-          Some(false)
-        }
-      }
-      Value::UnaryGreaterOrEqual(r_end) => eval_ternary_equality(l_end, r_end),
-      _ => None,
-    },
     Value::UnaryLessOrEqual(l_end) => match rhs {
       Value::Range(rs, cs, re, ce) => {
         if cs.closed() && ce.opened() && !rs.is_null() {
@@ -2120,6 +2105,28 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
         }
       }
       Value::UnaryLessOrEqual(r_end) => eval_ternary_equality(l_end, r_end),
+      _ => None,
+    },
+    Value::UnaryGreater(l_end) => match rhs {
+      Value::Range(rs, cs, re, ce) => {
+        if cs.opened() && ce.opened() && !re.is_null() {
+          eval_ternary_equality(l_end, rs)
+        } else {
+          Some(false)
+        }
+      }
+      Value::UnaryGreater(r_end) => eval_ternary_equality(l_end, r_end),
+      _ => None,
+    },
+    Value::UnaryGreaterOrEqual(l_end) => match rhs {
+      Value::Range(rs, cs, re, ce) => {
+        if cs.closed() && ce.opened() && !re.is_null() {
+          eval_ternary_equality(l_end, rs)
+        } else {
+          Some(false)
+        }
+      }
+      Value::UnaryGreaterOrEqual(r_end) => eval_ternary_equality(l_end, r_end),
       _ => None,
     },
     Value::Range(r1s, c1s, r1e, c1e) => match rhs {
@@ -2140,9 +2147,10 @@ pub fn eval_ternary_equality(lhs: &Value, rhs: &Value) -> Option<bool> {
 }
 
 fn eval_in_list(left: &Value, items: &[Value]) -> Value {
+  let mut unary_not_equal = vec![];
   for item in items {
     match item {
-      inner @ Value::Null(_)
+      inner @ Value::Null(None)
       | inner @ Value::String(_)
       | inner @ Value::Number(_)
       | inner @ Value::Boolean(_)
@@ -2154,6 +2162,18 @@ fn eval_in_list(left: &Value, items: &[Value]) -> Value {
       | inner @ Value::Context(_) => {
         if let Value::Boolean(true) = eval_in_equal(left, inner) {
           return VALUE_TRUE;
+        }
+      }
+      Value::UnaryEqual(inner) => {
+        if let Value::Boolean(true) = eval_in_equal(left, inner.borrow()) {
+          return VALUE_TRUE;
+        }
+      }
+      Value::UnaryNotEqual(inner) => {
+        if let Value::Boolean(true) = eval_in_equal(left, inner.borrow()) {
+          unary_not_equal.push(false);
+        } else {
+          unary_not_equal.push(true);
         }
       }
       Value::UnaryLess(inner) => {
@@ -2186,10 +2206,83 @@ fn eval_in_list(left: &Value, items: &[Value]) -> Value {
           return VALUE_TRUE;
         }
       }
-      _ => return value_null!("eval_in_list"),
+      Value::Null(Some(message)) => return value_null!(message),
+      other => return value_null!("unexpected type in list: {}", other.type_of()),
     }
   }
+  if !unary_not_equal.is_empty() && unary_not_equal.iter().all(|value| *value) {
+    return VALUE_TRUE;
+  }
   VALUE_FALSE
+}
+
+fn eval_in_negated_list(left: &Value, items: &[Value]) -> Value {
+  let mut unary_not_equal = vec![];
+  for item in items {
+    match item {
+      inner @ Value::Null(None)
+      | inner @ Value::String(_)
+      | inner @ Value::Number(_)
+      | inner @ Value::Boolean(_)
+      | inner @ Value::Date(_)
+      | inner @ Value::Time(_)
+      | inner @ Value::DateTime(_)
+      | inner @ Value::DaysAndTimeDuration(_)
+      | inner @ Value::YearsAndMonthsDuration(_) => {
+        if let Value::Boolean(true) = eval_in_equal(left, inner) {
+          return VALUE_FALSE;
+        }
+      }
+      Value::UnaryEqual(inner) => {
+        if let Value::Boolean(true) = eval_in_equal(left, inner) {
+          return VALUE_FALSE;
+        }
+      }
+      Value::UnaryNotEqual(inner) => {
+        if let Value::Boolean(true) = eval_in_equal(left, inner.borrow()) {
+          unary_not_equal.push(false);
+        } else {
+          unary_not_equal.push(true);
+        }
+      }
+      Value::UnaryLess(inner) => {
+        if let Value::Boolean(true) = eval_in_unary_less(left, inner.borrow()) {
+          return VALUE_FALSE;
+        }
+      }
+      Value::UnaryLessOrEqual(inner) => {
+        if let Value::Boolean(true) = eval_in_unary_less_or_equal(left, inner.borrow()) {
+          return VALUE_FALSE;
+        }
+      }
+      Value::UnaryGreater(inner) => {
+        if let Value::Boolean(true) = eval_in_unary_greater(left, inner.borrow()) {
+          return VALUE_FALSE;
+        }
+      }
+      Value::UnaryGreaterOrEqual(inner) => {
+        if let Value::Boolean(true) = eval_in_unary_greater_or_equal(left, inner.borrow()) {
+          return VALUE_FALSE;
+        }
+      }
+      Value::List(inner) => {
+        if let Value::Boolean(true) = eval_in_list(left, inner) {
+          return VALUE_FALSE;
+        }
+      }
+      Value::Range(l, l_closed, r, r_closed) => {
+        if let Value::Boolean(true) = eval_in_range(left, l, *l_closed, r, *r_closed) {
+          return VALUE_FALSE;
+        }
+      }
+      Value::Null(Some(message)) => return value_null!(message),
+      other => return value_null!("unexpected type in negated list: {}", other.type_of()),
+    }
+  }
+  if !unary_not_equal.is_empty() && unary_not_equal.iter().all(|value| *value) {
+    return VALUE_FALSE;
+  }
+  VALUE_TRUE
 }
 
 /// Checks if all elements from `list` are present in `items`.
@@ -2216,58 +2309,6 @@ fn eval_in_list_in_list(l_items: &[Value], r_items: &[Value]) -> Value {
     }
   }
   VALUE_FALSE
-}
-
-fn eval_in_negated_list(left: &Value, items: &[Value]) -> Value {
-  for item in items {
-    match item {
-      inner @ Value::Null(_)
-      | inner @ Value::String(_)
-      | inner @ Value::Number(_)
-      | inner @ Value::Boolean(_)
-      | inner @ Value::Date(_)
-      | inner @ Value::Time(_)
-      | inner @ Value::DateTime(_)
-      | inner @ Value::DaysAndTimeDuration(_)
-      | inner @ Value::YearsAndMonthsDuration(_) => {
-        if let Value::Boolean(true) = eval_in_equal(left, inner) {
-          return Value::Boolean(false);
-        }
-      }
-      Value::UnaryLess(inner) => {
-        if let Value::Boolean(true) = eval_in_unary_less(left, inner.borrow()) {
-          return Value::Boolean(false);
-        }
-      }
-      Value::UnaryLessOrEqual(inner) => {
-        if let Value::Boolean(true) = eval_in_unary_less_or_equal(left, inner.borrow()) {
-          return Value::Boolean(false);
-        }
-      }
-      Value::UnaryGreater(inner) => {
-        if let Value::Boolean(true) = eval_in_unary_greater(left, inner.borrow()) {
-          return Value::Boolean(false);
-        }
-      }
-      Value::UnaryGreaterOrEqual(inner) => {
-        if let Value::Boolean(true) = eval_in_unary_greater_or_equal(left, inner.borrow()) {
-          return Value::Boolean(false);
-        }
-      }
-      Value::List(inner) => {
-        if let Value::Boolean(true) = eval_in_list(left, inner) {
-          return Value::Boolean(false);
-        }
-      }
-      Value::Range(l, l_closed, r, r_closed) => {
-        if let Value::Boolean(true) = eval_in_range(left, l, *l_closed, r, *r_closed) {
-          return Value::Boolean(false);
-        }
-      }
-      other => return value_null!("unexpected type in negated list: {}", other.type_of()),
-    }
-  }
-  Value::Boolean(true)
 }
 
 fn eval_in_range(lhv: &Value, start: &Value, start_type: IntervalType, end: &Value, end_type: IntervalType) -> Value {

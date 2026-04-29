@@ -1,9 +1,12 @@
+use super::*;
+
 mod addition;
 mod arithmetic_negation;
 mod between;
 mod boxed_expression;
 mod comment;
 mod comparison;
+mod comparison_in;
 mod conjunction;
 mod context;
 mod date;
