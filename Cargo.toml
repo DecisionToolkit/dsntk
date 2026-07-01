@@ -24,7 +24,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.3.0-dev"
+version = "0.3.1-dev"
 authors = ["Dariusz Depta <depta@engos.de>"]
 repository = "https://github.com/DecisionToolkit/dsntk.git"
 homepage = "https://decision-toolkit.org"
