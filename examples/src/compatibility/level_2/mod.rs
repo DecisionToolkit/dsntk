@@ -1,9 +1,11 @@
 //! # Decision models for compatibility tests level 2
 
 pub const DMN_2_0001: &str = include_str!("2_0001.dmn");
+pub const IDML_2_0001: &str = include_str!("2_0001.idml");
 pub const DMN_2_0002: &str = include_str!("2_0002.dmn");
 pub const DMN_2_0003: &str = include_str!("2_0003.dmn");
 pub const DMN_2_0004: &str = include_str!("2_0004.dmn");
+pub const IDML_2_0004: &str = include_str!("2_0004.idml");
 pub const DMN_2_0005: &str = include_str!("2_0005.dmn");
 pub const DMN_2_0006: &str = include_str!("2_0006.dmn");
 pub const DMN_2_0007: &str = include_str!("2_0007.dmn");

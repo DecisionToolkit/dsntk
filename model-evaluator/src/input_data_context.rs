@@ -69,7 +69,7 @@ mod tests {
   /// Utility function for building input data context evaluator from definitions,
   /// and item definition context evaluator from definitions.
   fn build_evaluators(xml: &str) -> (InputDataContextEvaluator, ItemDefinitionContextEvaluator) {
-    let definitions = dsntk_model::parse(xml).unwrap();
+    let definitions = dsntk_model::from_xml(xml).unwrap();
     let mut def_definitions = DefDefinitions::default();
     def_definitions.add_model(&definitions);
     let input_data_context_evaluator = InputDataContextEvaluator::new(&def_definitions);

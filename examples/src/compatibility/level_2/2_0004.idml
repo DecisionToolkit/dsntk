@@ -1,0 +1,59 @@
+.NAMESPACE https://decision-toolkit.org
+.NAME compliance-level-2-test-0004
+.ID _3859fe63-c8a7-4fc7-8a10-f27830e9d2ac
+.VERSION https://www.omg.org/spec/DMN/20191111/MODEL/
+.DECISION
+    .NAME Approval Status
+    .ID _3b2953a3-745f-4d2e-b55d-75c8c5ae653c
+    .VARIABLE
+        .NAME Approval Status
+        .ID _8ee5dd22-4857-4ccf-97dd-b3f87cabf05f
+        .TYPE-REF string
+    .INFORMATION-REQUIREMENT
+        .ID _c565bfc1-53ae-4e25-ad35-b26767a9b1d9
+        .REQUIRED-INPUT
+            .HREF #_5a4bdb64-f0ef-4978-9e03-6f1ae64a1f17
+    .INFORMATION-REQUIREMENT
+        .ID _ac23f1ad-562f-47e9-a369-d9cc01f8b415
+        .REQUIRED-INPUT
+            .HREF #_41effb45-b3c4-46ac-b1da-122b3e428a98
+    .INFORMATION-REQUIREMENT
+        .ID _ae239e86-d326-4513-a01b-24e18269de29
+        .REQUIRED-INPUT
+            .HREF #_8ff18665-84e9-49f2-a8df-8981b1844549
+    .DECISION-TABLE
+        ┌───┬───────────┬────────────────────────┬──────────────╥────────────────────────┐
+        │ U │    Age    │      RiskCategory      │ isAffordable ║     Approval Status    │
+        │   ├───────────┼────────────────────────┼──────────────╫────────────────────────┤
+        │   │ [10..120] │"High", "Low", "Medium" │ false, true  ║ "Approved", "Declined" │
+        ╞═══╪═══════════╪════════════════════════╪══════════════╬════════════════════════╡
+        │ 1 │   >=18    │    "Medium", "Low"     │     true     ║       "Approved"       │
+        ├───┼───────────┼────────────────────────┼──────────────╫────────────────────────┤
+        │ 2 │    <18    │    "Medium", "Low"     │     true     ║       "Declined"       │
+        ├───┼───────────┼────────────────────────┼──────────────╫────────────────────────┤
+        │ 3 │     -     │         "High"         │     true     ║       "Declined"       │
+        ├───┼───────────┼────────────────────────┼──────────────╫────────────────────────┤
+        │ 4 │     -     │           -            │    false     ║       "Declined"       │
+        └───┴───────────┴────────────────────────┴──────────────╨────────────────────────┘
+        .ID _73ec5c56-978c-45ee-a0b7-9585fb48008e
+.INPUT-DATA
+    .NAME Age
+    .ID _41effb45-b3c4-46ac-b1da-122b3e428a98
+    .VARIABLE
+        .NAME Age
+        .ID _e073557f-c20f-42e4-ba1a-b98c15daec50
+        .TYPE-REF number
+.INPUT-DATA
+    .NAME RiskCategory
+    .ID _5a4bdb64-f0ef-4978-9e03-6f1ae64a1f17
+    .VARIABLE
+        .NAME RiskCategory
+        .ID _7c9ecedf-0010-488d-9b93-122520ddaab5
+        .TYPE-REF string
+.INPUT-DATA
+    .NAME isAffordable
+    .ID _8ff18665-84e9-49f2-a8df-8981b1844549
+    .VARIABLE
+        .NAME isAffordable
+        .ID _2af698d7-017a-40b9-bea5-94ee748e4a30
+        .TYPE-REF boolean

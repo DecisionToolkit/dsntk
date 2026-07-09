@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <title>compliance-level-2-test-0004</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <style>
+    @media print {
+      body {
+        font-size: 10pt;
+        margin: 0;
+      }
+      svg {
+        border: unset;
+        width: 100%;
+      }
+      .diagram-section {
+        grid-template-columns: 0 auto 0;
+      }
+    }
+    body {
+      background-color: white;
+      color: black;
+      font-family: "Barlow", sans-serif;
+      font-size: 16pt;
+      font-weight: 300;
+    }
+    section {
+      display: block;
+    }
+    svg {
+      border: 1px solid #DBDBDB;
+      color: black;
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 20px;
+      font-weight: 400;
+      overflow: hidden;
+      user-select: none;
+      fill: white;
+      stroke: black;
+      stroke-width: 1;
+    }
+    h1 {
+      background-color: #002F56;
+      color: white;
+      font-size: 1.4em;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      padding: 8px 20px;
+      text-align: left;
+    }
+    h2 {
+      background-color: #D8ECFF;
+      font-size: 1.2em;
+      font-weight: 600;
+      margin: 0;
+      padding: 8px 20px;
+      text-align: left;
+    }
+    h3 {
+      background-color: white;
+      font-size: 1.2em;
+      font-weight: 400;
+      margin: 0;
+      padding: 12px 20px 4px 20px;
+      text-align: center;
+    }
+    strong {
+      font-weight: 600;
+    }
+    .diagram-section {
+      display: grid;
+      grid-template-columns: auto 80% auto;
+    }
+    .diagram-container {
+      align-items: center;
+      break-inside: avoid;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 5px;
+      width: 100%;
+    }
+    .diagram-title {
+      font-size: 1.2em;
+      font-weight: 400;
+      margin: 0;
+      padding: 12px 12px 4px 12px;
+      text-align: center;
+    }
+    .model-element-container {
+      margin: 0;
+      padding: 20px 0 0 20px;
+    }
+    .model-element-name {
+      display: inline-block;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+    .model-element-type {
+      display: inline-block;
+      font-size: 1em;
+      font-weight: 300;
+    }
+    .variable-details-container {
+      align-content: flex-start;
+      break-inside: avoid;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 12px 0 12px 30px;
+    }
+    .variable-details-heading {
+      font-size: 1em;
+      font-weight: 600;
+      margin: 0;
+      padding: 0 0 4px 0;
+      text-align: left;
+    }
+    .variable-details-properties {
+      align-self: start;
+      background-color: #B6B6B6;
+      border: 2px solid #B6B6B6;
+      display: grid;
+      grid-gap: 2px;
+      grid-template-columns: auto auto;
+    }
+    .variable-details-property-name {
+      background-color: #E1E1E1;
+      font-size: 1em;
+      font-weight: 300;
+      margin: 0;
+      padding: 4px 10px 4px 10px;
+      text-align: right;
+    }
+    .variable-details-property-value {
+      background-color: white;
+      font-size: 1em;
+      font-weight: 500;
+      margin: 0;
+      padding: 4px 10px 4px 10px;
+      text-align: left;
+    }
+    .variable-details-property-value-type {
+      background-color: white;
+      font-size: 1em;
+      font-style: italic;
+      font-weight: 600;
+      margin: 0;
+      padding: 4px 10px 4px 10px;
+      text-align: left;
+    }
+    .description-container {
+      border-left: 3px solid #FFAC41;
+      margin: 10px 30px 10px 30px;
+      padding: 0 0 0 8px;
+    }
+    .description {
+      font-size: 1em;
+      font-weight: 300;
+      margin: 0;
+      padding: 0;
+    }
+    .description p {
+      margin: 0;
+      padding: 0;
+    }
+    .description ol {
+      margin: 4px 0;
+    }
+    .description ul {
+      margin: 4px 0;
+    }
+    .expression-instance-container {
+      align-content: flex-start;
+      break-inside: avoid;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 12px 0 12px 30px;
+    }
+    .literal-expression {
+      align-self: flex-start;
+      border: 1px solid #9B9B9B;
+      color: blueviolet;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.8em;
+      font-weight: 400;
+      margin: 0;
+      padding: 8px 20px;
+      text-align: left;
+    }
+    .decision-table {
+      align-content: flex-start;
+      break-inside: avoid;
+      color: black;
+      display: flex;
+      flex-direction: column;
+      font-weight: 300;
+    }
+    .decision-table .information-item-name {
+      align-self: flex-start;
+      background-color: #EFEFEF;
+      border: 2px solid #727272;
+      font-weight: 500;
+      padding: 2px 4px;
+      position: relative;
+      top: 2px;
+    }
+    .decision-table .grid-container {
+      display: flex;
+      flex-direction: row;
+    }
+    .decision-table .grid-body {
+      background-color: #727272;
+      border: 2px solid #727272;
+      color: #404040;
+      display: grid;
+      grid-gap: 2px;
+    }
+    .decision-table .vertical-double-line {
+      background-color: white;
+      width: 2px;
+    }
+    .decision-table .horizontal-double-line {
+      background-color: white;
+      height: 2px;
+    }
+    .decision-table .hit-policy {
+      background-color: #FFB25B;
+      color: white;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .rule-number {
+      align-items: center;
+      background-color: #FF6300;
+      color: white;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .input-expression {
+      align-items: center;
+      background-color: #96C1E3;
+      color: black;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .input-allowed-values {
+      align-items: center;
+      background-color: #9A9A9A;
+      color: white;
+      display: flex;
+      font-weight: 400;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .input-entry {
+      align-items: center;
+      background-color: #FAFAFA;
+      color: black;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .output-label {
+      align-items: center;
+      background-color: #E8B4D1;
+      color: black;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .output-component {
+      align-items: center;
+      background-color: #FADBEB;
+      color: black;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .output-allowed-values {
+      align-items: center;
+      background-color: #9A9A9A;
+      color: white;
+      display: flex;
+      font-weight: 400;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .output-entry {
+      align-items: center;
+      background-color: #FAFAFA;
+      color: black;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .annotation-label {
+      align-items: center;
+      background-color: #C1D9C0;
+      color: black;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .annotation-allowed-values {
+      align-items: center;
+      background-color: #9A9A9A;
+      color: white;
+      display: flex;
+      font-weight: 400;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    .decision-table .annotation-entry {
+      align-items: center;
+      background-color: #FAFAFA;
+      color: black;
+      display: flex;
+      font-weight: 500;
+      justify-content: center;
+      padding: 4px 4px;
+      text-align: center;
+    }
+    @media print {
+      .decision-table .grid-body {
+        border: 1px solid #727272;
+        grid-gap: 1px;
+      }
+      .decision-table .horizontal-double-line {
+        height: 1px;
+      }
+      .decision-table .information-item-name {
+        border: 1px solid #727272;
+        top: 1px;
+      }
+      .decision-table .vertical-double-line {
+        width: 1px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>compliance-level-2-test-0004</h1>
+  <div class="description-container">
+    <span></span>
+  </div>
+  <h2>Model diagrams</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">Decision Requirement Diagram</div>
+    <svg viewBox="0 0 550 240" width="550">
+      <g>
+        <rect x="200" y="20" width="150" height="60" style="fill:rgb(255,255,255);stroke:rgb(0,0,0);"/>
+        <foreignObject x="204" y="20" width="142" height="58">
+          <div style="display:table;height:100%;width:100%;text-align:center;color:blue;">
+            <span style="display:table-cell;color:rgb(0,0,0);font-family:Arial;font-size:8pt;vertical-align:middle;">Approval Status</span>
+          </div>
+        </foreignObject>
+      </g>
+      <g>
+        <rect x="20" y="160" width="150" height="60" rx="30" ry="30" style="fill:rgb(255,255,255);stroke:rgb(0,0,0);"/>
+        <foreignObject x="24" y="160" width="142" height="58">
+          <div style="display:table;height:100%;width:100%;text-align:center;color:blue;">
+            <span style="display:table-cell;color:rgb(0,0,0);font-family:Arial;font-size:8pt;vertical-align:middle;">Age</span>
+          </div>
+        </foreignObject>
+      </g>
+      <g>
+        <rect x="200" y="160" width="150" height="60" rx="30" ry="30" style="fill:rgb(255,255,255);stroke:rgb(0,0,0);"/>
+        <foreignObject x="204" y="160" width="142" height="58">
+          <div style="display:table;height:100%;width:100%;text-align:center;color:blue;">
+            <span style="display:table-cell;color:rgb(0,0,0);font-family:Arial;font-size:8pt;vertical-align:middle;">RiskCategory</span>
+          </div>
+        </foreignObject>
+      </g>
+      <g>
+        <rect x="380" y="160" width="150" height="60" rx="30" ry="30" style="fill:rgb(255,255,255);stroke:rgb(0,0,0);"/>
+        <foreignObject x="384" y="160" width="142" height="58">
+          <div style="display:table;height:100%;width:100%;text-align:center;color:blue;">
+            <span style="display:table-cell;color:rgb(0,0,0);font-family:Arial;font-size:8pt;vertical-align:middle;">isAffordable</span>
+          </div>
+        </foreignObject>
+      </g>
+    </svg>
+  </div>
+  <h2>Model elements</h2>
+  <div class="model-element-container">
+    <div class="model-element-name">Approval Status</div>
+    <div class="model-element-type">(Decision)</div>
+    <div class="description-container">
+      <span></span>
+    </div>
+    <div class="variable-details-container">
+      <div class="variable-details-heading">Output data</div>
+      <div class="variable-details-properties">
+        <div class="variable-details-property-name">Name</div>
+        <div class="variable-details-property-value">Approval Status</div>
+        <div class="variable-details-property-name">Type</div>
+        <div class="variable-details-property-value-type">string</div>
+      </div>
+    </div>
+    <div class="expression-instance-container">
+      <div class="variable-details-heading">Decision Logic (Decision Table)</div>
+      <div class="decision-table">
+        <div class="grid-container">
+          <div class="grid-body" style="grid-template-columns: auto auto auto auto auto auto;">
+            <div class="horizontal-double-line" style="grid-column: 1 / span 6; grid-row: 3 / span 1;"></div>
+            <div class="vertical-double-line" style="grid-column: 5 / span 1; grid-row: 1 / span 7;"></div>
+            <div class="hit-policy" style="grid-row: span 2;">U</div>
+            <div class="input-expression" style="grid-row: span 1;">Age</div>
+            <div class="input-expression" style="grid-row: span 1;">RiskCategory</div>
+            <div class="input-expression" style="grid-row: span 1;">isAffordable</div>
+            <div class="output-label">Approval Status</div>
+            <div class="input-allowed-values">[10..120]</div>
+            <div class="input-allowed-values">"High", "Low", "Medium"</div>
+            <div class="input-allowed-values">false, true</div>
+            <div class="output-allowed-values">"Approved", "Declined"</div>
+            <div class="rule-number">1</div>
+            <div class="input-entry">>=18</div>
+            <div class="input-entry">"Medium","Low"</div>
+            <div class="input-entry">true</div>
+            <div class="output-entry">"Approved"</div>
+            <div class="rule-number">2</div>
+            <div class="input-entry"><18</div>
+            <div class="input-entry">"Medium","Low"</div>
+            <div class="input-entry">true</div>
+            <div class="output-entry">"Declined"</div>
+            <div class="rule-number">3</div>
+            <div class="input-entry">-</div>
+            <div class="input-entry">"High"</div>
+            <div class="input-entry">true</div>
+            <div class="output-entry">"Declined"</div>
+            <div class="rule-number">4</div>
+            <div class="input-entry">-</div>
+            <div class="input-entry">-</div>
+            <div class="input-entry">false</div>
+            <div class="output-entry">"Declined"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="model-element-container">
+    <div class="model-element-name">Age</div>
+    <div class="model-element-type">(Input Data)</div>
+    <div class="variable-details-container">
+      <div class="variable-details-heading">Input data</div>
+      <div class="variable-details-properties">
+        <div class="variable-details-property-name">Name</div>
+        <div class="variable-details-property-value">Age</div>
+        <div class="variable-details-property-name">Type</div>
+        <div class="variable-details-property-value-type">number</div>
+      </div>
+    </div>
+  </div>
+  <div class="model-element-container">
+    <div class="model-element-name">RiskCategory</div>
+    <div class="model-element-type">(Input Data)</div>
+    <div class="variable-details-container">
+      <div class="variable-details-heading">Input data</div>
+      <div class="variable-details-properties">
+        <div class="variable-details-property-name">Name</div>
+        <div class="variable-details-property-value">RiskCategory</div>
+        <div class="variable-details-property-name">Type</div>
+        <div class="variable-details-property-value-type">string</div>
+      </div>
+    </div>
+  </div>
+  <div class="model-element-container">
+    <div class="model-element-name">isAffordable</div>
+    <div class="model-element-type">(Input Data)</div>
+    <div class="variable-details-container">
+      <div class="variable-details-heading">Input data</div>
+      <div class="variable-details-properties">
+        <div class="variable-details-property-name">Name</div>
+        <div class="variable-details-property-value">isAffordable</div>
+        <div class="variable-details-property-name">Type</div>
+        <div class="variable-details-property-value-type">boolean</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

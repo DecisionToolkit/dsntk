@@ -122,7 +122,7 @@ pub struct ExtensionElement;
 pub struct ExtensionAttribute;
 
 /// Enumeration of concrete instances of [BusinessContextElement].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BusinessContextElementInstance {
   PerformanceIndicator(PerformanceIndicator),
   OrganizationUnit(OrganizationUnit),
@@ -133,7 +133,7 @@ pub enum BusinessContextElementInstance {
 #[named_element]
 #[dmn_element]
 #[business_context_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PerformanceIndicator {
   /// Collection of [Decision] that impact this [PerformanceIndicator].
   /// This attribute stores references
@@ -151,7 +151,7 @@ impl PerformanceIndicator {
 #[named_element]
 #[dmn_element]
 #[business_context_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationUnit {
   /// Collection of [Decision] that are made by this [OrganizationUnit].
   pub(crate) decisions_made: Vec<HRef>,
@@ -173,7 +173,7 @@ impl OrganizationUnit {
 /// All DMN elements are contained within [Definitions] and that have a graphical
 /// representation in a DRD. This enumeration specifies the list
 /// of [DRGElements](DrgElement) contained in [Definitions].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[allow(clippy::large_enum_variant)]
 pub enum DrgElement {
   Decision(Decision),
@@ -196,7 +196,7 @@ pub enum Requirement {
 /// for all contained elements.
 #[named_element]
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Definitions {
   /// This attribute identifies the expression language used in
   /// [LiteralExpressions](LiteralExpression) within the scope
@@ -494,7 +494,7 @@ impl FeelTypedElement for InformationItem {
 /// are defined outside the decision model.
 #[named_element]
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InputData {
   /// The instance of [InformationItem] that stores the result of this [InputData].
   pub(crate) variable: InformationItem,
@@ -675,7 +675,7 @@ impl Binding {
 /// [Decision]
 #[named_element]
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Decision {
   /// A natural language question that characterizes the [Decision],
   /// such that the output of the [Decision] is an answer to the question.
@@ -736,7 +736,7 @@ impl Decision {
 /// The class [InformationRequirement] is used to model an information requirement,
 /// as represented by a plain arrow in a DRD.
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InformationRequirement {
   /// Reference to [Decision] that this [InformationRequirement] associates
   /// with its containing  [Decision] element.
@@ -761,7 +761,7 @@ impl InformationRequirement {
 /// The class [KnowledgeRequirement] is used to model a knowledge requirement,
 /// as represented by a dashed arrow in a DRD.
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct KnowledgeRequirement {
   /// Reference to [Invocable] that this [KnowledgeRequirement] associates with
   /// its containing [Decision] or [BusinessKnowledgeModel] element.
@@ -778,7 +778,7 @@ impl KnowledgeRequirement {
 /// The class [AuthorityRequirement] is used to model an authority requirement,
 /// as represented by an arrow drawn with a dashed line and a filled circular head in a DRD
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AuthorityRequirement {
   /// The instance of [KnowledgeSource] that this [AuthorityRequirement] associates
   /// with its containing [KnowledgeSource], [Decision] or [BusinessKnowledgeModel] element.
@@ -810,7 +810,7 @@ impl AuthorityRequirement {
 /// In a DRD, an instance of [KnowledgeSource] is represented by a `knowledge source` diagram element.
 #[named_element]
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct KnowledgeSource {
   /// Collection of the instances of [AuthorityRequirement] that compose this [Decision].
   pub(crate) authority_requirements: Vec<AuthorityRequirement>,
@@ -830,7 +830,7 @@ impl KnowledgeSource {
 /// must be a single FEEL boxed function definition.
 #[named_element]
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BusinessKnowledgeModel {
   /// Variable that is bound to the function defined by the [FunctionDefinition] for this [BusinessKnowledgeModel].
   pub(crate) variable: InformationItem,
@@ -868,7 +868,7 @@ impl RequiredVariable for BusinessKnowledgeModel {
 /// against the decision model contained in an instance of [Definitions].
 #[named_element]
 #[dmn_element]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DecisionService {
   /// Variable for this [DecisionService].
   pub(crate) variable: InformationItem,
@@ -925,7 +925,7 @@ pub enum ItemDefinitionType {
 #[named_element]
 #[dmn_element]
 #[expression]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ItemDefinition {
   /// This attribute identifies the type language used to specify the base
   /// type of this [ItemDefinition]. This value overrides the type
@@ -986,7 +986,7 @@ impl ItemDefinition {
 /// [UnaryTests] is used to model a boolean test, where the argument
 /// to be tested is implicit or denoted with a **?**.
 /// Test is specified by text in some specified expression language.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UnaryTests {
   /// The text of this [UnaryTests].
   /// It SHALL be a valid expression in the expressionLanguage.
@@ -1011,7 +1011,7 @@ impl UnaryTests {
 
 /// [FunctionItem] defines the signature of a function:
 /// the parameters and the output type of the function.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FunctionItem {
   /// Reference to output type of the function.
   pub(crate) output_type_ref: Option<String>,
@@ -1615,7 +1615,7 @@ pub struct AnnotationEntry {
 
 /// [Dmndi] is a container for the shared [DmnStyle](DmnStyle)s
 /// and all [DmnDiagram]s defined in [Definitions].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Dmndi {
   /// A list of shared [DmnStyle] that can be referenced
   /// by all [DmnDiagram] and [DmnDiagramElement].
@@ -1625,7 +1625,7 @@ pub struct Dmndi {
 }
 
 /// Defines possible elements of [DmnDiagramElement].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DmnDiagramElement {
   DmnShape(DmnShape),
   DmnEdge(DmnEdge),
@@ -1633,7 +1633,7 @@ pub enum DmnDiagramElement {
 
 /// [DmnDiagram] is the container of [DmnDiagramElement] ([DmnShape] (s) and [DmnEdge] (s)).
 /// [DmnDiagram] cannot include other [DmnDiagrams](DmnDiagram).
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct DmnDiagram {
   /// [DmnDiagram] id.
   pub id: Option<String>,
@@ -1657,7 +1657,7 @@ pub struct DmnDiagram {
 
 /// [DmnShape] represents a [Decision], a [BusinessKnowledgeModel], an [InputData] element,
 /// a [KnowledgeSource], a [DecisionService] or a [TextAnnotation] that is depicted on the diagram.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DmnShape {
   /// Unique identifier of this [DmnShape].
   pub id: Option<String>,
@@ -1688,7 +1688,7 @@ pub struct DmnShape {
 }
 
 /// Struct defines line inside [DecisionService].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DmnDecisionServiceDividerLine {
   pub id: Option<String>,
   /// A list of points relative to the origin of its parent [DmnDiagram] that specifies
@@ -1701,7 +1701,7 @@ pub struct DmnDecisionServiceDividerLine {
   pub local_style: Option<DmnStyle>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DmnEdge {
   pub id: Option<String>,
   /// A list of points relative to the origin of its parent [DmnDiagram] that specifies
@@ -1735,7 +1735,7 @@ pub struct Association {}
 pub struct TextAnnotation {}
 
 /// [DmnStyle] is used to keep some non-normative visual attributes such as color and font.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DmnStyle {
   /// A unique identifier for this style so it can be referenced.
   /// Only styles defined in the [Dmndi] can be referenced by [DmnDiagramElement] and [DmnDiagram].
@@ -1768,7 +1768,7 @@ pub struct DmnStyle {
 }
 
 /// Struct represents the depiction of some textual information about a DMN element.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DmnLabel {
   /// The bounds of the [DmnLabel]. When not specified, the label is positioned
   /// at its default position as determined in clause 13.5.
@@ -1781,7 +1781,7 @@ pub struct DmnLabel {
 }
 
 /// Defines RGB color.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DcColor {
   pub red: u8,
   pub green: u8,
@@ -1803,14 +1803,14 @@ impl DcColor {
 }
 
 /// Defines point.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DcPoint {
   pub x: f64,
   pub y: f64,
 }
 
 /// Defines bounds.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DcBounds {
   pub x: f64,
   pub y: f64,
@@ -1819,14 +1819,14 @@ pub struct DcBounds {
 }
 
 /// Defines dimensions.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DcDimension {
   pub width: f64,
   pub height: f64,
 }
 
 /// Defines the kind of element alignment.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum DcAlignmentKind {
   /// Left or top.
   Start,
@@ -1837,7 +1837,7 @@ pub enum DcAlignmentKind {
 }
 
 /// Defines known colors.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum DcKnownColor {
   Aqua = 0x00FFFF,
   Black = 0x000000,

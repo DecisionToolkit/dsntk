@@ -15,7 +15,7 @@ const TARGET_DIR: &str = "../target/gendoc";
 
 /// Utility function for generating HTML file for decision table defined as text.
 fn gen_html_from_model(model: &str, output_file_name: &str) {
-  let definitions = dsntk_model::parse(model).expect("parsing model failed");
+  let definitions = dsntk_model::from_xml(model).expect("parsing model failed");
   let html = crate::dmn_model_to_html(&definitions);
   assert_eq!("<!DOCTYPE html>", &html[0..15]);
   fs::create_dir_all(TARGET_DIR).expect("creating target directories failed");

@@ -1,10 +1,10 @@
+use crate::from_xml;
 use crate::model::DmnElement;
-use crate::parse;
 use dsntk_examples::DMN_FULL;
 
 #[test]
 fn _0001() {
-  let definitions = parse(DMN_FULL).unwrap();
+  let definitions = from_xml(DMN_FULL).unwrap();
   assert_eq!("_id_definitions", definitions.id());
   //------------------------------------------------------------------------------------------------
   // ITEM DEFINITIONS
@@ -30,7 +30,7 @@ fn _0001() {
 #[test]
 #[allow(clippy::redundant_clone)]
 fn _0002() {
-  let definitions = parse(DMN_FULL).unwrap();
+  let definitions = from_xml(DMN_FULL).unwrap();
   let cloned_definitions = definitions.clone();
   assert_eq!("_id_definitions", cloned_definitions.id());
   let expected = format!("{definitions:?}");

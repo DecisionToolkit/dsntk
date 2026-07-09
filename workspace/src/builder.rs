@@ -125,7 +125,7 @@ impl WorkspaceBuilder {
   /// Loads decision model from specified file.
   fn load_model(&mut self, workspace_name: &str, file: &Path) {
     match fs::read_to_string(file) {
-      Ok(xml) => match dsntk_model::parse(&xml) {
+      Ok(xml) => match dsntk_model::from_xml(&xml) {
         Ok(definitions) => {
           let namespace = definitions.namespace().to_string();
           if to_rdnn(&namespace).is_some() {

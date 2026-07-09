@@ -9,7 +9,7 @@ use dsntk_feel::{FEEL_TYPE_NAME_ANY, Name};
 use roxmltree::{Node, NodeType};
 
 /// Parses the XML input document containing DMN model into [Definitions].
-pub fn parse(input: &str) -> Result<Definitions> {
+pub fn from_xml(input: &str) -> Result<Definitions> {
   // parse document
   match roxmltree::Document::parse(input) {
     Ok(document) => {
