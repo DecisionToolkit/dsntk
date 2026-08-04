@@ -37,8 +37,18 @@ pub fn evaluate_equals(left: &Value, right: &Value) -> bool {
 
 /// Evaluates a context from text containing `FEEL` expression.
 pub fn evaluate_context(scope: &FeelScope, input: &str) -> Result<FeelContext> {
-  let node = &dsntk_feel_parser::parse_context(scope, input, false)?;
-  evaluate_context_node(scope, node)
+  let node = dsntk_feel_parser::parse_context(scope, input, false)?;
+  let evaluator = crate::builders::build_evaluator(&node);
+  // `Evaluator` has no lifetime parameter, so an evaluator can never borrow the
+  // parsed syntax tree. The tree is dead here. For a large data literal, it is
+  // the biggest of the three input representations. Free it before the evaluator
+  // builds the value tree.
+  drop(node);
+  if let Value::Context(context) = evaluator(scope) {
+    Ok(context)
+  } else {
+    Err(err_not_a_context())
+  }
 }
 
 /// Evaluates a context from AST node.
