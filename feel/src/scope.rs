@@ -103,6 +103,25 @@ impl FeelScope {
     None
   }
 
+  /// Returns a clone of the entry `field` taken from the context bound to `name`.
+  ///
+  /// This resolves the binding of `name` exactly like [FeelScope::get_value] resolves
+  /// it. The search stops at the first context that binds `name`, so an inner binding
+  /// always shadows an outer one. This returns `None` when `name` is not bound, when
+  /// it is not bound to a context, or when that context has no `field` entry. In all
+  /// three cases the caller must fall back to evaluating the base value.
+  ///
+  /// This clones only the requested entry. Evaluating the base value instead clones
+  /// the whole context, which costs about 2 KB per field access on a typical record.
+  pub fn get_context_entry(&self, name: &Name, field: &Name) -> Option<Value> {
+    for context in self.stack.borrow().iter().rev() {
+      if let Some(value) = context.get_entry(name) {
+        return if let Value::Context(ctx) = value { ctx.get_entry(field).cloned() } else { None };
+      }
+    }
+    None
+  }
+
   /// Searches for a value under so called `qualified` name build from
   /// multiple names passed as an argument.
   pub fn search(&self, names: &[Name]) -> Option<Value> {

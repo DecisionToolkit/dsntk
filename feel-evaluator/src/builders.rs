@@ -1612,9 +1612,22 @@ impl<'b> EvaluatorBuilder<'b> {
       Some(AstNode::UnaryGe(_)) => |value: Value| (Value::UnaryGreaterOrEqual(value.into()), true),
       _ => |value: Value| (value, false),
     };
+    // When the base of the path is a plain name, this code reads the entry straight
+    // from the context bound to that name. Evaluating the base instead clones the
+    // whole context just to read one entry. That cost dominates field access.
+    let opt_base_name = if let AstNode::Name(base_name) = lhs { Some(base_name.clone()) } else { None };
     let lhe = self.build(lhs);
     // prepare and return the evaluator
     Box::new(move |scope: &FeelScope| {
+      // Fast path. `get_context_entry` resolves the base name exactly like the general path
+      // below does. It returns a value only when the general path would return that
+      // same value. Everything else, including a missing entry, falls through, so the
+      // reported reasons for a null result stay unchanged.
+      if let Some(base_name) = &opt_base_name
+        && let Some(value) = scope.get_context_entry(base_name, &name)
+      {
+        return value;
+      }
       let lhv = lhe(scope);
       match lhv {
         Value::Context(context) => {
