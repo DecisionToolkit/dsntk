@@ -10,6 +10,14 @@ use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelT
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+/// Every value slot in the engine pays for `size_of::<Value>()`. A `BTreeMap` node
+/// holds eleven of them, so this size is the dominant term in the memory footprint.
+/// This test fails if a new variant, or an unboxed payload, makes `Value` grow again.
+#[test]
+fn test_size_of_value() {
+  assert_eq!(64, std::mem::size_of::<Value>());
+}
+
 macro_rules! eq_dbg {
   ($expected:literal, $value: expr) => {
     assert_eq!($expected, format!("{:?}", $value));
@@ -77,8 +85,8 @@ fn test_debug() {
     Value::FunctionBody(v_function_body.clone(), v_external)
   );
   eq_dbg!(
-    r#"FunctionDefinition([(Name("a"), Number)], FunctionBodyLiteralExpression, false, Closure({}), FeelContext({}), Number)"#,
-    Value::FunctionDefinition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
+    r#"FunctionDefinition(([(Name("a"), Number)], FunctionBodyLiteralExpression, false, Closure({}), FeelContext({}), Number))"#,
+    Value::function_definition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
   );
   eq_dbg!(r#"IntervalEnd(Number(+1E+0), Opened)"#, Value::IntervalEnd(b_number.clone(), IntervalType::Opened));
   eq_dbg!(r#"IntervalStart(Number(+1E+0), Opened)"#, Value::IntervalStart(b_number.clone(), IntervalType::Opened));
@@ -156,7 +164,7 @@ fn test_display() {
   eq_dsp!(r#"FunctionBody"#, Value::FunctionBody(v_function_body.clone(), v_external));
   eq_dsp!(
     r#"FunctionDefinition([(Name("a"), Number)],_,false,[],{},number)"#,
-    Value::FunctionDefinition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
+    Value::function_definition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
   );
   eq_dsp!(r#"IntervalEnd"#, Value::IntervalEnd(b_number.clone(), IntervalType::Opened));
   eq_dsp!(r#"IntervalStart"#, Value::IntervalStart(b_number.clone(), IntervalType::Opened));
@@ -221,7 +229,7 @@ fn test_type_of() {
   eq_typ!(FeelType::Any, Value::FunctionBody(v_function_body.clone(), v_external));
   eq_typ!(
     FeelType::Function(vec![FeelType::Number], Box::new(FeelType::Number)),
-    Value::FunctionDefinition(
+    Value::function_definition(
       vec![(name.clone(), t_number.clone())],
       v_function_body,
       v_external,
@@ -474,7 +482,7 @@ fn test_coerced() {
   let v_list_number_1 = Value::List(vec![value_number!(1, 0)]);
   let v_list_number_2 = Value::List(vec![value_number!(1, 0), value_number!(2, 0)]);
   let v_list_string_1 = Value::List(vec![Value::String("A".to_string())]);
-  let v_function_a = Value::FunctionDefinition(
+  let v_function_a = Value::function_definition(
     vec![(NAME_A.clone(), T_NUMBER.clone())],
     FunctionBody::LiteralExpression(Arc::new(Box::new(|_: &FeelScope| value_number!(1)))),
     false,

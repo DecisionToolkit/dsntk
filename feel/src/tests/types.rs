@@ -410,7 +410,7 @@ fn test_type_get_conformant_value() {
   ctx_d.set_entry(&NAME_D, v_number_1.clone());
   let v_context_d = Value::Context(ctx_d);
   // functions
-  let v_function_a = Value::FunctionDefinition(
+  let v_function_a = Value::function_definition(
     vec![(NAME_A.clone(), T_NUMBER.clone()), (NAME_B.clone(), T_NUMBER.clone())],
     FunctionBody::LiteralExpression(Arc::new(Box::new(|_: &FeelScope| value_number!(1)))),
     false,
@@ -418,7 +418,7 @@ fn test_type_get_conformant_value() {
     FeelContext::default(),
     T_NUMBER.clone(),
   );
-  let v_function_b = Value::FunctionDefinition(
+  let v_function_b = Value::function_definition(
     vec![(NAME_A.clone(), T_NUMBER.clone()), (NAME_B.clone(), T_NUMBER.clone())],
     FunctionBody::LiteralExpression(Arc::new(Box::new(|_: &FeelScope| value_number!(2)))),
     false,
@@ -426,7 +426,7 @@ fn test_type_get_conformant_value() {
     FeelContext::default(),
     T_BOOLEAN.clone(),
   );
-  let v_function_c = Value::FunctionDefinition(
+  let v_function_c = Value::function_definition(
     vec![(NAME_A.clone(), T_NUMBER.clone())],
     FunctionBody::LiteralExpression(Arc::new(Box::new(|_: &FeelScope| value_number!(3)))),
     false,
@@ -434,7 +434,7 @@ fn test_type_get_conformant_value() {
     FeelContext::default(),
     T_STRING.clone(),
   );
-  let v_function_d = Value::FunctionDefinition(
+  let v_function_d = Value::function_definition(
     vec![(NAME_D.clone(), T_NUMBER.clone())],
     FunctionBody::LiteralExpression(Arc::new(Box::new(|_: &FeelScope| value_number!(4)))),
     false,
@@ -442,7 +442,7 @@ fn test_type_get_conformant_value() {
     FeelContext::default(),
     T_STRING.clone(),
   );
-  let v_function_e = Value::FunctionDefinition(
+  let v_function_e = Value::function_definition(
     vec![(NAME_A.clone(), T_STRING.clone())],
     FunctionBody::LiteralExpression(Arc::new(Box::new(|_: &FeelScope| value_number!(5)))),
     false,

@@ -67,7 +67,7 @@ impl DecisionServiceEvaluator {
             value_null!()
           });
           let function_body = dsntk_feel::FunctionBody::DecisionService(Arc::new(body_evaluator));
-          let function_definition = Value::FunctionDefinition(entry.1.clone(), function_body, false, Closure::default(), FeelContext::default(), output_variable_type);
+          let function_definition = Value::function_definition(entry.1.clone(), function_body, false, Closure::default(), FeelContext::default(), output_variable_type);
           let decision_service_as_function_definition_evaluator = Box::new(move |_: &FeelScope| function_definition.clone());
           entry.3 = Some(decision_service_as_function_definition_evaluator);
         });

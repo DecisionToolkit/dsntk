@@ -134,7 +134,8 @@ impl ModelEvaluator {
     self
       .business_knowledge_model_evaluator
       .evaluate(def_key, &self.global_context, input_data, self, &mut evaluated_ctx);
-    if let Some(Value::FunctionDefinition(parameters, body, _external, _, closure_ctx, result_type)) = evaluated_ctx.get_entry(output_variable_name) {
+    if let Some(Value::FunctionDefinition(fd)) = evaluated_ctx.get_entry(output_variable_name) {
+      let (parameters, body, _external, _, closure_ctx, result_type) = &**fd;
       //TODO Handle external functions.
       let mut parameters_ctx = FeelContext::default();
       parameters_ctx.zip(closure_ctx);

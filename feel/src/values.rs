@@ -74,6 +74,10 @@ pub const VALUE_FALSE: Value = Value::Boolean(false);
 /// Constant indicating invalid coercion result.
 const INVALID_COERCION: &str = "after coercion";
 
+/// Payload of [Value::FunctionDefinition]: formal parameters, body, external flag,
+/// closure names, closure values, result type.
+pub type FunctionDefinitionParts = (Vec<(Name, FeelType)>, FunctionBody, bool, Closure, FeelContext, FeelType);
+
 /// `FEEL` value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -148,20 +152,14 @@ pub enum Value {
 
   /// Value representing the function definition.
   /// This value holds the list of function's formal parameters, the function's body, closure for lambdas and expected result type.
-  FunctionDefinition(
-    /// Formal parameters of the function.
-    Vec<(Name, FeelType)>,
-    /// Body of the function.
-    FunctionBody,
-    /// Flag indicating if the function's body is an external function, `true` == external.
-    bool,
-    /// Closed names from function context (closure names).
-    Closure,
-    /// Values of the closed names (closure values).
-    FeelContext,
-    /// Return type of the function.
-    FeelType,
-  ),
+  ///
+  /// This variant boxes its payload. Unboxed, it is 129 bytes, more than three times
+  /// the size of any other variant. That size alone sets `size_of::<Value>()` for
+  /// every value in the engine. A `BTreeMap` node holds 11 values, so each context
+  /// pays 11 times that difference. Function definitions are rare, so the extra
+  /// indirection costs nothing measurable. Use [Value::function_definition] to build
+  /// this variant.
+  FunctionDefinition(Box<FunctionDefinitionParts>),
 
   /// Value representing interval end.
   IntervalEnd(
@@ -295,7 +293,8 @@ impl Display for Value {
       Value::FormalParameter(_, _) => write!(f, "FormalParameter"),
       Value::FormalParameters(_) => write!(f, "FormalParameters"),
       Value::FunctionBody(_, external) => write!(f, "FunctionBody{}", if *external { " (external)" } else { "" }),
-      Value::FunctionDefinition(parameters, _body, external, closure, closure_ctx, return_type) => {
+      Value::FunctionDefinition(fd) => {
+        let (parameters, _body, external, closure, closure_ctx, return_type) = &**fd;
         write!(f, "FunctionDefinition({parameters:?},_,{external},{closure},{closure_ctx},{return_type})")
       }
       Value::IntervalEnd(_, _) => write!(f, "IntervalEnd"),
@@ -375,6 +374,18 @@ impl Jsonify for Value {
 }
 
 impl Value {
+  /// Builds [Value::FunctionDefinition] from its six parts and boxes the payload.
+  pub fn function_definition(
+    parameters: Vec<(Name, FeelType)>,
+    body: FunctionBody,
+    external: bool,
+    closure: Closure,
+    closure_ctx: FeelContext,
+    result_type: FeelType,
+  ) -> Value {
+    Value::FunctionDefinition(Box::new((parameters, body, external, closure, closure_ctx, result_type)))
+  }
+
   /// Returns `true` when the value is of type [Value::Null].
   pub fn is_null(&self) -> bool {
     matches!(self, Value::Null(_))
@@ -496,7 +507,8 @@ impl Value {
       Value::FormalParameter(_, feel_type) => feel_type.clone(),
       Value::FormalParameters(_) => FeelType::Any,
       Value::FunctionBody(_, _) => FeelType::Any,
-      Value::FunctionDefinition(parameters, _, _, _, _, result_type) => {
+      Value::FunctionDefinition(fd) => {
+        let (parameters, _, _, _, _, result_type) = &**fd;
         let parameter_types = parameters.iter().map(|(_, feel_type)| feel_type.clone()).collect();
         FeelType::Function(parameter_types, Box::new(result_type.clone()))
       }
@@ -593,7 +605,8 @@ impl Value {
         }
         false
       }
-      Value::FunctionDefinition(parameters, _, _, _, _, result_type) => {
+      Value::FunctionDefinition(fd) => {
+        let (parameters, _, _, _, _, result_type) = &**fd;
         if let FeelType::Function(t_parameters, t_result) = target_type {
           if parameters.len() != t_parameters.len() {
             return false;
@@ -642,7 +655,7 @@ impl Value {
   /// All these conversion rules are implemented in this function.
   ///
   pub fn coerced(&self, target_type: &FeelType) -> Value {
-    if let Value::FunctionDefinition(_, _, _, _, _, _) = self {
+    if let Value::FunctionDefinition(_) = self {
       return self.clone();
     }
     if let Value::BuiltInFunction(bif) = self

@@ -1284,7 +1284,8 @@ pub fn list_replace(list: &Value, position_or_match: &Value, new_item: &Value) -
         value_null!("position exceeds integer range")
       }
     }
-    Value::FunctionDefinition(parameters, body, false, _, closure_ctx, _) => {
+    Value::FunctionDefinition(fd) if !fd.2 => {
+      let (parameters, body, _, _, closure_ctx, _) = &**fd;
       if parameters.len() != 2 {
         return value_null!("list replace: matching function must have exactly two arguments");
       }
@@ -2132,7 +2133,10 @@ pub fn round_up(n: &Value, scale: &Value) -> Value {
 
 pub fn sort(list: &Value, ordering_function: &Value) -> Value {
   if let Value::List(items) = list {
-    if let Value::FunctionDefinition(parameters, body, false, _, closure_ctx, _) = ordering_function {
+    if let Value::FunctionDefinition(fd) = ordering_function
+      && !fd.2
+    {
+      let (parameters, body, _, _, closure_ctx, _) = &**fd;
       if parameters.len() == 2 {
         let mut elements = items.clone();
         elements.sort_by(|x, y| {

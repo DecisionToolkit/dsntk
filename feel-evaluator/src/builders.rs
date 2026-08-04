@@ -814,7 +814,7 @@ impl<'b> EvaluatorBuilder<'b> {
               }
             }
             //TODO Check if `FeelType::Any` is always ok for function result type in function definition.
-            Value::FunctionDefinition(parameters, body, external, closure.clone(), closure_ctx, FeelType::Any)
+            Value::function_definition(parameters, body, external, closure.clone(), closure_ctx, FeelType::Any)
           } else {
             value_null!("invalid body in function definition")
           }
@@ -886,7 +886,8 @@ impl<'b> EvaluatorBuilder<'b> {
       let args = argument_evaluators.iter().map(|evaluator| evaluator(scope)).collect::<Vec<Value>>();
       match function {
         Value::BuiltInFunction(bif) => bifs::positional::evaluate_bif(bif, &args),
-        Value::FunctionDefinition(params, body, external, _, closure_ctx, result_type) => {
+        Value::FunctionDefinition(fd) => {
+          let (params, body, external, _, closure_ctx, result_type) = *fd;
           if external {
             eval_external_function_with_positional_parameters(scope, &args, &params, &body, result_type)
           } else {
@@ -940,7 +941,8 @@ impl<'b> EvaluatorBuilder<'b> {
       let args = arguments_evaluator(scope);
       match function {
         Value::BuiltInFunction(bif) => bifs::named::evaluate_bif(bif, &args),
-        Value::FunctionDefinition(params, body, external, _, closure_ctx, result_type) => {
+        Value::FunctionDefinition(fd) => {
+          let (params, body, external, _, closure_ctx, result_type) = *fd;
           if external {
             eval_external_function_with_named_parameters(scope, &args, &params, &body, result_type)
           } else {
@@ -2682,14 +2684,15 @@ fn eval_function_definition(scope: &FeelScope, params_ctx: FeelContext, body: &F
   scope.push(closure_ctx); // closure_ctx
   scope.push(params_ctx); // params_ctx
   let mut result = body.evaluate(scope);
-  if let Value::FunctionDefinition(fd_params, fd_body, fd_external, fd_closure, fd_closure_ctx, fd_result_type) = &result {
+  if let Value::FunctionDefinition(fd) = &result {
+    let (fd_params, fd_body, fd_external, fd_closure, fd_closure_ctx, fd_result_type) = &**fd;
     let mut new_closure_ctx = fd_closure_ctx.clone();
     for closure_name in fd_closure.iter() {
       if let Some(closure_value) = scope.search_entry(closure_name) {
         new_closure_ctx.create_entry(closure_name, closure_value);
       }
     }
-    result = Value::FunctionDefinition(
+    result = Value::function_definition(
       fd_params.to_owned(),
       fd_body.to_owned(),
       fd_external.to_owned(),

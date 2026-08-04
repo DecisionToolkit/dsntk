@@ -148,7 +148,7 @@ pub fn build_function_definition_evaluator(scope: &FeelScope, function_definitio
             closure_ctx.create_entry(closure_name, closure_value);
           }
         }
-        Value::FunctionDefinition(parameters.clone(), function_body.clone(), false, closure.clone(), closure_ctx, result_type.clone())
+        Value::function_definition(parameters.clone(), function_body.clone(), false, closure.clone(), closure_ctx, result_type.clone())
       });
       Ok((
         build_coerced_result_evaluator(function_definition_evaluator, function_definition, function_definition.namespace(), model_builder),
@@ -169,7 +169,7 @@ pub fn build_function_definition_evaluator(scope: &FeelScope, function_definitio
               let java_evaluator = Box::new(move |_: &FeelScope| Value::ExternalJavaFunction(java_class_name.clone(), java_method_signature.clone())) as Evaluator;
               let function_body_evaluator = Arc::new(java_evaluator);
               let function_body = FunctionBody::External(function_body_evaluator);
-              Value::FunctionDefinition(parameters.clone(), function_body, true, Closure::default(), FeelContext::default(), result_type.clone())
+              Value::function_definition(parameters.clone(), function_body, true, Closure::default(), FeelContext::default(), result_type.clone())
             } else {
               value_null!("invalid Java function mapping, no method signature entry in context {}", java_mapping)
             }
@@ -199,7 +199,7 @@ pub fn build_function_definition_evaluator(scope: &FeelScope, function_definitio
               let pmml_evaluator = Box::new(move |_: &FeelScope| Value::ExternalPmmlFunction(pmml_document.clone(), pmml_model_name.clone())) as Evaluator;
               let function_body_evaluator = Arc::new(pmml_evaluator);
               let function_body = FunctionBody::External(function_body_evaluator);
-              Value::FunctionDefinition(parameters.clone(), function_body, true, Closure::default(), FeelContext::default(), result_type.clone())
+              Value::function_definition(parameters.clone(), function_body, true, Closure::default(), FeelContext::default(), result_type.clone())
             } else {
               value_null!("invalid PMML function mapping, no model name entry in context {}", pmml_mapping)
             }
@@ -243,7 +243,10 @@ pub fn build_invocation_evaluator(scope: &FeelScope, invocation: &Invocation, mo
       }
       params_ctx.set_entry(param_name, param_value.coerced(param_type))
     }
-    if let Value::FunctionDefinition(formal_parameters, body, false, _, closure_ctx, result_type) = function_evaluator(scope) {
+    if let Value::FunctionDefinition(fd) = function_evaluator(scope)
+      && !fd.2
+    {
+      let (formal_parameters, body, _, _, closure_ctx, result_type) = *fd;
       for (formal_parameter_name, formal_parameter_type) in formal_parameters {
         if let Some(param_value) = params_ctx.get(&formal_parameter_name) {
           let coerced_param_value = param_value.coerced(&formal_parameter_type);
