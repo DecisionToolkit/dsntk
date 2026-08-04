@@ -65,6 +65,16 @@ impl FeelScope {
     self.stack.borrow_mut().push(ctx)
   }
 
+  /// Returns the number of contexts on the scope stack.
+  pub fn len(&self) -> usize {
+    self.stack.borrow().len()
+  }
+
+  /// Returns `true` when there are no contexts on the scope stack.
+  pub fn is_empty(&self) -> bool {
+    self.stack.borrow().is_empty()
+  }
+
   /// Appends the content of another scope at the end of this scope.
   pub fn append(&self, other: FeelScope) {
     self.stack.borrow_mut().append(&mut other.stack.borrow_mut());
