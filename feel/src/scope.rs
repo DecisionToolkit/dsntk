@@ -91,6 +91,28 @@ impl FeelScope {
     self.stack.borrow().last().cloned()
   }
 
+  /// Builds a scope from a stack of contexts.
+  ///
+  /// Used to give each worker of a parallel `for` its own stack. The contexts are shared,
+  /// not copied: [crate::context::FeelContext] keeps its entries behind an `Arc`, so
+  /// cloning the stack costs one refcount bump per level. Pushing or popping on the copy
+  /// does not affect the original. Mutating a context through it copies that context
+  /// first, because every `FeelContext` mutation is copy-on-write.
+  ///
+  /// A [FeelScope] holds a `RefCell` and so is not `Sync`, but a `Vec<FeelContext>` is both
+  /// `Send` and `Sync`. So the stack is what crosses a thread boundary, and each worker
+  /// builds its own scope around a clone of it.
+  pub fn from_contexts(contexts: Vec<FeelContext>) -> Self {
+    Self { stack: RefCell::new(contexts) }
+  }
+
+  /// Returns `true` when any context on the stack binds `name`.
+  ///
+  /// Unlike [FeelScope::get_value] this clones nothing, so it is usable as a guard.
+  pub fn contains_name(&self, name: &Name) -> bool {
+    self.stack.borrow().iter().any(|context| context.contains_entry(name))
+  }
+
   /// Returns a value of an entry with specified name.
   /// Entries are searched from the last to the first context,
   /// (from top to bottom of the stack).

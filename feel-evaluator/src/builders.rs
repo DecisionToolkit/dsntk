@@ -638,6 +638,8 @@ impl<'b> EvaluatorBuilder<'b> {
       List((Name, Evaluator)),
       Variable((Name, Name)),
     }
+    // Analyze the body once, when the evaluator is built, not per evaluation.
+    let safety = crate::parallel::analyze(rhs);
     let rhe = self.build(rhs);
     let mut evaluators = vec![];
     let mut binding_variables = HashSet::new();
@@ -678,6 +680,7 @@ impl<'b> EvaluatorBuilder<'b> {
     }
     Box::new(move |scope: &FeelScope| {
       let mut for_expression_evaluator = ForExpressionEvaluator::new();
+      for_expression_evaluator.set_safety(safety.clone());
       for iterator_type in &evaluators {
         match iterator_type {
           IteratorType::Interval((name, interval_start_evaluator, interval_end_evaluator)) => {

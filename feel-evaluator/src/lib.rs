@@ -13,6 +13,7 @@ mod evaluators;
 mod filters;
 mod iterations;
 mod macros;
+mod parallel;
 mod tests;
 
 pub use crate::evaluators::*;
