@@ -185,14 +185,14 @@ impl<'b> EvaluatorBuilder<'b> {
         },
         Value::DateTime(lh) => match rhv {
           Value::DaysAndTimeDuration(rh) => {
-            if let Some(a) = *lh + rh {
+            if let Some(a) = Arc::unwrap_or_clone(lh) + rh {
               Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding days and time duration to date and time")
             }
           }
           Value::YearsAndMonthsDuration(rh) => {
-            if let Some(a) = *lh + rh {
+            if let Some(a) = Arc::unwrap_or_clone(lh) + rh {
               Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding years and months duration to date and time")
@@ -214,7 +214,7 @@ impl<'b> EvaluatorBuilder<'b> {
             }
           }
           Value::DateTime(rh) => {
-            if let Some(a) = *rh + lh {
+            if let Some(a) = Arc::unwrap_or_clone(rh) + lh {
               Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding date and time to days and time duration")
@@ -232,7 +232,7 @@ impl<'b> EvaluatorBuilder<'b> {
             }
           }
           Value::DateTime(rh) => {
-            if let Some(a) = *rh + lh {
+            if let Some(a) = Arc::unwrap_or_clone(rh) + lh {
               Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding date and time to years and months duration")
@@ -1748,7 +1748,7 @@ impl<'b> EvaluatorBuilder<'b> {
           }
           Value::DateTime(rh) => {
             let l = FeelDateTime::new(lh, FeelTime::utc(0, 0, 0, 0));
-            if let Some(result) = l - *rh {
+            if let Some(result) = l - Arc::unwrap_or_clone(rh) {
               return Value::DaysAndTimeDuration(result);
             }
           }
@@ -1778,22 +1778,22 @@ impl<'b> EvaluatorBuilder<'b> {
         Value::DateTime(lh) => match rhv {
           Value::Date(rh) => {
             let r = FeelDateTime::new(rh, FeelTime::utc(0, 0, 0, 0));
-            if let Some(result) = *lh - r {
+            if let Some(result) = Arc::unwrap_or_clone(lh) - r {
               return Value::DaysAndTimeDuration(result);
             }
           }
           Value::DateTime(rh) => {
-            if let Some(result) = *lh - *rh {
+            if let Some(result) = Arc::unwrap_or_clone(lh) - Arc::unwrap_or_clone(rh) {
               return Value::DaysAndTimeDuration(result);
             }
           }
           Value::DaysAndTimeDuration(rh) => {
-            if let Some(result) = *lh - rh {
+            if let Some(result) = Arc::unwrap_or_clone(lh) - rh {
               return Value::DateTime(result.into());
             }
           }
           Value::YearsAndMonthsDuration(rh) => {
-            if let Some(result) = *lh - rh {
+            if let Some(result) = Arc::unwrap_or_clone(lh) - rh {
               return Value::DateTime(result.into());
             }
           }
