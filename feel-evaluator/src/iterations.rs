@@ -15,6 +15,11 @@ use std::sync::LazyLock;
 /// Below this the thread pool costs more than it saves.
 const PARALLEL_MIN_ELEMENTS: usize = 512;
 
+/// The name `partial`, interned once. See the note on `NAME_ITEM` in `filters.rs`. A
+/// `for` expression builds a fresh evaluator on every evaluation, so interning this text
+/// was one contended lock acquisition per `for` evaluation.
+static NAME_PARTIAL: LazyLock<Name> = LazyLock::new(|| "partial".into());
+
 /// Set `DSNTK_PARALLEL=0` to force every `for` expression onto the serial path.
 ///
 /// This exists so that the parallel and serial results can be compared on the same binary.
@@ -424,7 +429,7 @@ impl ForExpressionEvaluator {
   pub fn new() -> Self {
     Self {
       iterator: FeelIterator::default(),
-      partial: "partial".into(),
+      partial: NAME_PARTIAL.clone(),
       safety: ParallelSafety::default(),
     }
   }

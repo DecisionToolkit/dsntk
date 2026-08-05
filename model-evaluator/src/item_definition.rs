@@ -9,7 +9,13 @@ use dsntk_feel::{Evaluator, FeelScope, FeelType, Name, value_null};
 use dsntk_feel_parser::AstNode;
 use dsntk_model::ItemDefinitionType;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
+
+/// The name `?`, the implicit input of an allowed-values test, interned once.
+///
+/// See the note on `NAME_ITEM` in `feel-evaluator/src/filters.rs`. This ran once per value
+/// checked against an allowed-values list, from every Rayon worker.
+static NAME_QUESTION_MARK: LazyLock<Name> = LazyLock::new(|| "?".into());
 
 /// Type of closure that evaluates input data conformant with item definition.
 pub type ItemDefinitionEvaluatorFn = Box<dyn Fn(&Value, &ItemDefinitionEvaluator) -> Value + Send + Sync>;
@@ -72,7 +78,7 @@ fn build_allowed_values_evaluator(item_definition: &DefItemDefinition) -> Result
 fn check_allowed_values(value: Value, av_evaluator: Option<&Evaluator>) -> Value {
   if let Some(evaluator) = av_evaluator {
     let scope = FeelScope::default();
-    scope.set_value(&"?".into(), value.clone());
+    scope.set_value(&NAME_QUESTION_MARK, value.clone());
     if evaluator(&scope).is_true() {
       value
     } else {

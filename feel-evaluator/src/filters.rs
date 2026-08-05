@@ -3,6 +3,16 @@
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::{Value, Values};
 use dsntk_feel::{Evaluator, FeelScope, Name, value_null};
+use std::sync::LazyLock;
+
+/// The name `item`, interned once.
+///
+/// `"item".into()` interns the text, and interning takes a read acquisition on the one
+/// process-wide `RwLock` that guards the name table. The evaluator runs a filter once
+/// per filter expression per row, from every Rayon worker. That acquisition is
+/// therefore an atomic read-modify-write on a cache line every worker shares. A
+/// `LazyLock` is an acquire load on a line that is read-only after the first use.
+static NAME_ITEM: LazyLock<Name> = LazyLock::new(|| "item".into());
 
 pub struct FilterExpressionEvaluator {}
 
@@ -19,14 +29,14 @@ impl FilterExpressionEvaluator {
   }
 
   pub fn evaluate(&self, scope: &FeelScope, value: Value, evaluator: &Evaluator) -> Value {
-    let name_item: Name = "item".into();
+    let name_item: &Name = &NAME_ITEM;
     match value {
       Value::List(values) => {
         let mut filtered_values = vec![];
         for value in &values {
           let (added_local_context, has_item_entry) = if let Value::Context(local_context) = value {
             scope.push(local_context.clone());
-            if local_context.contains_entry(&name_item) { (true, true) } else { (true, false) }
+            if local_context.contains_entry(name_item) { (true, true) } else { (true, false) }
           } else {
             (false, false)
           };
@@ -34,7 +44,7 @@ impl FilterExpressionEvaluator {
             // One entry, built and then shared. Building it with `default()` and `set_entry`
             // instead runs `Arc::make_mut` on a static every thread shares. See
             // [FeelContext::from_entry].
-            scope.push(FeelContext::from_entry(&name_item, value.clone()));
+            scope.push(FeelContext::from_entry(name_item, value.clone()));
           }
           let rhv = evaluator(scope);
           match rhv {
