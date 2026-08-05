@@ -185,15 +185,15 @@ impl<'b> EvaluatorBuilder<'b> {
         },
         Value::DateTime(lh) => match rhv {
           Value::DaysAndTimeDuration(rh) => {
-            if let Some(a) = lh + rh {
-              Value::DateTime(a)
+            if let Some(a) = *lh + rh {
+              Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding days and time duration to date and time")
             }
           }
           Value::YearsAndMonthsDuration(rh) => {
-            if let Some(a) = lh + rh {
-              Value::DateTime(a)
+            if let Some(a) = *lh + rh {
+              Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding years and months duration to date and time")
             }
@@ -214,8 +214,8 @@ impl<'b> EvaluatorBuilder<'b> {
             }
           }
           Value::DateTime(rh) => {
-            if let Some(a) = rh + lh {
-              Value::DateTime(a)
+            if let Some(a) = *rh + lh {
+              Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding date and time to days and time duration")
             }
@@ -232,8 +232,8 @@ impl<'b> EvaluatorBuilder<'b> {
             }
           }
           Value::DateTime(rh) => {
-            if let Some(a) = rh + lh {
-              Value::DateTime(a)
+            if let Some(a) = *rh + lh {
+              Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding date and time to years and months duration")
             }
@@ -256,7 +256,7 @@ impl<'b> EvaluatorBuilder<'b> {
     if let Ok(date) = FeelDate::from_str(text) {
       Box::new(move |_: &FeelScope| Value::Date(date.clone()))
     } else if let Ok(date_time) = FeelDateTime::try_from(text) {
-      Box::new(move |_: &FeelScope| Value::DateTime(date_time.clone()))
+      Box::new(move |_: &FeelScope| Value::DateTime(date_time.clone().into()))
     } else if let Ok(time) = text.parse::<FeelTime>() {
       Box::new(move |_: &FeelScope| Value::Time(time.clone()))
     } else if let Ok(ym_duration) = FeelYearsAndMonthsDuration::try_from(text) {
@@ -765,8 +765,8 @@ impl<'b> EvaluatorBuilder<'b> {
           if let Some(Value::Context(java_mapping)) = mapping_information.get_entry(&"java".into()) {
             return if let Some(Value::String(class_name)) = java_mapping.get_entry(&"class".into()) {
               if let Some(Value::String(method_signature)) = java_mapping.get_entry(&"method signature".into()) {
-                let java_class_name = class_name.to_owned();
-                let java_method_signature = method_signature.to_owned();
+                let java_class_name: Box<str> = class_name.as_str().into();
+                let java_method_signature: Box<str> = method_signature.as_str().into();
                 let java_evaluator = Box::new(move |_: &FeelScope| Value::ExternalJavaFunction(java_class_name.clone(), java_method_signature.clone())) as Evaluator;
                 let lhe = Arc::new(java_evaluator);
                 Value::FunctionBody(FunctionBody::External(lhe), true)
@@ -780,8 +780,8 @@ impl<'b> EvaluatorBuilder<'b> {
           if let Some(Value::Context(pmml_mapping)) = mapping_information.get_entry(&"pmml".into()) {
             return if let Some(Value::String(document)) = pmml_mapping.get_entry(&"document".into()) {
               if let Some(Value::String(model_name)) = pmml_mapping.get_entry(&"model".into()) {
-                let pmml_document = document.to_owned();
-                let pmml_model_name = model_name.to_owned();
+                let pmml_document: Box<str> = document.as_str().into();
+                let pmml_model_name: Box<str> = model_name.as_str().into();
                 let pmml_evaluator = Box::new(move |_: &FeelScope| Value::ExternalPmmlFunction(pmml_document.clone(), pmml_model_name.clone())) as Evaluator;
                 let lhe = Arc::new(pmml_evaluator);
                 Value::FunctionBody(FunctionBody::External(lhe), true)
@@ -1748,7 +1748,7 @@ impl<'b> EvaluatorBuilder<'b> {
           }
           Value::DateTime(rh) => {
             let l = FeelDateTime::new(lh, FeelTime::utc(0, 0, 0, 0));
-            if let Some(result) = l - rh {
+            if let Some(result) = l - *rh {
               return Value::DaysAndTimeDuration(result);
             }
           }
@@ -1778,23 +1778,23 @@ impl<'b> EvaluatorBuilder<'b> {
         Value::DateTime(lh) => match rhv {
           Value::Date(rh) => {
             let r = FeelDateTime::new(rh, FeelTime::utc(0, 0, 0, 0));
-            if let Some(result) = lh - r {
+            if let Some(result) = *lh - r {
               return Value::DaysAndTimeDuration(result);
             }
           }
           Value::DateTime(rh) => {
-            if let Some(result) = lh - rh {
+            if let Some(result) = *lh - *rh {
               return Value::DaysAndTimeDuration(result);
             }
           }
           Value::DaysAndTimeDuration(rh) => {
-            if let Some(result) = lh - rh {
-              return Value::DateTime(result);
+            if let Some(result) = *lh - rh {
+              return Value::DateTime(result.into());
             }
           }
           Value::YearsAndMonthsDuration(rh) => {
-            if let Some(result) = lh - rh {
-              return Value::DateTime(result);
+            if let Some(result) = *lh - rh {
+              return Value::DateTime(result.into());
             }
           }
           _ => {}

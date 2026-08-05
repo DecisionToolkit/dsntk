@@ -73,19 +73,24 @@ pub fn te_date(trace: bool, scope: &FeelScope, expression: &str, year: Year, mon
 pub fn te_date_time_local(trace: bool, scope: &FeelScope, s: &str, date: (Year, Month, Day), time: (u8, u8, u8, u64)) {
   let (year, month, day) = date;
   let (hour, min, sec, nano) = time;
-  textual_expression(trace, scope, s, Value::DateTime(FeelDateTime::local(year, month, day, hour, min, sec, nano).unwrap()));
+  textual_expression(
+    trace,
+    scope,
+    s,
+    Value::DateTime(FeelDateTime::local(year, month, day, hour, min, sec, nano).unwrap().into()),
+  );
 }
 
 /// Utility function that tests evaluation of UTC date and time value.
 pub fn te_date_time_utc(trace: bool, scope: &FeelScope, s: &str, date: (Year, Month, Day), time: (u8, u8, u8, u64)) {
   let (year, month, day) = date;
   let (hour, min, sec, nano) = time;
-  textual_expression(trace, scope, s, Value::DateTime(FeelDateTime::utc(year, month, day, hour, min, sec, nano).unwrap()));
+  textual_expression(trace, scope, s, Value::DateTime(FeelDateTime::utc(year, month, day, hour, min, sec, nano).unwrap().into()));
 }
 
 /// Utility function that tests evaluation of date and time value with explicit offset.
 pub fn te_date_time_offset(trace: bool, scope: &FeelScope, s: &str, date: (Year, Month, Day), time: (u8, u8, u8, u64), offset: i32) {
-  textual_expression(trace, scope, s, Value::DateTime(FeelDateTime::offset(date, time, offset).unwrap()));
+  textual_expression(trace, scope, s, Value::DateTime(FeelDateTime::offset(date, time, offset).unwrap().into()));
 }
 
 /// Utility function that creates a scope from specified input.
@@ -308,7 +313,7 @@ pub fn te_date_time_local_after(trace: bool, scope: &FeelScope, expression: &str
         panic!("expected date and time, actual type is {}", value.type_of());
       };
       assert!(
-        (actual > range_start && actual < range_end),
+        (*actual > range_start && *actual < range_end),
         "ERROR\nexpected: {range_start}..{range_end}\n  actual: {actual}\n"
       );
     }

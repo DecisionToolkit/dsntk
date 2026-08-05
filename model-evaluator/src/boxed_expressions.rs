@@ -164,8 +164,8 @@ pub fn build_function_definition_evaluator(scope: &FeelScope, function_definitio
         if let Value::Context(java_mapping) = body_evaluator(scope) {
           if let Some(Value::String(class_name)) = java_mapping.get_entry(&"class".into()) {
             if let Some(Value::String(method_signature)) = java_mapping.get_entry(&"method signature".into()) {
-              let java_class_name = class_name.to_owned();
-              let java_method_signature = method_signature.to_owned();
+              let java_class_name: Box<str> = class_name.as_str().into();
+              let java_method_signature: Box<str> = method_signature.as_str().into();
               let java_evaluator = Box::new(move |_: &FeelScope| Value::ExternalJavaFunction(java_class_name.clone(), java_method_signature.clone())) as Evaluator;
               let function_body_evaluator = Arc::new(java_evaluator);
               let function_body = FunctionBody::External(function_body_evaluator);
@@ -194,8 +194,8 @@ pub fn build_function_definition_evaluator(scope: &FeelScope, function_definitio
         if let Value::Context(pmml_mapping) = body_evaluator(scope) {
           if let Some(Value::String(document)) = pmml_mapping.get_entry(&"document".into()) {
             if let Some(Value::String(model_name)) = pmml_mapping.get_entry(&"model".into()) {
-              let pmml_document = document.to_owned();
-              let pmml_model_name = model_name.to_owned();
+              let pmml_document: Box<str> = document.as_str().into();
+              let pmml_model_name: Box<str> = model_name.as_str().into();
               let pmml_evaluator = Box::new(move |_: &FeelScope| Value::ExternalPmmlFunction(pmml_document.clone(), pmml_model_name.clone())) as Evaluator;
               let function_body_evaluator = Arc::new(pmml_evaluator);
               let function_body = FunctionBody::External(function_body_evaluator);

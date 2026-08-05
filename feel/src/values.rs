@@ -109,7 +109,12 @@ pub enum Value {
   Date(FeelDate),
 
   /// Value for storing date and time as [FeelDateTime].
-  DateTime(FeelDateTime),
+  ///
+  /// The payload is boxed. Unboxed it is 56 bytes, and a payload of more than 40 bytes sets
+  /// `size_of::<Value>()` to 64 instead of 48, because [Value] has align 16 and an align-8
+  /// payload starts at offset 8. Eleven values share a `BTreeMap` node, so every context in
+  /// the engine would pay for it. The cost is one allocation per date and time value.
+  DateTime(Box<FeelDateTime>),
 
   /// Value for days and time durations.
   DaysAndTimeDuration(FeelDaysAndTimeDuration),
@@ -118,19 +123,25 @@ pub enum Value {
   ExpressionList(Values),
 
   /// Value representing a mapping to externally defined `Java` function.
+  ///
+  /// The two names are `Box<str>` rather than [String] for the reason given on
+  /// [Value::DateTime]: two [String]s are 48 bytes, which is above the 40 that
+  /// `size_of::<Value>() == 48` allows, while two `Box<str>` are 32.
   ExternalJavaFunction(
     /// Class name.
-    String,
+    Box<str>,
     /// Method signature.
-    String,
+    Box<str>,
   ),
 
   /// Value representing a mapping to externally defined `PMML` function.
+  ///
+  /// The two names are `Box<str>` for the same reason as [Value::ExternalJavaFunction].
   ExternalPmmlFunction(
     /// Document.
-    String,
+    Box<str>,
     /// Model name.
-    String,
+    Box<str>,
   ),
 
   /// Value representing the `FEEL` type of the value.
@@ -736,7 +747,7 @@ impl Value {
   /// Tries to convert `xsd:dateTime` string into valid [Value] representing a date and time.
   /// FEEL date and time format is fully conformant with `xsd:dateTime`.
   pub fn try_from_xsd_date_time(text: &str) -> Result<Self> {
-    Ok(Value::DateTime(FeelDateTime::try_from(text).map_err(|_| err_invalid_xsd_date_time(text))?))
+    Ok(Value::DateTime(FeelDateTime::try_from(text).map_err(|_| err_invalid_xsd_date_time(text))?.into()))
   }
 
   /// Tries to convert `xsd:duration` string into valid [Value] representing a date and time.

@@ -376,7 +376,7 @@ fn test_type_get_conformant_value() {
   let v_date = Value::Date(FeelDate::new(2022, 9, 26).unwrap());
   let v_date_b = Value::Date(FeelDate::new(2022, 11, 30).unwrap());
   // date time
-  let v_date_time = Value::DateTime(FeelDateTime::new(FeelDate::new(2022, 9, 27).unwrap(), FeelTime::local_opt(9, 2, 0, 0).unwrap()));
+  let v_date_time = Value::DateTime(FeelDateTime::new(FeelDate::new(2022, 9, 27).unwrap(), FeelTime::local_opt(9, 2, 0, 0).unwrap()).into());
   // days and time duration
   let v_days_and_time_duration = Value::DaysAndTimeDuration(FeelDaysAndTimeDuration::from_s(100));
   // null

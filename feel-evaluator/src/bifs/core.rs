@@ -624,10 +624,10 @@ pub fn date_3(year_value: &Value, month_value: &Value, day_value: &Value) -> Val
 pub fn date_and_time_1(value: &Value) -> Value {
   if let Value::String(text) = value {
     if let Ok(date_time) = FeelDateTime::try_from(text.as_str()) {
-      return Value::DateTime(date_time);
+      return Value::DateTime(date_time.into());
     }
     if let Ok(date) = FeelDate::from_str(text) {
-      return Value::DateTime(FeelDateTime::new(date, FeelTime::local(0, 0, 0, 0)));
+      return Value::DateTime(FeelDateTime::new(date, FeelTime::local(0, 0, 0, 0)).into());
     }
     value_null!("[core::date and time] invalid date or date and time '{}'", text)
   } else {
@@ -640,13 +640,13 @@ pub fn date_and_time_2(date_value: &Value, time_value: &Value) -> Value {
   match date_value {
     Value::DateTime(date_time) => {
       if let Value::Time(time) = time_value {
-        return Value::DateTime(FeelDateTime::new(date_time.date(), time.clone()));
+        return Value::DateTime(FeelDateTime::new(date_time.date(), time.clone()).into());
       }
       invalid_argument_type!("date and time", "time", time_value.type_of())
     }
     Value::Date(date) => {
       if let Value::Time(time) = time_value {
-        return Value::DateTime(FeelDateTime::new(date.clone(), time.clone()));
+        return Value::DateTime(FeelDateTime::new(date.clone(), time.clone()).into());
       }
       invalid_argument_type!("date and time", "time", time_value.type_of())
     }
@@ -1681,7 +1681,7 @@ pub fn not(negand: &Value) -> Value {
 
 /// Returns current date and time.
 pub fn now() -> Value {
-  Value::DateTime(FeelDateTime::now())
+  Value::DateTime(FeelDateTime::now().into())
 }
 
 /// Converts string to a number.
