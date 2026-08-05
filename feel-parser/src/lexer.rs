@@ -7,6 +7,7 @@ use dsntk_common::Result;
 use dsntk_feel::Name;
 use dsntk_feel::bif::is_built_in_date_time_function_name;
 use dsntk_feel::bip::is_built_in_property_name;
+use std::str::FromStr;
 
 /// Definition of a single space character.
 const WS: char = ' ';
@@ -750,6 +751,15 @@ impl<'lexer> Lexer<'lexer> {
     }
 
     //------------------------------------------------------------------------------
+    // No candidate resolved against the scope. Note where a reserved word would cut the
+    // name. Do not act on it yet. The checks below still have to see the whole name,
+    // because several built-in names contain a reserved word themselves. Examples:
+    // `date and time`, `years and months duration`, `day of week`, `index of`.
+    //------------------------------------------------------------------------------
+    let reserved_cut = parts.iter().skip(1).position(|part| is_reserved_name_part(part)).map(|offset| offset + 1);
+    let uncut_parts = reserved_cut.map(|_| parts.clone());
+
+    //------------------------------------------------------------------------------
     // Build the name from name parts.
     //------------------------------------------------------------------------------
     let name: Name = parts.into();
@@ -776,6 +786,31 @@ impl<'lexer> Lexer<'lexer> {
     //------------------------------------------------------------------------------
     if is_built_in_date_time_function_name(name.as_str()) && self.is_next_character(&['('], 0) {
       return Ok((TokenType::NameDateTime, TokenValue::NameDateTime(name)));
+    }
+
+    //------------------------------------------------------------------------------
+    // Last resort. No candidate resolved against the scope, and the whole name is not a
+    // built-in of any kind. Stop the name at the first reserved word instead of absorbing
+    // an operator into it.
+    //
+    // A `FEEL` name may legally contain spaces and keywords, so for `c.noAddresses or true`
+    // the loop above sees `noAddresses or true`, `noAddresses or` and `noAddresses`. Taking
+    // the longest when none of them is known absorbs `or` into the member name. The member
+    // is then absent from the record, and the expression yields `null` instead of the
+    // boolean the author wrote. That is a wrong answer with no diagnostic, and it hides.
+    // When the field **is** present, the loop above resolves the short name, and the same
+    // expression is correct. So it only appears where a field is optional.
+    //
+    // This cannot change a name the scope knows, a context key, a named parameter, a `for`
+    // or quantified variable, a built-in type, a built-in date and time function, or any
+    // other built-in function. Every one of those returns before this point.
+    //------------------------------------------------------------------------------
+    if let (Some(part_count), Some(mut parts)) = (reserved_cut, uncut_parts)
+      && !is_built_in_function_name(name.as_str())
+    {
+      parts.truncate(part_count);
+      self.position = consumed_positions[part_count - 1] + 1;
+      return Ok((TokenType::Name, TokenValue::Name(parts.into())));
     }
 
     //------------------------------------------------------------------------------
@@ -964,6 +999,26 @@ fn is_separator(ch: char) -> bool {
 /// Returns **true** when the specified character is an ASCII digit.
 fn is_digit(ch: char) -> bool {
   ch.is_ascii_digit()
+}
+
+/// Returns `true` when a name part is a reserved word that must not be absorbed into a name.
+///
+/// Enumerated rather than excluded, so a word is absorbed unless it is listed here. Every
+/// listed word can legally follow a complete expression. That is exactly why absorbing
+/// one into a name in front of it changes what the expression means. See the fallback in
+/// [Lexer::consume_name].
+fn is_reserved_name_part(part: &str) -> bool {
+  matches!(part, "and" | "or" | "between" | "instance" | "then" | "else" | "satisfies" | "return")
+}
+
+/// Returns `true` when the whole name is the name of a built-in function.
+///
+/// Built-in function names may contain a reserved word, such as `date and time`, `day of
+/// week`, `index of` or `years and months duration`. A name that resolves here must
+/// therefore never be cut at one. `Bif::from_str` is the same table the evaluator
+/// resolves a bare name against.
+fn is_built_in_function_name(name: &str) -> bool {
+  dsntk_feel::bif::Bif::from_str(name).is_ok()
 }
 
 /// Returns `true` when the specified character is a keyword `not` separator,

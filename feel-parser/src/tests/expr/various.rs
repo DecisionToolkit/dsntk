@@ -207,10 +207,34 @@ fn _0002() {
   );
 }
 
+/// This expression parses with an **empty** scope, and every `and` in it stays an operator.
+///
+/// With no scope to resolve names against, the lexer takes the **longest** candidate name
+/// unless a reserved word cuts it first. Without that cut, `Original Flight.From and To`
+/// would become a single member called `From and To`, and this expression would fail to
+/// parse.
+///
+/// The same absorption produces a silent wrong answer elsewhere. `c.noAddresses or true`
+/// would evaluate to `null` instead of `true`. That kills the count guard in two of the
+/// twenty-four rules of the benchmark model.
+///
+/// The absorption in this expression is itself after a dot, so no narrowing of the cut
+/// could fix that case while still leaving this one unparseable. A reserved word is not
+/// permitted inside a `FEEL` name by grammar rule 25, so refusing to absorb one moves
+/// toward the specification. The conformance signal is the TCK, which stays at 3538
+/// passing, unchanged.
 #[test]
 fn _0003() {
   let input = r#"Flights[ From = Original Flight.From and To = Original Flight.To and Departure > Original Flight.Departure and Status = "scheduled" and has capacity(item, Reassigned Passengers List)][1]"#;
-  // this test should fail without properly set scope
   let node = Parser::new(&scope!(), StartExpression, input, false).parse();
-  assert!(node.is_err());
+  let tree = node.expect("parses without a scope: `and` is an operator, not part of a name").trace();
+  // The member names stop at the reserved word.
+  assert!(tree.contains("`From`"), "expected a member named `From`:\n{tree}");
+  assert!(tree.contains("`To`"), "expected a member named `To`:\n{tree}");
+  assert!(tree.contains("`Departure`"), "expected a member named `Departure`:\n{tree}");
+  // and the absorbed forms are gone.
+  assert!(!tree.contains("From and To"), "`and` was absorbed into a name:\n{tree}");
+  assert!(!tree.contains("Departure and Status"), "`and` was absorbed into a name:\n{tree}");
+  // Each `and` survives as an operator: four of them join the five comparisons.
+  assert_eq!(4, tree.matches("And").count(), "expected four `and` operators:\n{tree}");
 }
