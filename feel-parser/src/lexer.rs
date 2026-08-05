@@ -804,6 +804,13 @@ impl<'lexer> Lexer<'lexer> {
     // This cannot change a name the scope knows, a context key, a named parameter, a `for`
     // or quantified variable, a built-in type, a built-in date and time function, or any
     // other built-in function. Every one of those returns before this point.
+    //
+    // `in` is one of the cut points. The `till_in` branch above only covers the variable
+    // position of a `for` or quantified expression. So it does nothing for the `in` of
+    // grammar rule 49.d, `expression in ( positive unary tests )`. Without the cut,
+    // `t.type in ("a","b")` reads the member as `type in`. The following `(` then makes
+    // that absent member the callee of a function invocation, and the comparison silently
+    // returns null.
     //------------------------------------------------------------------------------
     if let (Some(part_count), Some(mut parts)) = (reserved_cut, uncut_parts)
       && !is_built_in_function_name(name.as_str())
@@ -1007,8 +1014,15 @@ fn is_digit(ch: char) -> bool {
 /// listed word can legally follow a complete expression. That is exactly why absorbing
 /// one into a name in front of it changes what the expression means. See the fallback in
 /// [Lexer::consume_name].
+///
+/// The comparison is against a whole name part, not a substring, so `in` does not cut
+/// `instance`: `instance` is one part and the two strings differ. `of` is deliberately absent
+/// and must stay absent, because `day of week`, `day of year`, `week of year`,
+/// `month of year` and `index of` carry `of` as a part of their own name. No built-in
+/// function name, built-in property name or built-in type name has `in` as a part, so `in`
+/// has the hazard shape of `and`, not of `of`.
 fn is_reserved_name_part(part: &str) -> bool {
-  matches!(part, "and" | "or" | "between" | "instance" | "then" | "else" | "satisfies" | "return")
+  matches!(part, "and" | "or" | "between" | "in" | "instance" | "then" | "else" | "satisfies" | "return")
 }
 
 /// Returns `true` when the whole name is the name of a built-in function.

@@ -218,11 +218,20 @@ fn _0002() {
 /// would evaluate to `null` instead of `true`. That kills the count guard in two of the
 /// twenty-four rules of the benchmark model.
 ///
-/// The absorption in this expression is itself after a dot, so no narrowing of the cut
-/// could fix that case while still leaving this one unparseable. A reserved word is not
-/// permitted inside a `FEEL` name by grammar rule 25, so refusing to absorb one moves
-/// toward the specification. The conformance signal is the TCK, which stays at 3538
+/// The two expectations are mutually exclusive. The absorption in this expression is itself
+/// after a dot. So no narrowing of the cut can both fix `c.noAddresses or true` and keep
+/// this expression unparseable. The conformance signal is the TCK, which stays at 3538
 /// passing, unchanged.
+///
+/// **Correction.** An earlier version of this comment claimed a reserved word is not
+/// permitted inside a `FEEL` name by grammar rule 25. That is wrong. Clause 10.3.1.6 gives
+/// `Profit and loss` as an example of a name that contains a keyword. It resolves the
+/// ambiguity by matching name tokens against **the names in-scope**, longest match
+/// preferred. So a reserved word inside a name is legal, and the cut is not derived from
+/// the grammar. It is a decision taken in the gap the specification leaves. No candidate
+/// matched the scope, so there is no longest match to prefer. The pre-existing behavior of
+/// taking the longest lexical run was equally an invention. The cut is the reading that
+/// keeps the operator, and it can only reach a name the scope does not know.
 #[test]
 fn _0003() {
   let input = r#"Flights[ From = Original Flight.From and To = Original Flight.To and Departure > Original Flight.Departure and Status = "scheduled" and has capacity(item, Reassigned Passengers List)][1]"#;
@@ -237,4 +246,41 @@ fn _0003() {
   assert!(!tree.contains("Departure and Status"), "`and` was absorbed into a name:\n{tree}");
   // Each `and` survives as an operator: four of them join the five comparisons.
   assert_eq!(4, tree.matches("And").count(), "expected four `and` operators:\n{tree}");
+}
+
+/// A path member is followed by `in`, and the `in` stays the comparison operator of grammar
+/// rule 49.d, `expression in ( positive unary tests )`.
+///
+/// The scope knows `t` but knows nothing about its members, which is what a `typeRef="Any"`
+/// parameter gives the parser. Without the cut in [crate::lexer::Lexer::consume_name], the
+/// member name would absorb `in` and become `type in`. The following `(` would then read
+/// that absent member as the callee of a function invocation. So `t.type in ("a","b")`
+/// would answer `null` instead of a boolean, and `count(X[type in ("a","b")])` would
+/// answer 0.
+///
+/// The `till_in` branch above the fallback does not cover this. It only trims the **variable**
+/// name of a `for` or quantified expression, so it never sees an `in` used as a comparison.
+#[test]
+fn _0004() {
+  let scope = scope!();
+  scope.set_context("t".into(), ParsingContext::default());
+  accept(
+    &scope,
+    StartExpression,
+    r#"t.type in ("a","b")"#,
+    r#"
+       In
+       ├─ Path
+       │  ├─ Name
+       │  │  └─ `t`
+       │  └─ Name
+       │     └─ `type`
+       └─ ExpressionList
+          ├─ String
+          │  └─ `a`
+          └─ String
+             └─ `b`
+    "#,
+    false,
+  );
 }
