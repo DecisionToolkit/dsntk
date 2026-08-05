@@ -562,7 +562,9 @@ pub fn context_merge(contexts: &Value) -> Value {
       for item in items {
         match item {
           Value::Context(ctx) => result_ctx.zip(ctx),
-          Value::Null(_) => {}
+          // A null entry is out of domain, just like any other non-context value. It is
+          // also the entry a failed expression produces, so it is the entry that most
+          // needs this diagnostic.
           other => return invalid_argument_type!("context merge", "context", other.type_of()),
         }
       }
@@ -2438,7 +2440,7 @@ pub fn string(value: &Value) -> Value {
   }
 }
 
-/// Returns the number of characters in string.
+/// Joins a list of strings, ignoring null elements, and separates them with a delimiter.
 pub fn string_join(list: &Value, delimiter: &Value) -> Value {
   match list {
     Value::List(items) => {
@@ -2448,13 +2450,18 @@ pub fn string_join(list: &Value, delimiter: &Value) -> Value {
         _ => return value_null!("string join: invalid delimiter, expected string, actual value type is {}", delimiter.type_of()),
       };
       let mut joined_string = String::new();
-      for (i, item) in items.iter().enumerate() {
+      // The delimiter goes before every string except the first one that is
+      // actually kept. Counting from the list index instead puts a delimiter at
+      // the front when the list starts with a null.
+      let mut joined_any = false;
+      for item in items.iter() {
         match item {
           Value::String(s) => {
-            if i > 0 {
+            if joined_any {
               joined_string.push_str(&delimiter);
             }
             joined_string.push_str(s);
+            joined_any = true;
           }
           Value::Null(_) => {}
           other => return invalid_argument_type!("string join", "string", other.type_of()),
