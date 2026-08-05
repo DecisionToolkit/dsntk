@@ -649,10 +649,13 @@ impl<'b> EvaluatorBuilder<'b> {
 
   fn build_filter(&mut self, lhs: &'b AstNode, rhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
+    // Decide once, here, whether this predicate is really an index, so that `L[i]` need not run
+    // the predicate for every element of `L`. See [crate::filters::IndexShape].
+    let shape = crate::filters::index_shape(rhs);
     let rhe = self.build_hoisted(rhs);
     Box::new(move |scope: &FeelScope| {
       let filter_expression_evaluator = FilterExpressionEvaluator::new();
-      filter_expression_evaluator.evaluate(scope, lhe(scope), &rhe)
+      filter_expression_evaluator.evaluate(scope, lhe(scope), &rhe, shape)
     })
   }
 
