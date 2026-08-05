@@ -31,9 +31,10 @@ impl FilterExpressionEvaluator {
             (false, false)
           };
           if !has_item_entry {
-            let mut special_context = FeelContext::default();
-            special_context.set_entry(&name_item, value.clone());
-            scope.push(special_context);
+            // One entry, built and then shared. Building it with `default()` and `set_entry`
+            // instead runs `Arc::make_mut` on a static every thread shares. See
+            // [FeelContext::from_entry].
+            scope.push(FeelContext::from_entry(&name_item, value.clone()));
           }
           let rhv = evaluator(scope);
           match rhv {

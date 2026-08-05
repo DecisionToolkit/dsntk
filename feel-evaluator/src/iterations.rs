@@ -511,9 +511,7 @@ fn evaluate_in_parallel(scope: &FeelScope, evaluator: &Evaluator, variable: &Nam
     .map_init(
       || FeelScope::from_contexts(base.clone()),
       |local: &mut FeelScope, item| {
-        let mut iteration_context = FeelContext::default();
-        iteration_context.set_entry(variable, item.clone());
-        local.push(iteration_context);
+        local.push(FeelContext::from_entry(variable, item.clone()));
         let value = evaluator(local);
         // The body may leave contexts behind, exactly as on the serial path. This worker
         // reuses this scope for the next element. Restore the original depth here.

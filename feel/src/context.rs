@@ -127,6 +127,25 @@ impl FeelContext {
     Self::default()
   }
 
+  /// Creates a context holding exactly one entry.
+  ///
+  /// Use this instead of [FeelContext::default] followed by [FeelContext::set_entry].
+  /// Those two build the same context, but reach it through [Arc::make_mut] on the shared
+  /// [EMPTY_ENTRIES] static. That costs three atomic operations on **one** cache line
+  /// that every thread in the process touches: a refcount increment to clone the static, a
+  /// compare-exchange inside [Arc::make_mut] because the refcount is never one, and a
+  /// decrement to release it again. This builds the map first and shares it afterwards, so
+  /// nothing is contended.
+  ///
+  /// A profile of the largest benchmark model put `entries_mut` at 8.99% of main-thread
+  /// work. 97.5% of that came from one call site: the filter evaluator, which builds a
+  /// one-entry context for every element of every filtered list.
+  pub fn from_entry(name: &Name, value: Value) -> Self {
+    let mut entries = FeelContextEntries::new();
+    entries.insert(name.clone(), value);
+    Self(Arc::new(entries))
+  }
+
   /// Returns a mutable reference to the entries, copying them first when they are shared.
   ///
   /// This is the only way to mutate a context. [Arc::make_mut] copies the map only
