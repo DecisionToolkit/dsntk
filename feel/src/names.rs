@@ -22,14 +22,42 @@
 //! became "order in which names were interned", output key order would change.
 //!
 //! So a handle carries a **rank** as well as an identity. This module assigns ranks so
-//! that rank order equals lexicographic order of the name text. A rank, once assigned,
-//! never changes, which is what keeps already-built `BTreeMap`s valid. A new name takes
-//! a rank between the ranks of its two lexicographic neighbours. Appending past the
-//! current largest name, the common case, leaves a full stride of room for later
-//! insertions.
+//! that rank order equals lexicographic order of the name text, and a rank once assigned
+//! never changes. A new name takes a rank strictly between the ranks of its two
+//! lexicographic neighbours.
 //!
 //! The rank lives in the high bits of the handle, so [Ord] is a single unsigned compare of
 //! the whole handle. Nothing outside this module observes any change in ordering.
+//!
+//! # Why ranks can never be renumbered
+//!
+//! Renumbering looks safe, because renumbering that preserves lexicographic order preserves
+//! the order relation, and a `BTreeMap` only needs its keys to stay sorted. It is not safe.
+//! **The rank lives inside the handle, and handles have already been copied into live
+//! `BTreeMap`s** that are still being searched. Renumbering would rewrite the interner and
+//! leave every stored key holding a stale rank. A lookup with a fresh handle would then
+//! compare against stale ones and walk to the wrong node. Any scheme that wants to
+//! renumber has to take the rank *out* of the handle first. That costs a load per
+//! comparison on the hottest path in the engine, and it would need measurement before
+//! anyone trusts it.
+//!
+//! # Running out of rank space
+//!
+//! Because this module assigns ranks without ever renumbering, a gap between two
+//! neighbours can be used up. When that happens the new name is left **unranked** and
+//! compares by text. That is slower for that name and stays correct, because both
+//! comparison paths agree with lexicographic order exactly.
+//!
+//! The bound matters, because ascending numbered identifiers are the ordinary case in a
+//! generated model, not a corner case, and a narrow stride lets a run of them exhaust a
+//! gap fast. Rules named `Kb01`, `Kb02`, ... `Kb24` are one example. The current stride
+//! keeps every name in all four benchmark models ranked.
+//!
+//! Two things keep names ranked in practice. The gap left by an append is far wider than
+//! a single halving would leave. A name that continues a **family** consumes a fixed
+//! [RANK_STEP] rather than half of what is left, so a run of numbered names costs one
+//! step per name. See [Interner::rank_for] for how a family is recognised and why an
+//! unrelated name is still halved into the middle.
 //!
 //! # Limitations, stated plainly
 //!
@@ -38,12 +66,22 @@
 //!   text comes from identifiers and context keys, so the set is bounded by the shape of
 //!   the input, not by its size. A process that parses unboundedly many *distinct* names
 //!   grows without bound.
-//! - The rank space is 40 bits. If a run of insertions exhausts the gap between two
-//!   neighbours, the new name is left **unranked** and compares by text instead. That is
-//!   slower for that name and stays correct, because both comparison paths agree with
-//!   lexicographic order.
-//! - At most `2^24 - 1` distinct names. Past that the handle could not stay injective, so
-//!   interning panics rather than return a handle that compares equal to another name.
+//! - At most `2^20 - 1` distinct names. Past that the handle could not stay injective, so
+//!   interning panics rather than return a handle that compares equal to another name. The
+//!   four models in this repository intern 50 to 175.
+//! - The rank space is 44 bits, and it bounds three separate things. At least **131,072**
+//!   names may be appended past the largest name so far, or prepended below the smallest. At
+//!   least **4,096** names of one family fit in one appended gap. At least **15** more names
+//!   may halve a gap that has become too narrow to step through.
+//! - **The residual cliff is the third of those.** Names that repeatedly land between two
+//!   ever-closer neighbours halve the gap each time. No fixed rank space can avoid that
+//!   without renumbering, which the section above shows is unsound. Measured across the
+//!   four models, the narrowest gap any name was inserted into is 2,048, which leaves 11
+//!   halvings in hand.
+//! - Past any of those three bounds a name is left unranked and compares by text. It is still
+//!   ordered exactly lexicographically, so no output changes and no answer changes — only
+//!   that name's lookups get slower. [Ord] mixes the two paths and stays a total order,
+//!   because both paths agree with lexicographic order.
 
 use dsntk_common::Jsonify;
 use std::cmp::Ordering;
@@ -53,7 +91,11 @@ use std::hash::{BuildHasherDefault, Hasher};
 use std::sync::{LazyLock, OnceLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 /// Number of low bits of a handle that hold the identity of a name.
-const ID_BITS: u32 = 24;
+///
+/// Twenty bits allow 1,048,575 distinct names and leave 44 bits of rank space. The models
+/// in this repository intern between 50 and 175 names. The set is bounded by the shape of
+/// the input rather than by its size.
+const ID_BITS: u32 = 20;
 
 /// Mask selecting the identity of a name.
 const ID_MASK: u64 = (1 << ID_BITS) - 1;
@@ -66,7 +108,27 @@ const RANK_MAX: u64 = (1 << (64 - ID_BITS)) - 1;
 
 /// Room left between a newly appended name and its predecessor, so that later insertions
 /// between the two have somewhere to go.
-const RANK_STRIDE: u64 = 1 << 16;
+///
+/// `RANK_MAX / 2 / RANK_STRIDE` is 131,072, which is how many names may be appended past the
+/// largest name so far before the append room itself runs out.
+const RANK_STRIDE: u64 = 1 << 26;
+
+/// Room taken by a name that continues a family of names, while the gap can afford it.
+///
+/// `RANK_STRIDE / RANK_STEP` is 4,096, which is how many names of one family fit in a freshly
+/// appended gap. `log2(2 * RANK_STEP)` is 15, which is how many halvings are left once a gap is
+/// too narrow to step through.
+///
+/// Both bounds move in opposite directions with this constant. It was chosen by sweeping
+/// it against the four models and reading off the narrowest gap any name landed in: 2^12 gave
+/// 512, **2^14 gave 2,048**, 2^16 gave 2, and 2^18 and 2^20 left names unranked again. The
+/// response is not monotone, because the constant changes which names become neighbours.
+const RANK_STEP: u64 = 1 << 14;
+
+/// Shortest shared prefix that counts as two names belonging to the same family.
+///
+/// One shared character is a coincidence between unrelated identifiers. Two is a stem.
+const STEM_LEN: usize = 2;
 
 /// Rank value meaning "this name has no rank", so it compares by text.
 const RANK_NONE: u64 = 0;
@@ -184,30 +246,67 @@ fn text_of(id: u64) -> &'static str {
   read_interner().texts[id as usize]
 }
 
+/// Number of leading bytes two strings share.
+///
+/// This function only guesses which end of a gap a run of insertions is walking away
+/// from. Its answer affects how much rank space is left, and never affects an ordering.
+fn shared_prefix(left: &str, right: &str) -> usize {
+  left.as_bytes().iter().zip(right.as_bytes()).take_while(|(l, r)| l == r).count()
+}
+
 impl Interner {
   /// Picks a rank for `text` that sits strictly between the ranks of its lexicographic
   /// neighbours, or [RANK_NONE] when no such rank is left.
   fn rank_for(&self, text: &str) -> u64 {
-    let lower = self.ranked.range(..text).next_back().map(|(_, &rank)| rank);
-    let upper = self.ranked.range(text..).next().map(|(_, &rank)| rank);
+    let lower = self.ranked.range(..text).next_back().map(|(&neighbour, &rank)| (neighbour, rank));
+    let upper = self.ranked.range(text..).next().map(|(&neighbour, &rank)| (neighbour, rank));
     let rank = match (lower, upper) {
       // The first ranked name starts in the middle, so both directions have room.
       (None, None) => RANK_MAX / 2,
       // Appended after every existing name.
-      (Some(lower), None) => {
+      (Some((_, lower)), None) => {
         let room = RANK_MAX - lower;
         if room > RANK_STRIDE { lower + RANK_STRIDE } else { lower + room / 2 }
       }
       // Inserted before every existing name.
-      (None, Some(upper)) => {
+      (None, Some((_, upper))) => {
         if upper > RANK_STRIDE { upper - RANK_STRIDE } else { upper / 2 }
       }
-      // Between two existing names.
-      (Some(lower), Some(upper)) => lower + (upper - lower) / 2,
+      // Between two existing names. Two cases, and telling them apart is the whole point.
+      //
+      // A name that continues a **family** — one that shares a stem with the neighbour it
+      // follows, like `Kb02` after `Kb01` — belongs to a run. A run must not halve the gap
+      // per name, or it uses the gap up in `log2` names. It takes a fixed [RANK_STEP] away
+      // from its family neighbour instead, so a run of `room / RANK_STEP` names fits. It
+      // walks up from `lower` or down from `upper`, as the family lies.
+      //
+      // A name unrelated to both neighbours is halved into the middle, because that keeps
+      // both halves of the gap roomy for whatever arrives later.
+      //
+      // A shared stem is at least two leading characters. One shared character is a
+      // coincidence between unrelated identifiers, such as `Kb01` sharing `K` with
+      // `Kr Adjacent Name`.
+      //
+      // Every branch returns a rank strictly inside the gap, so misjudging a family costs
+      // later capacity and never an ordering.
+      (Some((lower_text, lower)), Some((upper_text, upper))) => {
+        let room = upper - lower;
+        let with_lower = shared_prefix(text, lower_text);
+        let with_upper = shared_prefix(text, upper_text);
+        if room <= 2 * RANK_STEP {
+          lower + room / 2
+        } else if with_lower >= STEM_LEN && with_lower > with_upper {
+          lower + RANK_STEP
+        } else if with_upper >= STEM_LEN && with_upper > with_lower {
+          upper - RANK_STEP
+        } else {
+          lower + room / 2
+        }
+      }
     };
     // A rank equal to either neighbour would order two different names the same way, and a
     // rank of zero is the "unranked" marker. Either way the gap is exhausted.
-    if rank == RANK_NONE || Some(rank) == lower || Some(rank) == upper {
+    if rank == RANK_NONE || Some(rank) == lower.map(|(_, rank)| rank) || Some(rank) == upper.map(|(_, rank)| rank) {
       RANK_NONE
     } else {
       rank
