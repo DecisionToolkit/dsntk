@@ -38,9 +38,28 @@
 //!    definition that is **not external**. So no `Java` or `PMML` implementation is reached.
 //! 4. That function's body contains only calls of built-ins on the allowed list below, or of
 //!    other functions that pass this same test.
-//! 5. Every occurrence sits on the predicate's non-binding spine. The walk refuses to enter
-//!    `for`, `some`, `every`, a context literal, a nested filter or a function definition.
-//!    So nothing hoists an occurrence out of a construct that binds a name it reads.
+//! 5. Every occurrence sits on the expression's non-binding spine. The walk refuses to enter
+//!    `for`, `some`, `every`, a context literal, a nested filter or a function definition. So
+//!    nothing hoists an occurrence out of a construct that binds a name it reads.
+//!
+//! # Where the hoist applies
+//!
+//! Two positions, and the rule is the same in both. A subtree may be evaluated once and
+//! read many times only where every occurrence runs in one unchanged scope.
+//!
+//! - a **filter predicate**, evaluated once per element with `item` bound
+//! - a **`for` body**, evaluated once per iteration with the iteration variables and `partial`
+//!   bound. `partial` is set once per iteration and does not move while the body runs. So two
+//!   occurrences inside one iteration see the same value, and one evaluation answers both.
+//!
+//! # The rewrite has to refuse exactly what the walk refuses
+//!
+//! Finding an occurrence and replacing it are two separate walks, and they must agree. The
+//! walk below stops at every construct that binds a name. The replacement, in
+//! `EvaluatorBuilder::build`, matches a hoisted subtree structurally. On its own, it would
+//! therefore reach an occurrence *inside* such a construct, and make it read a value
+//! computed outside it. `EvaluatorBuilder::build_isolated` is what keeps the two in step, and
+//! `adversarial/cases/20*` are the cases that fail without it.
 
 use dsntk_feel::Name;
 use dsntk_feel::bif::Bif;
@@ -167,11 +186,11 @@ pub fn collect_local_functions<'b>(entries: &'b [AstNode], into: &mut LocalFunct
   }
 }
 
-/// Returns the repeated subtrees of `predicate` that the transform can evaluate once instead
+/// Returns the repeated subtrees of `expression` that the transform can evaluate once instead
 /// of once per occurrence, in the order they first appear.
-pub fn hoistable<'b>(predicate: &'b AstNode, locals: &LocalFunctions<'b>) -> Vec<&'b AstNode> {
+pub fn hoistable<'b>(expression: &'b AstNode, locals: &LocalFunctions<'b>) -> Vec<&'b AstNode> {
   let mut found: Vec<(&'b AstNode, usize)> = vec![];
-  collect_calls(predicate, &mut found);
+  collect_calls(expression, &mut found);
   let mut hoists = vec![];
   for (node, count) in found {
     if count >= 2 && is_hoistable_call(node, locals) {
@@ -181,21 +200,49 @@ pub fn hoistable<'b>(predicate: &'b AstNode, locals: &LocalFunctions<'b>) -> Vec
   hoists
 }
 
-/// Walks the non-binding spine of `predicate`, counting structurally equal calls.
+/// Walks the non-binding spine of `expression`, counting structurally equal calls.
 ///
 /// The `_ => {}` arm is the safety property. This function does not enter any node kind not
-/// listed here. So a construct that binds a name -- `for`, `some`, `every`, a context
-/// literal, a nested filter, a function definition -- hides everything inside it from the
-/// hoist.
+/// listed here. So a construct that binds a name -- `some`, `every`, a context literal, a
+/// nested filter, a function definition, and the **body** of a nested `for` -- hides
+/// everything inside it from the hoist.
 fn collect_calls<'b>(node: &'b AstNode, found: &mut Vec<(&'b AstNode, usize)>) {
-  if let AstNode::FunctionInvocation(..) = node {
+  if let AstNode::FunctionInvocation(_, parameters) = node {
     if let Some(slot) = found.iter_mut().find(|(seen, _)| *seen == node) {
       slot.1 += 1;
     } else {
       found.push((node, 1));
     }
-    // The arguments of a call are names or literals when it qualifies, so there is nothing
-    // below a call worth walking.
+    // Then the argument list. `build_function_invocation_with_positional_parameters` evaluates
+    // every argument in the caller's own scope, eagerly and with nothing bound, before the
+    // call happens. So an occurrence inside an argument list runs in exactly the scope the
+    // hoist moves it to. This is what reaches the call inside `count(dayGroup(d))`. Named
+    // parameters are not entered: nothing measured needs them, so they stay outside the
+    // enumerated set.
+    if let AstNode::PositionalParameters(arguments) = parameters.as_ref() {
+      for argument in arguments {
+        collect_calls(argument, found);
+      }
+    }
+    return;
+  }
+  // A nested `for`: the expressions it iterates over, never its body. `build_for` evaluates
+  // every iterated expression by calling it with the **enclosing** scope, once per `for`
+  // evaluation and before any iteration variable exists. So an occurrence there runs in the
+  // scope the hoist moves it to. The body is the opposite case and is left alone.
+  if let AstNode::For(iteration_contexts, _body) = node {
+    if let AstNode::IterationContexts(items) = iteration_contexts.as_ref() {
+      for item in items {
+        match item {
+          AstNode::IterationContextSingle(_, expression) => collect_calls(expression, found),
+          AstNode::IterationContextInterval(_, start, end) => {
+            collect_calls(start, found);
+            collect_calls(end, found);
+          }
+          _ => {}
+        }
+      }
+    }
     return;
   }
   match node {

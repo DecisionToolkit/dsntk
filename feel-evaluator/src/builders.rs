@@ -437,10 +437,14 @@ impl<'b> EvaluatorBuilder<'b> {
     // not leak its functions.
     let saved_functions = self.local_functions.clone();
     cse::collect_local_functions(lhs, &mut self.local_functions);
+    // An entry is visible to every later entry as a bare name, so a context literal binds
+    // names. An enclosing hoist must not reach into it. See [Self::build_isolated].
+    let outer_slots = std::mem::take(&mut self.cse_slots);
     let mut evaluators = vec![];
     for node in lhs {
       evaluators.push(self.build(node));
     }
+    self.cse_slots = outer_slots;
     self.local_functions = saved_functions;
     Box::new(move |scope: &FeelScope| {
       let mut evaluated_ctx = FeelContext::default();
@@ -645,20 +649,49 @@ impl<'b> EvaluatorBuilder<'b> {
 
   fn build_filter(&mut self, lhs: &'b AstNode, rhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
-    let rhe = self.build_filter_predicate(rhs);
+    let rhe = self.build_hoisted(rhs);
     Box::new(move |scope: &FeelScope| {
       let filter_expression_evaluator = FilterExpressionEvaluator::new();
       filter_expression_evaluator.evaluate(scope, lhe(scope), &rhe)
     })
   }
 
-  /// Builds the predicate of a filter, evaluating any repeated call in it only once.
+  /// Builds `node` with the hoisted subtrees of an enclosing expression taken out of scope.
   ///
-  /// The benchmark model calls `inSum(item)` three times and `outSum(item)` four times in one
-  /// predicate, and each call filters and folds the whole transaction list. [crate::cse]
-  /// decides which subtrees may be hoisted. Everything about **when** that is sound is
-  /// documented there. When it finds nothing this is the plain predicate evaluator.
-  fn build_filter_predicate(&mut self, rhs: &'b AstNode) -> Evaluator {
+  /// This code may replace a hoisted subtree with a read of its slot only where every name
+  /// it reads still resolves the way it did. That is the scope where the value was computed.
+  /// [crate::cse] refuses to **look** inside a construct that binds a name. The replacement
+  /// in [Self::build] matches a subtree structurally. Without this function, the replacement
+  /// would therefore reach an occurrence *inside* such a construct, and make it read a value
+  /// computed outside it. The two walks have to refuse the same constructs.
+  /// `adversarial/cases/20*` are the cases that fail otherwise.
+  fn build_isolated(&mut self, node: &'b AstNode) -> Evaluator {
+    let outer_slots = std::mem::take(&mut self.cse_slots);
+    let evaluator = self.build(node);
+    self.cse_slots = outer_slots;
+    evaluator
+  }
+
+  /// Builds `node`, evaluating any repeated call in it only once per evaluation of `node`.
+  ///
+  /// Used for the two positions where that is sound. A **filter predicate** is evaluated
+  /// once per element with `item` bound. A **`for` body** is evaluated once per iteration
+  /// with the iteration variables and `partial` bound. The benchmark model calls
+  /// `inSum(item)` three times and `outSum(item)` four times in one predicate. It also calls
+  /// `dayGroup(d)` three times in one `for` body. Every one of those calls filters the whole
+  /// transaction list.
+  ///
+  /// [crate::cse] decides which subtrees may be hoisted. Everything about **when** that is
+  /// sound is documented there. When it finds nothing this is the plain evaluator for
+  /// `node`, still isolated from an enclosing hoist for the reason in [Self::build_isolated].
+  fn build_hoisted(&mut self, rhs: &'b AstNode) -> Evaluator {
+    let outer_slots = std::mem::take(&mut self.cse_slots);
+    let evaluator = self.build_hoisted_inner(rhs);
+    self.cse_slots = outer_slots;
+    evaluator
+  }
+
+  fn build_hoisted_inner(&mut self, rhs: &'b AstNode) -> Evaluator {
     let hoisted = cse::hoistable(rhs, &self.local_functions);
     if hoisted.is_empty() {
       return self.build(rhs);
@@ -701,9 +734,13 @@ impl<'b> EvaluatorBuilder<'b> {
       List((Name, Evaluator)),
       Variable((Name, Name)),
     }
-    // Analyze the body once, when the evaluator is built, not per evaluation.
+    // Analyze the body once, when the evaluator is built, not per evaluation. The analysis reads
+    // the body as written, so hoisting inside the body cannot change the verdict.
     let safety = crate::parallel::analyze(rhs);
-    let rhe = self.build(rhs);
+    // A repeated call in the body is evaluated once per iteration, not once per occurrence. The
+    // iteration variables and `partial` are already bound when the body runs and neither moves
+    // while it runs, so the occurrences share one value. See [Self::build_hoisted].
+    let rhe = self.build_hoisted(rhs);
     let mut evaluators = vec![];
     let mut binding_variables = HashSet::new();
     if let AstNode::IterationContexts(items) = lhs {
@@ -864,8 +901,9 @@ impl<'b> EvaluatorBuilder<'b> {
 
   fn build_function_definition(&mut self, lhs: &'b AstNode, rhs: &'b AstNode) -> Evaluator {
     let closure = ClosureBuilder::from_function_definition(lhs, rhs);
-    let lhe = self.build(lhs);
-    let rhe = self.build(rhs);
+    // The body binds the formal parameters, so an enclosing hoist must not reach into it.
+    let lhe = self.build_isolated(lhs);
+    let rhe = self.build_isolated(rhs);
     Box::new(move |scope: &FeelScope| {
       let lhv = lhe(scope);
       let rhv = rhe(scope);
@@ -926,7 +964,8 @@ impl<'b> EvaluatorBuilder<'b> {
     let AstNode::Satisfies(satisfies) = rhs else {
       return build_err_msg(err_msg_expected_node("Satisfies", lhs));
     };
-    let satisfies_evaluator = self.build(satisfies);
+    // The body binds the quantified variables, so an enclosing hoist must not reach into it.
+    let satisfies_evaluator = self.build_isolated(satisfies);
     Box::new(move |scope: &FeelScope| {
       let mut expression_evaluator = EveryExpressionEvaluator::new();
       for (name, expr_evaluator) in &expr_evaluators {
@@ -1774,7 +1813,8 @@ impl<'b> EvaluatorBuilder<'b> {
     let AstNode::Satisfies(satisfies) = rhs else {
       return build_err_msg(err_msg_expected_node("Satisfies", lhs));
     };
-    let satisfies_evaluator = self.build(satisfies);
+    // The body binds the quantified variables, so an enclosing hoist must not reach into it.
+    let satisfies_evaluator = self.build_isolated(satisfies);
     Box::new(move |scope: &FeelScope| {
       let mut expression_evaluator = SomeExpressionEvaluator::new();
       for (name, expr_evaluator) in &expr_evaluators {
