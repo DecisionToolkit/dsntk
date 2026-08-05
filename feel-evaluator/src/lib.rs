@@ -6,6 +6,7 @@ extern crate dsntk_macros;
 
 mod bifs;
 mod builders;
+mod cse;
 mod errors;
 mod evaluator_java;
 mod evaluator_pmml;

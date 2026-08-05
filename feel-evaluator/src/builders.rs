@@ -4,7 +4,7 @@ use crate::evaluator_java::evaluate_external_java_function;
 use crate::evaluator_pmml::evaluate_external_pmml_function;
 use crate::iterations::{EveryExpressionEvaluator, ForExpressionEvaluator, SomeExpressionEvaluator};
 use crate::macros::invalid_argument_type;
-use crate::{FilterExpressionEvaluator, bifs};
+use crate::{FilterExpressionEvaluator, bifs, cse};
 use dsntk_feel::bif::Bif;
 use dsntk_feel::bip::*;
 use dsntk_feel::context::FeelContext;
@@ -50,6 +50,14 @@ macro_rules! between_null3 {
 struct EvaluatorBuilder<'b> {
   /// Stack of visited parent nodes in AST during evaluator building.
   node_stack: Vec<&'b AstNode>,
+  /// Sibling context entries binding a name to a function definition, used by [crate::cse]
+  /// to decide whether a repeated call may be evaluated once. Scoped to the context literal
+  /// currently being built and restored when it finishes.
+  local_functions: cse::LocalFunctions<'b>,
+  /// Subtrees of the filter predicate currently being built that have been hoisted, each with
+  /// the synthetic name its value is bound to. Consulted for every node, so an occurrence
+  /// becomes a read of the slot instead of the call itself.
+  cse_slots: Vec<(&'b AstNode, Name)>,
 }
 
 impl<'b> EvaluatorBuilder<'b> {
@@ -61,6 +69,12 @@ impl<'b> EvaluatorBuilder<'b> {
 
   /// Builds and evaluator based on provided AST node.
   fn build(&mut self, node: &'b AstNode) -> Evaluator {
+    // An occurrence of a subtree hoisted out of the enclosing filter predicate reads the value
+    // bound to its slot instead of evaluating the subtree again. See [crate::cse].
+    if let Some((_, name)) = self.cse_slots.iter().find(|(hoisted, _)| *hoisted == node) {
+      let name = name.clone();
+      return Box::new(move |scope: &FeelScope| scope.get_value(&name).unwrap_or_else(|| value_null!("no value for hoisted subexpression")));
+    }
     // push the current node on the top of the node stack
     self.node_stack.push(node);
     // build the evaluator
@@ -417,10 +431,17 @@ impl<'b> EvaluatorBuilder<'b> {
   }
 
   fn build_context(&mut self, lhs: &'b [AstNode]) -> Evaluator {
+    // Record the sibling entries that bind a name to a function definition before building
+    // any entry. That way, if an entry calls one of them, this module can check that call
+    // for purity. This code restores the previous set afterwards, so a nested context does
+    // not leak its functions.
+    let saved_functions = self.local_functions.clone();
+    cse::collect_local_functions(lhs, &mut self.local_functions);
     let mut evaluators = vec![];
     for node in lhs {
       evaluators.push(self.build(node));
     }
+    self.local_functions = saved_functions;
     Box::new(move |scope: &FeelScope| {
       let mut evaluated_ctx = FeelContext::default();
       // prepare special context in scope, used for already evaluated context entries
@@ -624,10 +645,52 @@ impl<'b> EvaluatorBuilder<'b> {
 
   fn build_filter(&mut self, lhs: &'b AstNode, rhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
-    let rhe = self.build(rhs);
+    let rhe = self.build_filter_predicate(rhs);
     Box::new(move |scope: &FeelScope| {
       let filter_expression_evaluator = FilterExpressionEvaluator::new();
       filter_expression_evaluator.evaluate(scope, lhe(scope), &rhe)
+    })
+  }
+
+  /// Builds the predicate of a filter, evaluating any repeated call in it only once.
+  ///
+  /// The benchmark model calls `inSum(item)` three times and `outSum(item)` four times in one
+  /// predicate, and each call filters and folds the whole transaction list. [crate::cse]
+  /// decides which subtrees may be hoisted. Everything about **when** that is sound is
+  /// documented there. When it finds nothing this is the plain predicate evaluator.
+  fn build_filter_predicate(&mut self, rhs: &'b AstNode) -> Evaluator {
+    let hoisted = cse::hoistable(rhs, &self.local_functions);
+    if hoisted.is_empty() {
+      return self.build(rhs);
+    }
+    // Build the hoisted subtrees first, while the slot table is still empty, so each one
+    // evaluates the real call rather than a read of its own slot.
+    if std::env::var_os("DSNTK_CSE_TRACE").is_some() {
+      eprintln!("CSE hoisted {} subtree(s): {:?}", hoisted.len(), hoisted.iter().map(|n| format!("{n:?}").chars().take(70).collect::<String>()).collect::<Vec<_>>());
+    }
+    let hoisted_evaluators: Vec<Evaluator> = hoisted.iter().map(|node| self.build(node)).collect();
+    let slot_names: Vec<Name> = (0..hoisted.len()).map(cse::slot_name).collect();
+    // Now build the predicate, with every occurrence rewritten to a read of its slot.
+    let slots: Vec<(&'b AstNode, Name)> = hoisted.iter().copied().zip(slot_names.iter().cloned()).collect();
+    let saved_slots = std::mem::replace(&mut self.cse_slots, slots);
+    let predicate = self.build(rhs);
+    self.cse_slots = saved_slots;
+    Box::new(move |scope: &FeelScope| {
+      // One frame holding the hoisted values, built and shared in one allocation. `from_entry`
+      // leaves the refcount at one, so the remaining entries are written in place.
+      let mut names = slot_names.iter();
+      let mut evaluators = hoisted_evaluators.iter();
+      let Some((first_name, first_evaluator)) = names.next().zip(evaluators.next()) else {
+        return predicate(scope);
+      };
+      let mut frame = FeelContext::from_entry(first_name, first_evaluator(scope));
+      for (name, evaluator) in names.zip(evaluators) {
+        frame.set_entry(name, evaluator(scope));
+      }
+      scope.push(frame);
+      let value = predicate(scope);
+      scope.pop();
+      value
     })
   }
 
