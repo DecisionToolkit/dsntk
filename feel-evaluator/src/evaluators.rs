@@ -38,17 +38,27 @@ pub fn evaluate_equals(left: &Value, right: &Value) -> bool {
 /// Evaluates a context from text containing `FEEL` expression.
 pub fn evaluate_context(scope: &FeelScope, input: &str) -> Result<FeelContext> {
   let node = dsntk_feel_parser::parse_context(scope, input, false)?;
-  let evaluator = crate::builders::build_evaluator(&node);
-  // `Evaluator` has no lifetime parameter, so an evaluator can never borrow the
-  // parsed syntax tree. The tree is dead here. For a large data literal, it is
-  // the biggest of the three input representations. Free it before the evaluator
-  // builds the value tree.
-  drop(node);
-  if let Value::Context(context) = evaluator(scope) {
-    Ok(context)
-  } else {
-    Err(err_not_a_context())
-  }
+  // An input data file is usually not an expression but data: nested contexts and lists of
+  // string, number, boolean and null literals. This code converts such a tree straight into
+  // a value. That skips the closure tree completely and frees each record as soon as its
+  // value exists. A tree that holds anything else comes back unchanged and takes the normal
+  // path. See `crate::literal`.
+  let value = match crate::literal::literal_value(&node) {
+    Some(value) => {
+      drop(node);
+      value
+    }
+    None => {
+      let evaluator = crate::builders::build_evaluator(&node);
+      // `Evaluator` has no lifetime parameter, so an evaluator can never borrow the
+      // parsed syntax tree. The tree is dead here. For a large data literal, it is
+      // the biggest of the three input representations. Free it before the evaluator
+      // builds the value tree.
+      drop(node);
+      evaluator(scope)
+    }
+  };
+  if let Value::Context(context) = value { Ok(context) } else { Err(err_not_a_context()) }
 }
 
 /// Evaluates a context from AST node.

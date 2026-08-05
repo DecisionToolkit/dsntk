@@ -12,6 +12,7 @@ mod evaluator_pmml;
 mod evaluators;
 mod filters;
 mod iterations;
+mod literal;
 mod macros;
 mod parallel;
 mod tests;
