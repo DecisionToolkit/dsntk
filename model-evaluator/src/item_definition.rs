@@ -68,8 +68,10 @@ fn build_allowed_values_evaluator(item_definition: &DefItemDefinition) -> Result
   {
     let scope = FeelScope::default();
     let unary_tests_node = dsntk_feel_parser::parse_unary_tests(&scope, text, false)?;
-    let node = AstNode::In(Box::new(AstNode::Name("?".into())), Box::new(unary_tests_node));
-    av_evaluator = Some(dsntk_feel_evaluator::prepare(&node));
+    // The tested expression is the name `?`, which [check_allowed_values] binds to the
+    // checked value. The shared builder gives a test that itself uses `?` the DMN 1.3
+    // Table 55 semantics: the boolean value of the test is the answer.
+    av_evaluator = Some(crate::decision_table::build_unary_tests_evaluator(&AstNode::Name("?".into()), unary_tests_node));
   }
 
   Ok(av_evaluator)
@@ -469,6 +471,32 @@ mod tests {
     let mut def_definitions = DefDefinitions::default();
     def_definitions.add_model(&definitions);
     ItemDefinitionEvaluator::new(&def_definitions).unwrap()
+  }
+
+  /// An allowed-values test that is a boolean expression over `?`.
+  ///
+  /// DMN 1.3 Table 55: `e in t` means `{?: e, r: t}.r` when `t` is a boolean expression
+  /// that uses `?`. Without the shared builder, the engine would bind `?` but then
+  /// compare the tested string against the resulting boolean for equality. Every value
+  /// would be rejected, matching or not.
+  #[test]
+  fn test_allowed_values_with_question_mark() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+      <definitions namespace="https://dsntk.io" name="av-question-mark" id="_av_qm"
+                   xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/">
+        <itemDefinition name="tPayment">
+          <typeRef>string</typeRef>
+          <allowedValues>
+            <text>contains(?, "VENMO")</text>
+          </allowedValues>
+        </itemDefinition>
+      </definitions>"#;
+    let evaluator = build_evaluator(xml);
+    let def_key = DefKey::new(NAMESPACE, "tPayment");
+    let accepted = Value::String("VENMO-123".to_string());
+    assert_eq!(accepted, evaluator.eval(&def_key, &accepted).unwrap());
+    let rejected = Value::String("ZELLE-99".to_string());
+    assert_eq!(value_null!(r#"value '"ZELLE-99"' is not allowed"#), evaluator.eval(&def_key, &rejected).unwrap());
   }
 
   #[test]

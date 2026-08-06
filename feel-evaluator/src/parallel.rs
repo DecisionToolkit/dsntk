@@ -227,6 +227,19 @@ impl Analysis {
   }
 }
 
+/// Returns `true` when `name` appears anywhere in `node`, as a plain name or as a segment
+/// of a qualified name.
+///
+/// Used by the decision-table and item-definition builders to see whether a unary test
+/// uses the special name `?`. DMN 1.3 Table 55 gives such a test different semantics:
+/// `e in t` means `{?: e, r: t}.r` when `t` is a boolean expression over `?`.
+pub fn references_name(node: &AstNode, name: &Name) -> bool {
+  match node {
+    AstNode::Name(inner) | AstNode::QualifiedNameSegment(inner) if inner == name => true,
+    _ => children(node).into_iter().any(|child| references_name(child, name)),
+  }
+}
+
 /// Returns every child node of `node`.
 ///
 /// This match is deliberately **exhaustive with no catch-all arm**. If a future version of
