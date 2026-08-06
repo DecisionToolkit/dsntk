@@ -3,10 +3,10 @@ use crate::unicode_blocks::replace_block_names;
 use crate::utils::is_special_character;
 use regex::Regex;
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::HashMap;
-use std::sync::{LazyLock, RwLock};
 
-/// Maximum number of compiled patterns kept in the cache.
+/// Maximum number of compiled patterns kept in one thread's cache.
 ///
 /// Patterns come from a decision model, so their number is bounded by the size of the
 /// model. The limit only protects against a model that builds patterns from input data.
@@ -14,9 +14,24 @@ use std::sync::{LazyLock, RwLock};
 /// recompilation per live pattern, but keeps the cache bounded.
 const MAX_CACHED_PATTERNS: usize = 256;
 
-/// Cache of compiled regular expressions, keyed by the pattern text after all
-/// pattern fixes were applied.
-static CACHE: LazyLock<RwLock<HashMap<String, Regex>>> = LazyLock::new(|| RwLock::new(HashMap::new()));
+thread_local! {
+  /// Cache of compiled regular expressions, keyed by the pattern text after all
+  /// pattern fixes were applied. **One cache per thread**, and this is the point.
+  ///
+  /// A process-wide cache behind an `RwLock`, read-locked once per call, has the same
+  /// mistake `feel/src/names.rs` documents for its own text table. Taking a read lock
+  /// still *writes* the lock word, so every reader steals that cache line from every
+  /// other core. Measured on a 200,000-element parallel `for`, a `matches` body ran at
+  /// 1.00x the serial time. The same body with `contains` ran at 1.24x. The whole
+  /// parallel gain was eaten by one contended line.
+  ///
+  /// A thread-local cache touches no shared state on the hit path. It also keeps each
+  /// compiled expression on the thread that made it. That matters because a `Regex`
+  /// shared across threads serializes again on its internal scratch pool. The cost is
+  /// one compilation of each pattern per worker thread instead of per process, a
+  /// bounded one-time price that the first few hundred calls repay.
+  static CACHE: RefCell<HashMap<String, Regex>> = RefCell::new(HashMap::new());
+}
 
 /// Compiles `pattern` if needed, then calls `f` with the compiled regular expression.
 ///
@@ -26,23 +41,21 @@ static CACHE: LazyLock<RwLock<HashMap<String, Regex>>> = LazyLock::new(|| RwLock
 /// run time. The result is the same either way, because compiling a pattern is
 /// deterministic and the compiled expression is immutable.
 ///
+/// `f` must not call back into this function. Both callers pass a plain match closure.
+///
 /// Returns `None` when the pattern does not compile.
 fn with_compiled<T>(pattern: String, f: impl FnOnce(&Regex) -> T) -> Option<T> {
-  // Fast path: a shared read lock. This is the only path taken after the first call.
-  if let Ok(cache) = CACHE.read()
-    && let Some(re) = cache.get(&pattern)
-  {
-    return Some(f(re));
-  }
-  let re = Regex::new(&pattern).ok()?;
-  let result = f(&re);
-  if let Ok(mut cache) = CACHE.write() {
-    if cache.len() >= MAX_CACHED_PATTERNS {
-      cache.clear();
+  CACHE.with(|cell| {
+    let mut cache = cell.borrow_mut();
+    if !cache.contains_key(&pattern) {
+      let re = Regex::new(&pattern).ok()?;
+      if cache.len() >= MAX_CACHED_PATTERNS {
+        cache.clear();
+      }
+      cache.insert(pattern.clone(), re);
     }
-    cache.insert(pattern, re);
-  }
-  Some(result)
+    Some(f(&cache[&pattern]))
+  })
 }
 
 pub fn is_match(input: &str, pattern: &str) -> dsntk_common::Result<bool> {
