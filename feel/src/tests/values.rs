@@ -10,6 +10,19 @@ use dsntk_feel_temporal::{FeelDate, FeelDateTime, FeelDaysAndTimeDuration, FeelT
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+/// Every value slot in the engine pays for `size_of::<Value>()`. A `BTreeMap` node
+/// holds eleven of them, so this size is the dominant term in the memory footprint.
+/// This test fails if a new variant, or an unboxed payload, makes `Value` grow again.
+///
+/// 48 bytes is the floor that the [dsntk_feel::FeelNumber] payload allows. `FeelNumber`
+/// has align 16, so [Value] has align 16 and its size is a multiple of 16. An align-8
+/// payload starts at offset 8, so every such payload must be 40 bytes or less to keep
+/// the total at 48.
+#[test]
+fn test_size_of_value() {
+  assert_eq!(48, std::mem::size_of::<Value>());
+}
+
 macro_rules! eq_dbg {
   ($expected:literal, $value: expr) => {
     assert_eq!($expected, format!("{:?}", $value));
@@ -54,20 +67,17 @@ fn test_debug() {
   eq_dbg!(r#"Date(FeelDate(2022, 9, 27))"#, Value::Date(v_date));
   eq_dbg!(
     r#"DateTime(FeelDateTime(FeelDate(2022, 9, 27), FeelTime(12, 13, 23, 0, Local)))"#,
-    Value::DateTime(v_date_time)
+    Value::DateTime(v_date_time.into())
   );
   eq_dbg!(
     r#"DaysAndTimeDuration(FeelDaysAndTimeDuration(100000000000))"#,
     Value::DaysAndTimeDuration(v_days_and_time_duration)
   );
   eq_dbg!(r#"ExpressionList([])"#, Value::ExpressionList(Values::default()));
-  eq_dbg!(
-    r#"ExternalJavaFunction("class", "method")"#,
-    Value::ExternalJavaFunction("class".to_string(), "method".to_string())
-  );
+  eq_dbg!(r#"ExternalJavaFunction("class", "method")"#, Value::ExternalJavaFunction("class".into(), "method".into()));
   eq_dbg!(
     r#"ExternalPmmlFunction("document", "model")"#,
-    Value::ExternalPmmlFunction("document".to_string(), "model".to_string())
+    Value::ExternalPmmlFunction("document".into(), "model".into())
   );
   eq_dbg!(r#"FeelType(Number)"#, Value::FeelType(t_number.clone()));
   eq_dbg!(r#"FormalParameter(Name("a"), Number)"#, Value::FormalParameter(name.clone(), t_number.clone()));
@@ -77,8 +87,8 @@ fn test_debug() {
     Value::FunctionBody(v_function_body.clone(), v_external)
   );
   eq_dbg!(
-    r#"FunctionDefinition([(Name("a"), Number)], FunctionBodyLiteralExpression, false, Closure({}), FeelContext({}), Number)"#,
-    Value::FunctionDefinition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
+    r#"FunctionDefinition(([(Name("a"), Number)], FunctionBodyLiteralExpression, false, Closure({}), FeelContext({}), Number))"#,
+    Value::function_definition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
   );
   eq_dbg!(r#"IntervalEnd(Number(+1E+0), Opened)"#, Value::IntervalEnd(b_number.clone(), IntervalType::Opened));
   eq_dbg!(r#"IntervalStart(Number(+1E+0), Opened)"#, Value::IntervalStart(b_number.clone(), IntervalType::Opened));
@@ -139,24 +149,18 @@ fn test_display() {
   eq_dsp!(r#"a: number"#, Value::ContextTypeEntry(name.clone(), t_number.clone()));
   eq_dsp!(r#"a"#, Value::ContextTypeEntryKey(name.clone()));
   eq_dsp!(r#"2022-09-27"#, Value::Date(v_date));
-  eq_dsp!(r#"2022-09-27T12:13:23"#, Value::DateTime(v_date_time));
+  eq_dsp!(r#"2022-09-27T12:13:23"#, Value::DateTime(v_date_time.into()));
   eq_dsp!(r#"PT1M40S"#, Value::DaysAndTimeDuration(v_days_and_time_duration));
   eq_dsp!(r#"[]"#, Value::ExpressionList(Values::default()));
-  eq_dsp!(
-    r#"ExternalJavaFunction(class, method)"#,
-    Value::ExternalJavaFunction("class".to_string(), "method".to_string())
-  );
-  eq_dsp!(
-    r#"ExternalPmmlFunction(document, model)"#,
-    Value::ExternalPmmlFunction("document".to_string(), "model".to_string())
-  );
+  eq_dsp!(r#"ExternalJavaFunction(class, method)"#, Value::ExternalJavaFunction("class".into(), "method".into()));
+  eq_dsp!(r#"ExternalPmmlFunction(document, model)"#, Value::ExternalPmmlFunction("document".into(), "model".into()));
   eq_dsp!(r#"type(number)"#, Value::FeelType(t_number.clone()));
   eq_dsp!(r#"FormalParameter"#, Value::FormalParameter(name.clone(), t_number.clone()));
   eq_dsp!(r#"FormalParameters"#, Value::FormalParameters(vec![]));
   eq_dsp!(r#"FunctionBody"#, Value::FunctionBody(v_function_body.clone(), v_external));
   eq_dsp!(
     r#"FunctionDefinition([(Name("a"), Number)],_,false,[],{},number)"#,
-    Value::FunctionDefinition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
+    Value::function_definition(vec![(name.clone(), t_number.clone())], v_function_body, v_external, v_closure, v_closure_ctx, t_number)
   );
   eq_dsp!(r#"IntervalEnd"#, Value::IntervalEnd(b_number.clone(), IntervalType::Opened));
   eq_dsp!(r#"IntervalStart"#, Value::IntervalStart(b_number.clone(), IntervalType::Opened));
@@ -210,18 +214,18 @@ fn test_type_of() {
   eq_typ!(FeelType::Number, Value::ContextTypeEntry(name.clone(), t_number.clone()));
   eq_typ!(FeelType::Any, Value::ContextTypeEntryKey(name.clone()));
   eq_typ!(FeelType::Date, Value::Date(v_date));
-  eq_typ!(FeelType::DateTime, Value::DateTime(v_date_time));
+  eq_typ!(FeelType::DateTime, Value::DateTime(v_date_time.into()));
   eq_typ!(FeelType::DaysAndTimeDuration, Value::DaysAndTimeDuration(v_days_and_time_duration));
   eq_typ!(FeelType::Any, Value::ExpressionList(Values::default()));
-  eq_typ!(FeelType::Any, Value::ExternalJavaFunction("class".to_string(), "method".to_string()));
-  eq_typ!(FeelType::Any, Value::ExternalPmmlFunction("document".to_string(), "model".to_string()));
+  eq_typ!(FeelType::Any, Value::ExternalJavaFunction("class".into(), "method".into()));
+  eq_typ!(FeelType::Any, Value::ExternalPmmlFunction("document".into(), "model".into()));
   eq_typ!(FeelType::Number, Value::FeelType(t_number.clone()));
   eq_typ!(FeelType::Number, Value::FormalParameter(name.clone(), t_number.clone()));
   eq_typ!(FeelType::Any, Value::FormalParameters(vec![]));
   eq_typ!(FeelType::Any, Value::FunctionBody(v_function_body.clone(), v_external));
   eq_typ!(
     FeelType::Function(vec![FeelType::Number], Box::new(FeelType::Number)),
-    Value::FunctionDefinition(
+    Value::function_definition(
       vec![(name.clone(), t_number.clone())],
       v_function_body,
       v_external,
@@ -381,7 +385,7 @@ fn test_jsonify() {
   assert_eq!(r#""18:35:12.000598677Z""#, Value::Time(FeelTime::utc(18, 35, 12, 598677)).jsonify());
   assert_eq!(
     r#""2023-02-24T18:35:12.000598677Z""#,
-    Value::DateTime(FeelDateTime::new(FeelDate::new(2023, 2, 24).unwrap(), FeelTime::utc_opt(18, 35, 12, 598677).unwrap())).jsonify()
+    Value::DateTime(FeelDateTime::new(FeelDate::new(2023, 2, 24).unwrap(), FeelTime::utc_opt(18, 35, 12, 598677).unwrap()).into()).jsonify()
   );
   assert_eq!(r#""P10DT13H59M18S""#, Value::DaysAndTimeDuration(FeelDaysAndTimeDuration::from_s(914358)).jsonify());
   assert_eq!(r#""P3Y2M""#, Value::YearsAndMonthsDuration(FeelYearsAndMonthsDuration::from_ym(3, 2)).jsonify());
@@ -474,7 +478,7 @@ fn test_coerced() {
   let v_list_number_1 = Value::List(vec![value_number!(1, 0)]);
   let v_list_number_2 = Value::List(vec![value_number!(1, 0), value_number!(2, 0)]);
   let v_list_string_1 = Value::List(vec![Value::String("A".to_string())]);
-  let v_function_a = Value::FunctionDefinition(
+  let v_function_a = Value::function_definition(
     vec![(NAME_A.clone(), T_NUMBER.clone())],
     FunctionBody::LiteralExpression(Arc::new(Box::new(|_: &FeelScope| value_number!(1)))),
     false,

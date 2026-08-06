@@ -7,6 +7,13 @@ use dsntk_feel::{Evaluator, FeelScope, Name, value_null};
 use dsntk_feel_parser::AstNode;
 use dsntk_model::{BuiltinAggregator, DecisionTable, HitPolicy};
 use std::cmp::Ordering;
+use std::sync::LazyLock;
+
+/// The name `?`, the tested value inside a unary test, interned once.
+///
+/// See the note on `NAME_QUESTION_MARK` in `item_definition.rs`, which binds the same
+/// name for the allowed-values test of an item definition.
+static NAME_QUESTION_MARK: LazyLock<Name> = LazyLock::new(|| "?".into());
 
 /// Parsed rule of the decision table.
 /// Input entries and output entries are parsed into evaluation clauses
@@ -231,6 +238,59 @@ impl EvaluatedDecisionTable {
   }
 }
 
+/// Builds the evaluator of one unary-tests node `t` against a tested expression `e`.
+///
+/// When no test in `t` uses the name `?`, this builds the plain `e in (t)` node the
+/// engine always built. So the ordinary entry costs exactly what it did. When a test
+/// uses `?`, DMN 1.3 Table 55 applies: `e in t` means `{?: e, r: t}.r`. So the test is
+/// the boolean value of its own expression, evaluated with `?` bound to the value of
+/// `e`. The tests of the same entry that do not use `?` keep the plain `in` semantics,
+/// and the entry is satisfied when any of its tests is.
+///
+/// Used for decision-table input entries and for the allowed-values test of an item
+/// definition. These are the two places the model hands unary tests to the engine.
+pub(crate) fn build_unary_tests_evaluator(tested_expression: &AstNode, unary_tests: AstNode) -> Evaluator {
+  if !dsntk_feel_evaluator::references_name(&unary_tests, &NAME_QUESTION_MARK) {
+    let node = AstNode::In(Box::new(tested_expression.clone()), Box::new(unary_tests));
+    return dsntk_feel_evaluator::prepare(&node);
+  }
+  // Split the tests that use `?` from the tests that do not.
+  let (negated, items) = match unary_tests {
+    AstNode::ExpressionList(items) => (false, items),
+    AstNode::NegatedList(items) => (true, items),
+    other => (false, vec![other]),
+  };
+  let (question_items, plain_items): (Vec<AstNode>, Vec<AstNode>) = items
+    .into_iter()
+    .partition(|item| dsntk_feel_evaluator::references_name(item, &NAME_QUESTION_MARK));
+  let question_evaluators: Vec<Evaluator> = question_items.iter().map(dsntk_feel_evaluator::prepare).collect();
+  let plain_evaluator: Option<Evaluator> = if plain_items.is_empty() {
+    None
+  } else {
+    // The plain tests keep their old shape, including the negation of a `not(...)` list.
+    let list = if negated { AstNode::NegatedList(plain_items) } else { AstNode::ExpressionList(plain_items) };
+    Some(dsntk_feel_evaluator::prepare(&AstNode::In(Box::new(tested_expression.clone()), Box::new(list))))
+  };
+  let tested_evaluator = dsntk_feel_evaluator::prepare(tested_expression);
+  Box::new(move |scope: &FeelScope| {
+    let plain = plain_evaluator.as_ref().map(|evaluator| evaluator(scope).is_true());
+    let value = tested_evaluator(scope);
+    let mut ctx = FeelContext::default();
+    ctx.set_entry(&NAME_QUESTION_MARK, value);
+    scope.push(ctx);
+    let question = question_evaluators.iter().any(|evaluator| evaluator(scope).is_true());
+    scope.pop();
+    let satisfied = if negated {
+      // `not(t1, ..., tn)` is satisfied when no test is. The plain part carries its own
+      // negation already, because it was rebuilt as a negated list above.
+      plain.unwrap_or(true) && !question
+    } else {
+      plain.unwrap_or(false) || question
+    };
+    Value::Boolean(satisfied)
+  })
+}
+
 fn parse_decision_table(scope: &FeelScope, decision_table: &DecisionTable) -> Result<ParsedDecisionTable> {
   // parse input expressions and input values
   let mut input_expressions_and_values = vec![];
@@ -272,7 +332,21 @@ fn parse_decision_table(scope: &FeelScope, decision_table: &DecisionTable) -> Re
     let mut input_entries_evaluators = vec![];
     for (i, (input_expression, input_values)) in input_expressions_and_values.iter().enumerate() {
       let input_entry_node = dsntk_feel_parser::parse_unary_tests(scope, &rule.input_entries[i].text, false)?;
-      if let Some(input_values_node) = input_values {
+      let uses_question_mark = dsntk_feel_evaluator::references_name(&input_entry_node, &NAME_QUESTION_MARK)
+        || input_values.as_ref().is_some_and(|values| dsntk_feel_evaluator::references_name(values, &NAME_QUESTION_MARK));
+      if uses_question_mark {
+        // At least one test uses `?`, so the entry needs `?` bound to the value of the
+        // input expression. See [build_unary_tests_evaluator].
+        let entry_evaluator = build_unary_tests_evaluator(input_expression, input_entry_node);
+        if let Some(input_values_node) = input_values {
+          let values_evaluator = build_unary_tests_evaluator(input_expression, input_values_node.clone());
+          input_entries_evaluators.push(Box::new(move |scope: &FeelScope| {
+            Value::Boolean(values_evaluator(scope).is_true() && entry_evaluator(scope).is_true())
+          }) as Evaluator);
+        } else {
+          input_entries_evaluators.push(entry_evaluator);
+        }
+      } else if let Some(input_values_node) = input_values {
         let left = AstNode::In(Box::new(input_expression.clone()), Box::new(input_values_node.clone()));
         let right = AstNode::In(Box::new(input_expression.clone()), Box::new(input_entry_node));
         let node = AstNode::And(Box::new(left), Box::new(right));
@@ -402,5 +476,79 @@ mod tests {
     let scope = context(r#"{Customer:"Business", Order:-3.23 }"#).into();
     let evaluator = build_decision_table_evaluator(&scope, &decision_table).unwrap();
     assert_eq!(value_number!(10, 2), evaluator(&scope));
+  }
+
+  /// A decision table whose first input entry is a boolean expression over `?`.
+  ///
+  /// DMN 1.3 Table 55: when the test is a boolean expression that uses `?`, the entry
+  /// `e in t` means `{?: e, r: t}.r`. So the boolean itself is the answer. Without that
+  /// binding, the expression would evaluate to null, and the rule would silently never
+  /// match.
+  const DT_QUESTION_MARK: &str = r#"
+┌───┬──────────────────────╥───────┐
+│ F │       Payment        ║       │
+╞═══╪══════════════════════╬═══════╡
+│ 1 │ contains(?, "VENMO") ║ "P2P" │
+├───┼──────────────────────╫───────┤
+│ 2 │          -           ║ "OK"  │
+└───┴──────────────────────╨───────┘
+"#;
+
+  #[test]
+  fn question_mark_in_input_entry_matches() {
+    let decision_table: DecisionTable = dsntk_recognizer::from_unicode(DT_QUESTION_MARK, false).unwrap().into();
+    let scope = context(r#"{Payment: "VENMO-123"}"#).into();
+    let evaluator = build_decision_table_evaluator(&scope, &decision_table).unwrap();
+    assert_eq!(Value::String("P2P".to_string()), evaluator(&scope));
+  }
+
+  #[test]
+  fn question_mark_in_input_entry_does_not_match() {
+    let decision_table: DecisionTable = dsntk_recognizer::from_unicode(DT_QUESTION_MARK, false).unwrap().into();
+    let scope = context(r#"{Payment: "ZELLE-99"}"#).into();
+    let evaluator = build_decision_table_evaluator(&scope, &decision_table).unwrap();
+    assert_eq!(Value::String("OK".to_string()), evaluator(&scope));
+  }
+
+  /// The equality form `? = "X"`. It parses as one expression, not as a unary
+  /// comparison, so it takes the same bound-`?` path as a function call over `?`.
+  const DT_QUESTION_MARK_EQUALITY: &str = r#"
+┌───┬──────────╥───────┐
+│ F │  Letter  ║       │
+╞═══╪══════════╬═══════╡
+│ 1 │ ? = "X"  ║ "hit" │
+├───┼──────────╫───────┤
+│ 2 │    -     ║ "def" │
+└───┴──────────╨───────┘
+"#;
+
+  #[test]
+  fn question_mark_equality_in_input_entry() {
+    let decision_table: DecisionTable = dsntk_recognizer::from_unicode(DT_QUESTION_MARK_EQUALITY, false).unwrap().into();
+    let evaluator = build_decision_table_evaluator(&context("{Letter: \"X\"}").into(), &decision_table).unwrap();
+    assert_eq!(Value::String("hit".to_string()), evaluator(&context("{Letter: \"X\"}").into()));
+    assert_eq!(Value::String("def".to_string()), evaluator(&context("{Letter: \"Y\"}").into()));
+  }
+
+  /// A `?` test mixed with plain tests in one entry. The entry is satisfied when any
+  /// of its tests is. So the plain tests must keep their old semantics next to the
+  /// bound-`?` test.
+  const DT_QUESTION_MARK_MIXED: &str = r#"
+┌───┬─────────────────────────────╥───────┐
+│ F │           Payment           ║       │
+╞═══╪═════════════════════════════╬═══════╡
+│ 1 │ "WIRE", contains(?, "P2P")  ║ "yes" │
+├───┼─────────────────────────────╫───────┤
+│ 2 │              -              ║ "no"  │
+└───┴─────────────────────────────╨───────┘
+"#;
+
+  #[test]
+  fn question_mark_mixed_with_plain_tests() {
+    let decision_table: DecisionTable = dsntk_recognizer::from_unicode(DT_QUESTION_MARK_MIXED, false).unwrap().into();
+    let evaluator = build_decision_table_evaluator(&context("{Payment: \"WIRE\"}").into(), &decision_table).unwrap();
+    assert_eq!(Value::String("yes".to_string()), evaluator(&context("{Payment: \"WIRE\"}").into()));
+    assert_eq!(Value::String("yes".to_string()), evaluator(&context("{Payment: \"XP2P\"}").into()));
+    assert_eq!(Value::String("no".to_string()), evaluator(&context("{Payment: \"ACH\"}").into()));
   }
 }

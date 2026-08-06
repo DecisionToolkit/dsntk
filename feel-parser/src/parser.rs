@@ -819,7 +819,10 @@ impl ReduceActions for Parser<'_> {
 
   fn action_list(&mut self) -> Result<()> {
     trace_action!(self, "list");
-    if let Some(AstNode::CommaList(items)) = self.yy_node_stack.pop() {
+    if let Some(AstNode::CommaList(mut items)) = self.yy_node_stack.pop() {
+      // `action_list_tail` collects the items from last to first. This restores
+      // the order with one reversal of the whole list.
+      items.reverse();
       self.yy_node_stack.push(AstNode::List(items));
     }
     Ok(())
@@ -836,7 +839,10 @@ impl ReduceActions for Parser<'_> {
     let node = self.yy_node_stack.pop().unwrap();
     if let AstNode::CommaList(mut items) = node {
       let item = self.yy_node_stack.pop().unwrap();
-      items.insert(0, item);
+      // The `list_tail` production is right recursive, so the items arrive in reverse
+      // order. This code appends them, which keeps the action constant time.
+      // `action_list` reverses the result once.
+      items.push(item);
       self.yy_node_stack.push(AstNode::CommaList(items));
       return Ok(());
     }

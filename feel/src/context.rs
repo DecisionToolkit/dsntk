@@ -11,13 +11,36 @@ use std::collections::BTreeMap;
 use std::collections::btree_map::Iter;
 use std::fmt;
 use std::ops::Deref;
+use std::sync::{Arc, LazyLock};
 
 /// Type alias for context entries.
 type FeelContextEntries = BTreeMap<Name, Value>;
 
 /// The FEEL context.
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct FeelContext(FeelContextEntries);
+///
+/// The entries live behind an [Arc] so that cloning a context is a refcount bump instead
+/// of a deep copy of the whole map. Contexts are cloned once per element in several hot
+/// paths, most importantly [crate::values::Value::Context] values held in a list.
+///
+/// Mutation goes through [Arc::make_mut], which copies the map only when it is actually
+/// shared. Every mutating method below uses `entries_mut` for exactly that reason. A
+/// `&mut FeelContextEntries` is unreachable through an [Arc] without it. The compiler
+/// therefore rejects any mutation site that forgets to go copy-on-write.
+#[derive(Debug, Clone, PartialEq)]
+pub struct FeelContext(Arc<FeelContextEntries>);
+
+/// A shared empty entry map, so `FeelContext::default()` allocates nothing.
+///
+/// `FeelContext::default()` runs once per evaluated context literal and once per pushed
+/// scope context, so it is hot. The first mutation of such a context copies an empty map,
+/// which allocates no nodes.
+static EMPTY_ENTRIES: LazyLock<Arc<FeelContextEntries>> = LazyLock::new(|| Arc::new(FeelContextEntries::new()));
+
+impl Default for FeelContext {
+  fn default() -> Self {
+    Self(EMPTY_ENTRIES.clone())
+  }
+}
 
 impl Deref for FeelContext {
   type Target = FeelContextEntries;
@@ -104,6 +127,33 @@ impl FeelContext {
     Self::default()
   }
 
+  /// Creates a context holding exactly one entry.
+  ///
+  /// Use this instead of [FeelContext::default] followed by [FeelContext::set_entry].
+  /// Those two build the same context, but reach it through [Arc::make_mut] on the shared
+  /// [EMPTY_ENTRIES] static. That costs three atomic operations on **one** cache line
+  /// that every thread in the process touches: a refcount increment to clone the static, a
+  /// compare-exchange inside [Arc::make_mut] because the refcount is never one, and a
+  /// decrement to release it again. This builds the map first and shares it afterwards, so
+  /// nothing is contended.
+  ///
+  /// A profile of the largest benchmark model put `entries_mut` at 8.99% of main-thread
+  /// work. 97.5% of that came from one call site: the filter evaluator, which builds a
+  /// one-entry context for every element of every filtered list.
+  pub fn from_entry(name: &Name, value: Value) -> Self {
+    let mut entries = FeelContextEntries::new();
+    entries.insert(name.clone(), value);
+    Self(Arc::new(entries))
+  }
+
+  /// Returns a mutable reference to the entries, copying them first when they are shared.
+  ///
+  /// This is the only way to mutate a context. [Arc::make_mut] copies the map only
+  /// when the refcount is above one. It mutates an unshared context in place.
+  fn entries_mut(&mut self) -> &mut FeelContextEntries {
+    Arc::make_mut(&mut self.0)
+  }
+
   /// Returns `true` if context contains an entry specified by **name**.
   pub fn contains_entry(&self, name: &Name) -> bool {
     self.0.contains_key(name)
@@ -121,17 +171,17 @@ impl FeelContext {
 
   /// Sets a value for specified entry name.
   pub fn set_entry(&mut self, name: &Name, value: Value) {
-    self.0.insert(name.clone(), value);
+    self.entries_mut().insert(name.clone(), value);
   }
 
   /// Removes a value of an entry with specified name.
   pub fn remove_entry(&mut self, name: &Name) -> Option<Value> {
-    self.0.remove(name)
+    self.entries_mut().remove(name)
   }
 
   /// Sets a null value for specified entry.
   pub fn set_null(&mut self, name: Name) {
-    self.0.insert(name, value_null!());
+    self.entries_mut().insert(name, value_null!());
   }
 
   /// Returns a list of all [FeelContext] entries.
@@ -165,22 +215,24 @@ impl FeelContext {
   }
 
   pub fn zip(&mut self, other: &FeelContext) {
-    for (name, value) in &other.0 {
-      self.0.insert(name.clone(), value.clone());
+    let entries = self.entries_mut();
+    for (name, value) in other.0.iter() {
+      entries.insert(name.clone(), value.clone());
     }
   }
 
   pub fn overwrite(&mut self, other: &FeelContext) {
-    for (name, value) in &other.0 {
-      if self.0.contains_key(name) {
-        self.0.insert(name.clone(), value.clone());
+    let entries = self.entries_mut();
+    for (name, value) in other.0.iter() {
+      if entries.contains_key(name) {
+        entries.insert(name.clone(), value.clone());
       }
     }
   }
 
   //TODO refactor the name, this operation is not moving, it is like prefixing
   pub fn move_entry(&mut self, name: Name, parent: Name) {
-    if let Some(value) = self.0.remove(&name) {
+    if let Some(value) = self.entries_mut().remove(&name) {
       self.create_entries(&[parent, name], value);
     }
   }
@@ -223,18 +275,18 @@ impl FeelContext {
     let tail = &names[1..];
     // if tail is empty, then insert the value under the key in current context and return
     if tail.is_empty() {
-      self.0.insert(key, value);
+      self.entries_mut().insert(key, value);
       return;
     }
     // if there is a context under the key, then insert value to this context and return
-    if let Some(Value::Context(ctx)) = self.0.get_mut(&key) {
+    if let Some(Value::Context(ctx)) = self.entries_mut().get_mut(&key) {
       ctx.create_entries(tail, value);
       return;
     }
     // insert a value from tail to newly created context
     let mut ctx = FeelContext::default();
     ctx.create_entries(tail, value);
-    self.0.insert(key, ctx.into());
+    self.entries_mut().insert(key, ctx.into());
   }
 
   /// ???
@@ -247,11 +299,11 @@ impl FeelContext {
     let tail = &names[1..];
     // if tail is empty, then insert the value under the key in current context and return
     if tail.is_empty() {
-      self.0.insert(key, value);
+      self.entries_mut().insert(key, value);
       return Ok(());
     }
     // if there is a context under the key, then insert value to this context and return
-    match self.0.get_mut(&key) {
+    match self.entries_mut().get_mut(&key) {
       Some(Value::Context(ctx)) => {
         ctx.apply_entries(tail, value)?;
         return Ok(());
@@ -264,7 +316,7 @@ impl FeelContext {
     // insert a value from tail to new created context
     let mut ctx = FeelContext::default();
     ctx.apply_entries(tail, value)?;
-    self.0.insert(key, ctx.into());
+    self.entries_mut().insert(key, ctx.into());
     Ok(())
   }
 

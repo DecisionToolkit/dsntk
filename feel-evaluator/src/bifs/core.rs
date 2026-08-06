@@ -562,7 +562,9 @@ pub fn context_merge(contexts: &Value) -> Value {
       for item in items {
         match item {
           Value::Context(ctx) => result_ctx.zip(ctx),
-          Value::Null(_) => {}
+          // A null entry is out of domain, just like any other non-context value. It is
+          // also the entry a failed expression produces, so it is the entry that most
+          // needs this diagnostic.
           other => return invalid_argument_type!("context merge", "context", other.type_of()),
         }
       }
@@ -624,10 +626,10 @@ pub fn date_3(year_value: &Value, month_value: &Value, day_value: &Value) -> Val
 pub fn date_and_time_1(value: &Value) -> Value {
   if let Value::String(text) = value {
     if let Ok(date_time) = FeelDateTime::try_from(text.as_str()) {
-      return Value::DateTime(date_time);
+      return Value::DateTime(date_time.into());
     }
     if let Ok(date) = FeelDate::from_str(text) {
-      return Value::DateTime(FeelDateTime::new(date, FeelTime::local(0, 0, 0, 0)));
+      return Value::DateTime(FeelDateTime::new(date, FeelTime::local(0, 0, 0, 0)).into());
     }
     value_null!("[core::date and time] invalid date or date and time '{}'", text)
   } else {
@@ -640,13 +642,13 @@ pub fn date_and_time_2(date_value: &Value, time_value: &Value) -> Value {
   match date_value {
     Value::DateTime(date_time) => {
       if let Value::Time(time) = time_value {
-        return Value::DateTime(FeelDateTime::new(date_time.date(), time.clone()));
+        return Value::DateTime(FeelDateTime::new(date_time.date(), time.clone()).into());
       }
       invalid_argument_type!("date and time", "time", time_value.type_of())
     }
     Value::Date(date) => {
       if let Value::Time(time) = time_value {
-        return Value::DateTime(FeelDateTime::new(date.clone(), time.clone()));
+        return Value::DateTime(FeelDateTime::new(date.clone(), time.clone()).into());
       }
       invalid_argument_type!("date and time", "time", time_value.type_of())
     }
@@ -1074,11 +1076,16 @@ pub fn get_entries(context: &Value) -> Value {
 pub fn get_value(context: &Value, key: &Value) -> Value {
   if let Value::Context(ctx) = context {
     if let Value::String(entry_key) = key {
-      let name = Name::from(entry_key.to_owned());
-      if let Some(entry_value) = ctx.get_entry(&name) {
-        entry_value.clone()
-      } else {
-        value_null!()
+      // Look the key up without interning it. Interning on every probe, including the ones
+      // that miss, grows the table without bound, because the interner never releases a
+      // name. A key that was never interned cannot name an entry in any context, so the
+      // miss answers null either way.
+      match Name::existing(entry_key) {
+        Some(name) => match ctx.get_entry(&name) {
+          Some(entry_value) => entry_value.clone(),
+          None => value_null!(),
+        },
+        None => value_null!(),
       }
     } else {
       invalid_argument_type!("get value", "string", key.type_of())
@@ -1284,7 +1291,8 @@ pub fn list_replace(list: &Value, position_or_match: &Value, new_item: &Value) -
         value_null!("position exceeds integer range")
       }
     }
-    Value::FunctionDefinition(parameters, body, false, _, closure_ctx, _) => {
+    Value::FunctionDefinition(fd) if !fd.2 => {
+      let (parameters, body, _, _, closure_ctx, _) = &**fd;
       if parameters.len() != 2 {
         return value_null!("list replace: matching function must have exactly two arguments");
       }
@@ -1680,7 +1688,7 @@ pub fn not(negand: &Value) -> Value {
 
 /// Returns current date and time.
 pub fn now() -> Value {
-  Value::DateTime(FeelDateTime::now())
+  Value::DateTime(FeelDateTime::now().into())
 }
 
 /// Converts string to a number.
@@ -2132,7 +2140,10 @@ pub fn round_up(n: &Value, scale: &Value) -> Value {
 
 pub fn sort(list: &Value, ordering_function: &Value) -> Value {
   if let Value::List(items) = list {
-    if let Value::FunctionDefinition(parameters, body, false, _, closure_ctx, _) = ordering_function {
+    if let Value::FunctionDefinition(fd) = ordering_function
+      && !fd.2
+    {
+      let (parameters, body, _, _, closure_ctx, _) = &**fd;
       if parameters.len() == 2 {
         let mut elements = items.clone();
         elements.sort_by(|x, y| {
@@ -2434,7 +2445,7 @@ pub fn string(value: &Value) -> Value {
   }
 }
 
-/// Returns the number of characters in string.
+/// Joins a list of strings, ignoring null elements, and separates them with a delimiter.
 pub fn string_join(list: &Value, delimiter: &Value) -> Value {
   match list {
     Value::List(items) => {
@@ -2444,13 +2455,18 @@ pub fn string_join(list: &Value, delimiter: &Value) -> Value {
         _ => return value_null!("string join: invalid delimiter, expected string, actual value type is {}", delimiter.type_of()),
       };
       let mut joined_string = String::new();
-      for (i, item) in items.iter().enumerate() {
+      // The delimiter goes before every string except the first one that is
+      // actually kept. Counting from the list index instead puts a delimiter at
+      // the front when the list starts with a null.
+      let mut joined_any = false;
+      for item in items.iter() {
         match item {
           Value::String(s) => {
-            if i > 0 {
+            if joined_any {
               joined_string.push_str(&delimiter);
             }
             joined_string.push_str(s);
+            joined_any = true;
           }
           Value::Null(_) => {}
           other => return invalid_argument_type!("string join", "string", other.type_of()),

@@ -35,3 +35,23 @@ fn _0005() {
     "[core::context merge] invalid argument type, expected list<context>, actual type is number",
   );
 }
+
+#[test]
+fn _0006() {
+  te_null(
+    false,
+    &scope!(),
+    r#"context merge([{x:1}, null])"#,
+    "[core::context merge] invalid argument type, expected context, actual type is Null",
+  );
+}
+
+#[test]
+fn _0007() {
+  te_null(
+    false,
+    &scope!(),
+    r#"context merge([null])"#,
+    "[core::context merge] invalid argument type, expected context, actual type is Null",
+  );
+}

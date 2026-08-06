@@ -9,7 +9,7 @@ use dsntk_feel::closure::Closure;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::Value;
 use dsntk_feel::{Evaluator, FeelScope, FeelType, FunctionBody, IntervalType, value_null};
-use dsntk_feel_evaluator::{EveryExpressionEvaluator, FilterExpressionEvaluator, ForExpressionEvaluator, SomeExpressionEvaluator};
+use dsntk_feel_evaluator::{EveryExpressionEvaluator, FilterExpressionEvaluator, ForExpressionEvaluator, IndexShape, SomeExpressionEvaluator};
 use dsntk_feel_parser::{ClosureBuilder, parse_name};
 use dsntk_model::*;
 use std::sync::Arc;
@@ -148,7 +148,7 @@ pub fn build_function_definition_evaluator(scope: &FeelScope, function_definitio
             closure_ctx.create_entry(closure_name, closure_value);
           }
         }
-        Value::FunctionDefinition(parameters.clone(), function_body.clone(), false, closure.clone(), closure_ctx, result_type.clone())
+        Value::function_definition(parameters.clone(), function_body.clone(), false, closure.clone(), closure_ctx, result_type.clone())
       });
       Ok((
         build_coerced_result_evaluator(function_definition_evaluator, function_definition, function_definition.namespace(), model_builder),
@@ -164,12 +164,12 @@ pub fn build_function_definition_evaluator(scope: &FeelScope, function_definitio
         if let Value::Context(java_mapping) = body_evaluator(scope) {
           if let Some(Value::String(class_name)) = java_mapping.get_entry(&"class".into()) {
             if let Some(Value::String(method_signature)) = java_mapping.get_entry(&"method signature".into()) {
-              let java_class_name = class_name.to_owned();
-              let java_method_signature = method_signature.to_owned();
+              let java_class_name: Box<str> = class_name.as_str().into();
+              let java_method_signature: Box<str> = method_signature.as_str().into();
               let java_evaluator = Box::new(move |_: &FeelScope| Value::ExternalJavaFunction(java_class_name.clone(), java_method_signature.clone())) as Evaluator;
               let function_body_evaluator = Arc::new(java_evaluator);
               let function_body = FunctionBody::External(function_body_evaluator);
-              Value::FunctionDefinition(parameters.clone(), function_body, true, Closure::default(), FeelContext::default(), result_type.clone())
+              Value::function_definition(parameters.clone(), function_body, true, Closure::default(), FeelContext::default(), result_type.clone())
             } else {
               value_null!("invalid Java function mapping, no method signature entry in context {}", java_mapping)
             }
@@ -194,12 +194,12 @@ pub fn build_function_definition_evaluator(scope: &FeelScope, function_definitio
         if let Value::Context(pmml_mapping) = body_evaluator(scope) {
           if let Some(Value::String(document)) = pmml_mapping.get_entry(&"document".into()) {
             if let Some(Value::String(model_name)) = pmml_mapping.get_entry(&"model".into()) {
-              let pmml_document = document.to_owned();
-              let pmml_model_name = model_name.to_owned();
+              let pmml_document: Box<str> = document.as_str().into();
+              let pmml_model_name: Box<str> = model_name.as_str().into();
               let pmml_evaluator = Box::new(move |_: &FeelScope| Value::ExternalPmmlFunction(pmml_document.clone(), pmml_model_name.clone())) as Evaluator;
               let function_body_evaluator = Arc::new(pmml_evaluator);
               let function_body = FunctionBody::External(function_body_evaluator);
-              Value::FunctionDefinition(parameters.clone(), function_body, true, Closure::default(), FeelContext::default(), result_type.clone())
+              Value::function_definition(parameters.clone(), function_body, true, Closure::default(), FeelContext::default(), result_type.clone())
             } else {
               value_null!("invalid PMML function mapping, no model name entry in context {}", pmml_mapping)
             }
@@ -243,7 +243,10 @@ pub fn build_invocation_evaluator(scope: &FeelScope, invocation: &Invocation, mo
       }
       params_ctx.set_entry(param_name, param_value.coerced(param_type))
     }
-    if let Value::FunctionDefinition(formal_parameters, body, false, _, closure_ctx, result_type) = function_evaluator(scope) {
+    if let Value::FunctionDefinition(fd) = function_evaluator(scope)
+      && !fd.2
+    {
+      let (formal_parameters, body, _, _, closure_ctx, result_type) = *fd;
       for (formal_parameter_name, formal_parameter_type) in formal_parameters {
         if let Some(param_value) = params_ctx.get(&formal_parameter_name) {
           let coerced_param_value = param_value.coerced(&formal_parameter_type);
@@ -349,7 +352,9 @@ pub fn build_filter_evaluator(scope: &FeelScope, filter: &Filter, model_builder:
   // prepare `filter` evaluator
   let evaluator = Box::new(move |scope: &FeelScope| {
     let filter_expression_evaluator = FilterExpressionEvaluator::default();
-    filter_expression_evaluator.evaluate(scope, in_evaluator(scope), &match_evaluator)
+    // A boxed `Filter` element carries an expression instance rather than a `FEEL` syntax tree.
+    // So this proves nothing about its match expression, and every element runs it.
+    filter_expression_evaluator.evaluate(scope, in_evaluator(scope), &match_evaluator, IndexShape::Unknown)
   });
   Ok((build_coerced_result_evaluator(evaluator, filter, filter.namespace(), model_builder), Closure::default()))
 }

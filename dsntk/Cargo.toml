@@ -17,6 +17,7 @@ tck = ["dsntk-server/tck"]
 
 [dependencies]
 actix-web = { workspace = true }
+mimalloc = "0.1"
 antex = { workspace = true }
 base64 = { workspace = true }
 clap = { workspace = true }

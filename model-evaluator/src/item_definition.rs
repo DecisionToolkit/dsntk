@@ -9,7 +9,13 @@ use dsntk_feel::{Evaluator, FeelScope, FeelType, Name, value_null};
 use dsntk_feel_parser::AstNode;
 use dsntk_model::ItemDefinitionType;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
+
+/// The name `?`, the implicit input of an allowed-values test, interned once.
+///
+/// See the note on `NAME_ITEM` in `feel-evaluator/src/filters.rs`. This ran once per value
+/// checked against an allowed-values list, from every Rayon worker.
+static NAME_QUESTION_MARK: LazyLock<Name> = LazyLock::new(|| "?".into());
 
 /// Type of closure that evaluates input data conformant with item definition.
 pub type ItemDefinitionEvaluatorFn = Box<dyn Fn(&Value, &ItemDefinitionEvaluator) -> Value + Send + Sync>;
@@ -62,8 +68,10 @@ fn build_allowed_values_evaluator(item_definition: &DefItemDefinition) -> Result
   {
     let scope = FeelScope::default();
     let unary_tests_node = dsntk_feel_parser::parse_unary_tests(&scope, text, false)?;
-    let node = AstNode::In(Box::new(AstNode::Name("?".into())), Box::new(unary_tests_node));
-    av_evaluator = Some(dsntk_feel_evaluator::prepare(&node));
+    // The tested expression is the name `?`, which [check_allowed_values] binds to the
+    // checked value. The shared builder gives a test that itself uses `?` the DMN 1.3
+    // Table 55 semantics: the boolean value of the test is the answer.
+    av_evaluator = Some(crate::decision_table::build_unary_tests_evaluator(&AstNode::Name("?".into()), unary_tests_node));
   }
 
   Ok(av_evaluator)
@@ -72,7 +80,7 @@ fn build_allowed_values_evaluator(item_definition: &DefItemDefinition) -> Result
 fn check_allowed_values(value: Value, av_evaluator: Option<&Evaluator>) -> Value {
   if let Some(evaluator) = av_evaluator {
     let scope = FeelScope::default();
-    scope.set_value(&"?".into(), value.clone());
+    scope.set_value(&NAME_QUESTION_MARK, value.clone());
     if evaluator(&scope).is_true() {
       value
     } else {
@@ -465,6 +473,32 @@ mod tests {
     ItemDefinitionEvaluator::new(&def_definitions).unwrap()
   }
 
+  /// An allowed-values test that is a boolean expression over `?`.
+  ///
+  /// DMN 1.3 Table 55: `e in t` means `{?: e, r: t}.r` when `t` is a boolean expression
+  /// that uses `?`. Without the shared builder, the engine would bind `?` but then
+  /// compare the tested string against the resulting boolean for equality. Every value
+  /// would be rejected, matching or not.
+  #[test]
+  fn test_allowed_values_with_question_mark() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+      <definitions namespace="https://dsntk.io" name="av-question-mark" id="_av_qm"
+                   xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/">
+        <itemDefinition name="tPayment">
+          <typeRef>string</typeRef>
+          <allowedValues>
+            <text>contains(?, "VENMO")</text>
+          </allowedValues>
+        </itemDefinition>
+      </definitions>"#;
+    let evaluator = build_evaluator(xml);
+    let def_key = DefKey::new(NAMESPACE, "tPayment");
+    let accepted = Value::String("VENMO-123".to_string());
+    assert_eq!(accepted, evaluator.eval(&def_key, &accepted).unwrap());
+    let rejected = Value::String("ZELLE-99".to_string());
+    assert_eq!(value_null!(r#"value '"ZELLE-99"' is not allowed"#), evaluator.eval(&def_key, &rejected).unwrap());
+  }
+
   #[test]
   fn test_evaluate_input_data_0101_1() {
     let evaluator = build_evaluator(DMN_0101);
@@ -566,7 +600,7 @@ mod tests {
     let context = dsntk_feel_evaluator::evaluate_context(&Default::default(), context_str).unwrap();
     let value = context.get_entry(&Name::new(&["Appointment"])).unwrap();
     assert_eq!(
-      Value::DateTime(FeelDateTime::new(FeelDate::new(2021, 10, 12).unwrap(), FeelTime::local_opt(18, 35, 23, 0).unwrap())),
+      Value::DateTime(FeelDateTime::new(FeelDate::new(2021, 10, 12).unwrap(), FeelTime::local_opt(18, 35, 23, 0).unwrap()).into()),
       evaluator.eval(&DefKey::new(NAMESPACE, "tAppointment"), value).unwrap()
     );
   }
@@ -712,8 +746,8 @@ mod tests {
     let context = dsntk_feel_evaluator::evaluate_context(&Default::default(), context_str).unwrap();
     let value = context.get_entry(&Name::new(&["Items"])).unwrap();
     let expected = Value::List(vec![
-      Value::DateTime(FeelDateTime::new(FeelDate::new(2021, 10, 10).unwrap(), FeelTime::local_opt(21, 23, 18, 0).unwrap())),
-      Value::DateTime(FeelDateTime::new(FeelDate::new(2021, 10, 11).unwrap(), FeelTime::local_opt(12, 18, 59, 0).unwrap())),
+      Value::DateTime(FeelDateTime::new(FeelDate::new(2021, 10, 10).unwrap(), FeelTime::local_opt(21, 23, 18, 0).unwrap()).into()),
+      Value::DateTime(FeelDateTime::new(FeelDate::new(2021, 10, 11).unwrap(), FeelTime::local_opt(12, 18, 59, 0).unwrap()).into()),
     ]);
     assert_eq!(expected, evaluator.eval(&DefKey::new(NAMESPACE, "tItems"), value).unwrap());
   }

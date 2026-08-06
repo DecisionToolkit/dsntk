@@ -1010,28 +1010,44 @@ fn parse_dmn_model(dmn_file_name: &str, cm: ColorMode) {
 
 /// Evaluates DMN model loaded from XML file.
 fn evaluate_dmn_model(input_file_name: &str, dmn_file_name: &str, invocable_name: &str) {
-  match fs::read_to_string(dmn_file_name) {
-    Ok(dmn_file_content) => match fs::read_to_string(input_file_name) {
-      Ok(input_file_content) => match dsntk_evaluator::evaluate_context(&FeelScope::default(), &input_file_content) {
-        Ok(input_data) => match dsntk_model::parse(&dmn_file_content) {
-          Ok(definitions) => {
-            let model_namespace = definitions.namespace().to_string();
-            let model_name = definitions.name().to_string();
-            match dsntk_evaluator::ModelEvaluator::new(&[definitions]) {
-              Ok(model_evaluator) => {
-                let result = model_evaluator.evaluate_invocable(&model_namespace, &model_name, invocable_name, &input_data);
-                println!("{}", result.jsonify())
-              }
-              Err(reason) => eprintln!("building model evaluator failed with reason: {reason}"),
-            }
-          }
-          Err(reason) => eprintln!("parsing model failed with reason: {reason}"),
-        },
-        Err(reason) => eprintln!("evaluating input data failed with reason: {reason}"),
-      },
-      Err(reason) => eprintln!("loading input data file `{input_file_name}` failed with reason: {reason}"),
-    },
-    Err(reason) => eprintln!("loading model file `{dmn_file_name}` failed with reason: {reason}"),
+  let dmn_file_content = match fs::read_to_string(dmn_file_name) {
+    Ok(dmn_file_content) => dmn_file_content,
+    Err(reason) => {
+      eprintln!("loading model file `{dmn_file_name}` failed with reason: {reason}");
+      return;
+    }
+  };
+  let input_file_content = match fs::read_to_string(input_file_name) {
+    Ok(input_file_content) => input_file_content,
+    Err(reason) => {
+      eprintln!("loading input data file `{input_file_name}` failed with reason: {reason}");
+      return;
+    }
+  };
+  let input_data = match dsntk_evaluator::evaluate_context(&FeelScope::default(), &input_file_content) {
+    Ok(input_data) => input_data,
+    Err(reason) => {
+      eprintln!("evaluating input data failed with reason: {reason}");
+      return;
+    }
+  };
+  // The input data is now a context, so the text is dead. For a large input,
+  // this text is tens or hundreds of megabytes. Free it here instead of holding
+  // it until the process exits.
+  drop(input_file_content);
+  match dsntk_model::parse(&dmn_file_content) {
+    Ok(definitions) => {
+      let model_namespace = definitions.namespace().to_string();
+      let model_name = definitions.name().to_string();
+      match dsntk_evaluator::ModelEvaluator::new(&[definitions]) {
+        Ok(model_evaluator) => {
+          let result = model_evaluator.evaluate_invocable(&model_namespace, &model_name, invocable_name, &input_data);
+          println!("{}", result.jsonify())
+        }
+        Err(reason) => eprintln!("building model evaluator failed with reason: {reason}"),
+      }
+    }
+    Err(reason) => eprintln!("parsing model failed with reason: {reason}"),
   }
 }
 

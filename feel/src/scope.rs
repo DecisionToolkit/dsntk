@@ -65,6 +65,16 @@ impl FeelScope {
     self.stack.borrow_mut().push(ctx)
   }
 
+  /// Returns the number of contexts on the scope stack.
+  pub fn len(&self) -> usize {
+    self.stack.borrow().len()
+  }
+
+  /// Returns `true` when there are no contexts on the scope stack.
+  pub fn is_empty(&self) -> bool {
+    self.stack.borrow().is_empty()
+  }
+
   /// Appends the content of another scope at the end of this scope.
   pub fn append(&self, other: FeelScope) {
     self.stack.borrow_mut().append(&mut other.stack.borrow_mut());
@@ -81,6 +91,28 @@ impl FeelScope {
     self.stack.borrow().last().cloned()
   }
 
+  /// Builds a scope from a stack of contexts.
+  ///
+  /// Used to give each worker of a parallel `for` its own stack. The contexts are shared,
+  /// not copied: [crate::context::FeelContext] keeps its entries behind an `Arc`, so
+  /// cloning the stack costs one refcount bump per level. Pushing or popping on the copy
+  /// does not affect the original. Mutating a context through it copies that context
+  /// first, because every `FeelContext` mutation is copy-on-write.
+  ///
+  /// A [FeelScope] holds a `RefCell` and so is not `Sync`, but a `Vec<FeelContext>` is both
+  /// `Send` and `Sync`. So the stack is what crosses a thread boundary, and each worker
+  /// builds its own scope around a clone of it.
+  pub fn from_contexts(contexts: Vec<FeelContext>) -> Self {
+    Self { stack: RefCell::new(contexts) }
+  }
+
+  /// Returns `true` when any context on the stack binds `name`.
+  ///
+  /// Unlike [FeelScope::get_value] this clones nothing, so it is usable as a guard.
+  pub fn contains_name(&self, name: &Name) -> bool {
+    self.stack.borrow().iter().any(|context| context.contains_entry(name))
+  }
+
   /// Returns a value of an entry with specified name.
   /// Entries are searched from the last to the first context,
   /// (from top to bottom of the stack).
@@ -88,6 +120,25 @@ impl FeelScope {
     for context in self.stack.borrow().iter().rev() {
       if let Some(value) = context.get_entry(name) {
         return Some(value.clone());
+      }
+    }
+    None
+  }
+
+  /// Returns a clone of the entry `field` taken from the context bound to `name`.
+  ///
+  /// This resolves the binding of `name` exactly like [FeelScope::get_value] resolves
+  /// it. The search stops at the first context that binds `name`, so an inner binding
+  /// always shadows an outer one. This returns `None` when `name` is not bound, when
+  /// it is not bound to a context, or when that context has no `field` entry. In all
+  /// three cases the caller must fall back to evaluating the base value.
+  ///
+  /// This clones only the requested entry. Evaluating the base value instead clones
+  /// the whole context, which costs about 2 KB per field access on a typical record.
+  pub fn get_context_entry(&self, name: &Name, field: &Name) -> Option<Value> {
+    for context in self.stack.borrow().iter().rev() {
+      if let Some(value) = context.get_entry(name) {
+        return if let Value::Context(ctx) = value { ctx.get_entry(field).cloned() } else { None };
       }
     }
     None

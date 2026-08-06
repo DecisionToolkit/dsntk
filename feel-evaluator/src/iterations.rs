@@ -4,8 +4,26 @@ use crate::errors::*;
 use dsntk_common::Result;
 use dsntk_feel::context::FeelContext;
 use dsntk_feel::values::{VALUE_FALSE, VALUE_TRUE, Value, Values};
+use crate::parallel::ParallelSafety;
 use dsntk_feel::{Evaluator, FEEL_TYPE_NAME_DATE, FEEL_TYPE_NAME_NUMBER, FeelNumber, FeelScope, IntervalType, Name, value_null};
 use dsntk_feel_temporal::FeelDate;
+use rayon::prelude::*;
+use std::sync::LazyLock;
+
+/// Smallest number of elements worth evaluating in parallel.
+///
+/// Below this the thread pool costs more than it saves.
+const PARALLEL_MIN_ELEMENTS: usize = 512;
+
+/// The name `partial`, interned once. See the note on `NAME_ITEM` in `filters.rs`. A
+/// `for` expression builds a fresh evaluator on every evaluation, so interning this text
+/// was one contended lock acquisition per `for` evaluation.
+static NAME_PARTIAL: LazyLock<Name> = LazyLock::new(|| "partial".into());
+
+/// Set `DSNTK_PARALLEL=0` to force every `for` expression onto the serial path.
+///
+/// This exists so that the parallel and serial results can be compared on the same binary.
+static PARALLEL_ENABLED: LazyLock<bool> = LazyLock::new(|| !matches!(std::env::var("DSNTK_PARALLEL").as_deref(), Ok("0")));
 
 /// Common interface for all iteration state types.
 trait IterationState {
@@ -33,6 +51,14 @@ trait IterationState {
   /// Checks if the iteration state is a bounded variable.
   fn is_variable(&self) -> bool {
     false
+  }
+
+  /// Returns the bound variable and the values when this state iterates over a list.
+  ///
+  /// Only a list can be indexed, so only a list can be split across workers. Every other
+  /// state is a sequential machine and returns `None`, which keeps it on the serial path.
+  fn as_list(&self) -> Option<(&Name, &Values)> {
+    None
   }
 }
 
@@ -204,6 +230,10 @@ impl ListState {
 }
 
 impl IterationState for ListState {
+  fn as_list(&self) -> Option<(&Name, &Values)> {
+    Some((&self.variable, &self.values))
+  }
+
   fn set_value(&mut self, ctx: &mut FeelContext) {
     if !self.values.is_empty() {
       ctx.set_entry(&self.variable, self.values[self.current].clone());
@@ -339,6 +369,12 @@ impl FeelIterator {
     self.states.push(VariableState::init(variable, bound_variable));
   }
 
+  /// Returns the bound variable and the values when this iterator has exactly one state
+  /// and that state iterates over a list. Any other shape returns `None`.
+  pub fn single_list(&self) -> Option<(&Name, &Values)> {
+    if self.states.len() == 1 { self.states[0].as_list() } else { None }
+  }
+
   /// Iterates over all iteration states.
   pub fn iterate<F>(&mut self, mut handler: F)
   where
@@ -376,6 +412,9 @@ impl FeelIterator {
 pub struct ForExpressionEvaluator {
   iterator: FeelIterator,
   partial: Name,
+  /// Whether the body of this `for` can run in parallel. Decided when the
+  /// evaluator is built, see [crate::parallel].
+  safety: ParallelSafety,
 }
 
 impl Default for ForExpressionEvaluator {
@@ -390,8 +429,14 @@ impl ForExpressionEvaluator {
   pub fn new() -> Self {
     Self {
       iterator: FeelIterator::default(),
-      partial: "partial".into(),
+      partial: NAME_PARTIAL.clone(),
+      safety: ParallelSafety::default(),
     }
+  }
+
+  /// Records the result of the parallel-safety analysis of the body.
+  pub fn set_safety(&mut self, safety: ParallelSafety) {
+    self.safety = safety;
   }
 
   /// Adds an interval of values to iterate over.
@@ -414,17 +459,74 @@ impl ForExpressionEvaluator {
   }
 
   pub fn evaluate(&mut self, scope: &FeelScope, evaluator: &Evaluator) -> Values {
+    // Parallel path. This code takes it only when the body provably cannot read `partial`,
+    // so there is no dependency between iterations. It also requires the iteration to run
+    // over a single list, the only shape that can be indexed. Everything else falls through
+    // to the serial code below, which stays the default.
+    if *PARALLEL_ENABLED
+      && let Some((variable, values)) = self.iterator.single_list()
+      && values.len() >= PARALLEL_MIN_ELEMENTS
+      && self.safety.is_safe_in(scope)
+    {
+      return evaluate_in_parallel(scope, evaluator, variable, values);
+    }
     let mut results = vec![];
     self.iterator.iterate(|ctx| {
       let mut iteration_context = ctx.clone();
-      iteration_context.set_entry(&self.partial, Value::List(results.clone()));
-      scope.push(iteration_context.clone());
+      // The implicit `partial` variable holds the results of all previous iterations.
+      // This code moves them into the iteration context and moves them back out
+      // after the iteration, instead of copying the whole list every time.
+      iteration_context.set_entry(&self.partial, Value::List(std::mem::take(&mut results)));
+      let scope_depth = scope.len();
+      scope.push(iteration_context);
       let iteration_value = evaluator(scope);
-      scope.pop();
+      // Discard the contexts that the evaluated expression leaves behind. This keeps
+      // the context holding the partial results at the top of the scope.
+      while scope.len() > scope_depth + 1 {
+        scope.pop();
+      }
+      if let Some(mut iteration_context) = scope.pop()
+        && let Some(Value::List(previous_results)) = iteration_context.remove_entry(&self.partial)
+      {
+        results = previous_results;
+      }
       results.push(iteration_value);
     });
     results
   }
+}
+
+/// Evaluates the body of a `for` expression over `values` in parallel.
+///
+/// This function never binds `partial`, because the caller has already proved that the
+/// body cannot read it.
+///
+/// Each worker gets its own scope from [FeelScope::from_contexts], which shares the
+/// enclosing contexts by refcount rather than copying them. `map_init` builds one scope per
+/// worker task, not one per element, so the stack clone is not a per-element cost.
+///
+/// Order is preserved. A slice's `par_iter` is an indexed parallel iterator, and `map_init`
+/// keeps it indexed. `collect` into a `Vec` therefore writes each result at its own index.
+/// The output is identical to the serial path element for element, not merely equivalent.
+fn evaluate_in_parallel(scope: &FeelScope, evaluator: &Evaluator, variable: &Name, values: &Values) -> Values {
+  let base = scope.contexts();
+  let depth = base.len();
+  values
+    .par_iter()
+    .map_init(
+      || FeelScope::from_contexts(base.clone()),
+      |local: &mut FeelScope, item| {
+        local.push(FeelContext::from_entry(variable, item.clone()));
+        let value = evaluator(local);
+        // The body may leave contexts behind, exactly as on the serial path. This worker
+        // reuses this scope for the next element. Restore the original depth here.
+        while local.len() > depth {
+          local.pop();
+        }
+        value
+      },
+    )
+    .collect()
 }
 
 /// `some` expression evaluator.

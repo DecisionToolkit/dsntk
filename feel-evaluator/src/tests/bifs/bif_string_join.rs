@@ -155,3 +155,33 @@ fn _0025() {
     "expected 1,2 parameters, actual number of parameters is 3",
   );
 }
+
+#[test]
+fn _0026() {
+  te_string(false, &scope!(), r#"string join([null,"b"], "X")"#, "b");
+}
+
+#[test]
+fn _0027() {
+  te_string(false, &scope!(), r#"string join([null,"b"])"#, "b");
+}
+
+#[test]
+fn _0028() {
+  te_string(false, &scope!(), r#"string join([null,null,"c"], "X")"#, "c");
+}
+
+#[test]
+fn _0029() {
+  te_string(false, &scope!(), r#"string join([null,"a",null,"b"], "X")"#, "aXb");
+}
+
+#[test]
+fn _0030() {
+  te_string(false, &scope!(), r#"string join([null,null], "X")"#, "");
+}
+
+#[test]
+fn _0031() {
+  te_string(false, &scope!(), r#"string join(["a",null], "X")"#, "a");
+}

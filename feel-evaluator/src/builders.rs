@@ -4,7 +4,7 @@ use crate::evaluator_java::evaluate_external_java_function;
 use crate::evaluator_pmml::evaluate_external_pmml_function;
 use crate::iterations::{EveryExpressionEvaluator, ForExpressionEvaluator, SomeExpressionEvaluator};
 use crate::macros::invalid_argument_type;
-use crate::{FilterExpressionEvaluator, bifs};
+use crate::{FilterExpressionEvaluator, bifs, cse};
 use dsntk_feel::bif::Bif;
 use dsntk_feel::bip::*;
 use dsntk_feel::context::FeelContext;
@@ -50,6 +50,14 @@ macro_rules! between_null3 {
 struct EvaluatorBuilder<'b> {
   /// Stack of visited parent nodes in AST during evaluator building.
   node_stack: Vec<&'b AstNode>,
+  /// Sibling context entries binding a name to a function definition, used by [crate::cse]
+  /// to decide whether a repeated call may be evaluated once. Scoped to the context literal
+  /// currently being built and restored when it finishes.
+  local_functions: cse::LocalFunctions<'b>,
+  /// Subtrees of the filter predicate currently being built that have been hoisted, each with
+  /// the synthetic name its value is bound to. Consulted for every node, so an occurrence
+  /// becomes a read of the slot instead of the call itself.
+  cse_slots: Vec<(&'b AstNode, Name)>,
 }
 
 impl<'b> EvaluatorBuilder<'b> {
@@ -61,6 +69,12 @@ impl<'b> EvaluatorBuilder<'b> {
 
   /// Builds and evaluator based on provided AST node.
   fn build(&mut self, node: &'b AstNode) -> Evaluator {
+    // An occurrence of a subtree hoisted out of the enclosing filter predicate reads the value
+    // bound to its slot instead of evaluating the subtree again. See [crate::cse].
+    if let Some((_, name)) = self.cse_slots.iter().find(|(hoisted, _)| *hoisted == node) {
+      let name = name.clone();
+      return Box::new(move |scope: &FeelScope| scope.get_value(&name).unwrap_or_else(|| value_null!("no value for hoisted subexpression")));
+    }
     // push the current node on the top of the node stack
     self.node_stack.push(node);
     // build the evaluator
@@ -185,15 +199,15 @@ impl<'b> EvaluatorBuilder<'b> {
         },
         Value::DateTime(lh) => match rhv {
           Value::DaysAndTimeDuration(rh) => {
-            if let Some(a) = lh + rh {
-              Value::DateTime(a)
+            if let Some(a) = Arc::unwrap_or_clone(lh) + rh {
+              Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding days and time duration to date and time")
             }
           }
           Value::YearsAndMonthsDuration(rh) => {
-            if let Some(a) = lh + rh {
-              Value::DateTime(a)
+            if let Some(a) = Arc::unwrap_or_clone(lh) + rh {
+              Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding years and months duration to date and time")
             }
@@ -214,8 +228,8 @@ impl<'b> EvaluatorBuilder<'b> {
             }
           }
           Value::DateTime(rh) => {
-            if let Some(a) = rh + lh {
-              Value::DateTime(a)
+            if let Some(a) = Arc::unwrap_or_clone(rh) + lh {
+              Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding date and time to days and time duration")
             }
@@ -232,8 +246,8 @@ impl<'b> EvaluatorBuilder<'b> {
             }
           }
           Value::DateTime(rh) => {
-            if let Some(a) = rh + lh {
-              Value::DateTime(a)
+            if let Some(a) = Arc::unwrap_or_clone(rh) + lh {
+              Value::DateTime(a.into())
             } else {
               value_null!("invalid result while adding date and time to years and months duration")
             }
@@ -256,7 +270,7 @@ impl<'b> EvaluatorBuilder<'b> {
     if let Ok(date) = FeelDate::from_str(text) {
       Box::new(move |_: &FeelScope| Value::Date(date.clone()))
     } else if let Ok(date_time) = FeelDateTime::try_from(text) {
-      Box::new(move |_: &FeelScope| Value::DateTime(date_time.clone()))
+      Box::new(move |_: &FeelScope| Value::DateTime(date_time.clone().into()))
     } else if let Ok(time) = text.parse::<FeelTime>() {
       Box::new(move |_: &FeelScope| Value::Time(time.clone()))
     } else if let Ok(ym_duration) = FeelYearsAndMonthsDuration::try_from(text) {
@@ -417,10 +431,21 @@ impl<'b> EvaluatorBuilder<'b> {
   }
 
   fn build_context(&mut self, lhs: &'b [AstNode]) -> Evaluator {
+    // Record the sibling entries that bind a name to a function definition before building
+    // any entry. That way, if an entry calls one of them, this module can check that call
+    // for purity. This code restores the previous set afterwards, so a nested context does
+    // not leak its functions.
+    let saved_functions = self.local_functions.clone();
+    cse::collect_local_functions(lhs, &mut self.local_functions);
+    // An entry is visible to every later entry as a bare name, so a context literal binds
+    // names. An enclosing hoist must not reach into it. See [Self::build_isolated].
+    let outer_slots = std::mem::take(&mut self.cse_slots);
     let mut evaluators = vec![];
     for node in lhs {
       evaluators.push(self.build(node));
     }
+    self.cse_slots = outer_slots;
+    self.local_functions = saved_functions;
     Box::new(move |scope: &FeelScope| {
       let mut evaluated_ctx = FeelContext::default();
       // prepare special context in scope, used for already evaluated context entries
@@ -624,10 +649,84 @@ impl<'b> EvaluatorBuilder<'b> {
 
   fn build_filter(&mut self, lhs: &'b AstNode, rhs: &'b AstNode) -> Evaluator {
     let lhe = self.build(lhs);
-    let rhe = self.build(rhs);
+    // Decide once, here, whether this predicate is really an index, so that `L[i]` need not run
+    // the predicate for every element of `L`. See [crate::filters::IndexShape].
+    let shape = crate::filters::index_shape(rhs);
+    let rhe = self.build_hoisted(rhs);
     Box::new(move |scope: &FeelScope| {
       let filter_expression_evaluator = FilterExpressionEvaluator::new();
-      filter_expression_evaluator.evaluate(scope, lhe(scope), &rhe)
+      filter_expression_evaluator.evaluate(scope, lhe(scope), &rhe, shape)
+    })
+  }
+
+  /// Builds `node` with the hoisted subtrees of an enclosing expression taken out of scope.
+  ///
+  /// This code may replace a hoisted subtree with a read of its slot only where every name
+  /// it reads still resolves the way it did. That is the scope where the value was computed.
+  /// [crate::cse] refuses to **look** inside a construct that binds a name. The replacement
+  /// in [Self::build] matches a subtree structurally. Without this function, the replacement
+  /// would therefore reach an occurrence *inside* such a construct, and make it read a value
+  /// computed outside it. The two walks have to refuse the same constructs.
+  /// `adversarial/cases/20*` are the cases that fail otherwise.
+  fn build_isolated(&mut self, node: &'b AstNode) -> Evaluator {
+    let outer_slots = std::mem::take(&mut self.cse_slots);
+    let evaluator = self.build(node);
+    self.cse_slots = outer_slots;
+    evaluator
+  }
+
+  /// Builds `node`, evaluating any repeated call in it only once per evaluation of `node`.
+  ///
+  /// Used for the two positions where that is sound. A **filter predicate** is evaluated
+  /// once per element with `item` bound. A **`for` body** is evaluated once per iteration
+  /// with the iteration variables and `partial` bound. The benchmark model calls
+  /// `inSum(item)` three times and `outSum(item)` four times in one predicate. It also calls
+  /// `dayGroup(d)` three times in one `for` body. Every one of those calls filters the whole
+  /// transaction list.
+  ///
+  /// [crate::cse] decides which subtrees may be hoisted. Everything about **when** that is
+  /// sound is documented there. When it finds nothing this is the plain evaluator for
+  /// `node`, still isolated from an enclosing hoist for the reason in [Self::build_isolated].
+  fn build_hoisted(&mut self, rhs: &'b AstNode) -> Evaluator {
+    let outer_slots = std::mem::take(&mut self.cse_slots);
+    let evaluator = self.build_hoisted_inner(rhs);
+    self.cse_slots = outer_slots;
+    evaluator
+  }
+
+  fn build_hoisted_inner(&mut self, rhs: &'b AstNode) -> Evaluator {
+    let hoisted = cse::hoistable(rhs, &self.local_functions);
+    if hoisted.is_empty() {
+      return self.build(rhs);
+    }
+    // Build the hoisted subtrees first, while the slot table is still empty, so each one
+    // evaluates the real call rather than a read of its own slot.
+    if std::env::var_os("DSNTK_CSE_TRACE").is_some() {
+      eprintln!("CSE hoisted {} subtree(s): {:?}", hoisted.len(), hoisted.iter().map(|n| format!("{n:?}").chars().take(70).collect::<String>()).collect::<Vec<_>>());
+    }
+    let hoisted_evaluators: Vec<Evaluator> = hoisted.iter().map(|node| self.build(node)).collect();
+    let slot_names: Vec<Name> = (0..hoisted.len()).map(cse::slot_name).collect();
+    // Now build the predicate, with every occurrence rewritten to a read of its slot.
+    let slots: Vec<(&'b AstNode, Name)> = hoisted.iter().copied().zip(slot_names.iter().cloned()).collect();
+    let saved_slots = std::mem::replace(&mut self.cse_slots, slots);
+    let predicate = self.build(rhs);
+    self.cse_slots = saved_slots;
+    Box::new(move |scope: &FeelScope| {
+      // One frame holding the hoisted values, built and shared in one allocation. `from_entry`
+      // leaves the refcount at one, so the remaining entries are written in place.
+      let mut names = slot_names.iter();
+      let mut evaluators = hoisted_evaluators.iter();
+      let Some((first_name, first_evaluator)) = names.next().zip(evaluators.next()) else {
+        return predicate(scope);
+      };
+      let mut frame = FeelContext::from_entry(first_name, first_evaluator(scope));
+      for (name, evaluator) in names.zip(evaluators) {
+        frame.set_entry(name, evaluator(scope));
+      }
+      scope.push(frame);
+      let value = predicate(scope);
+      scope.pop();
+      value
     })
   }
 
@@ -638,7 +737,13 @@ impl<'b> EvaluatorBuilder<'b> {
       List((Name, Evaluator)),
       Variable((Name, Name)),
     }
-    let rhe = self.build(rhs);
+    // Analyze the body once, when the evaluator is built, not per evaluation. The analysis reads
+    // the body as written, so hoisting inside the body cannot change the verdict.
+    let safety = crate::parallel::analyze(rhs);
+    // A repeated call in the body is evaluated once per iteration, not once per occurrence. The
+    // iteration variables and `partial` are already bound when the body runs and neither moves
+    // while it runs, so the occurrences share one value. See [Self::build_hoisted].
+    let rhe = self.build_hoisted(rhs);
     let mut evaluators = vec![];
     let mut binding_variables = HashSet::new();
     if let AstNode::IterationContexts(items) = lhs {
@@ -676,8 +781,14 @@ impl<'b> EvaluatorBuilder<'b> {
         }
       }
     }
+    // Rule 6. `binding_variables` is only complete here, and `analyze` never sees the left side
+    // of the `for`, so this check cannot live inside it. A loop variable that spells a built-in
+    // makes the body invoke a data value through a name the analysis cleared as a built-in.
+    let mut safety = safety;
+    safety.forbid_names(&binding_variables);
     Box::new(move |scope: &FeelScope| {
       let mut for_expression_evaluator = ForExpressionEvaluator::new();
+      for_expression_evaluator.set_safety(safety.clone());
       for iterator_type in &evaluators {
         match iterator_type {
           IteratorType::Interval((name, interval_start_evaluator, interval_end_evaluator)) => {
@@ -762,8 +873,8 @@ impl<'b> EvaluatorBuilder<'b> {
           if let Some(Value::Context(java_mapping)) = mapping_information.get_entry(&"java".into()) {
             return if let Some(Value::String(class_name)) = java_mapping.get_entry(&"class".into()) {
               if let Some(Value::String(method_signature)) = java_mapping.get_entry(&"method signature".into()) {
-                let java_class_name = class_name.to_owned();
-                let java_method_signature = method_signature.to_owned();
+                let java_class_name: Box<str> = class_name.as_str().into();
+                let java_method_signature: Box<str> = method_signature.as_str().into();
                 let java_evaluator = Box::new(move |_: &FeelScope| Value::ExternalJavaFunction(java_class_name.clone(), java_method_signature.clone())) as Evaluator;
                 let lhe = Arc::new(java_evaluator);
                 Value::FunctionBody(FunctionBody::External(lhe), true)
@@ -777,8 +888,8 @@ impl<'b> EvaluatorBuilder<'b> {
           if let Some(Value::Context(pmml_mapping)) = mapping_information.get_entry(&"pmml".into()) {
             return if let Some(Value::String(document)) = pmml_mapping.get_entry(&"document".into()) {
               if let Some(Value::String(model_name)) = pmml_mapping.get_entry(&"model".into()) {
-                let pmml_document = document.to_owned();
-                let pmml_model_name = model_name.to_owned();
+                let pmml_document: Box<str> = document.as_str().into();
+                let pmml_model_name: Box<str> = model_name.as_str().into();
                 let pmml_evaluator = Box::new(move |_: &FeelScope| Value::ExternalPmmlFunction(pmml_document.clone(), pmml_model_name.clone())) as Evaluator;
                 let lhe = Arc::new(pmml_evaluator);
                 Value::FunctionBody(FunctionBody::External(lhe), true)
@@ -798,8 +909,9 @@ impl<'b> EvaluatorBuilder<'b> {
 
   fn build_function_definition(&mut self, lhs: &'b AstNode, rhs: &'b AstNode) -> Evaluator {
     let closure = ClosureBuilder::from_function_definition(lhs, rhs);
-    let lhe = self.build(lhs);
-    let rhe = self.build(rhs);
+    // The body binds the formal parameters, so an enclosing hoist must not reach into it.
+    let lhe = self.build_isolated(lhs);
+    let rhe = self.build_isolated(rhs);
     Box::new(move |scope: &FeelScope| {
       let lhv = lhe(scope);
       let rhv = rhe(scope);
@@ -814,7 +926,7 @@ impl<'b> EvaluatorBuilder<'b> {
               }
             }
             //TODO Check if `FeelType::Any` is always ok for function result type in function definition.
-            Value::FunctionDefinition(parameters, body, external, closure.clone(), closure_ctx, FeelType::Any)
+            Value::function_definition(parameters, body, external, closure.clone(), closure_ctx, FeelType::Any)
           } else {
             value_null!("invalid body in function definition")
           }
@@ -860,7 +972,8 @@ impl<'b> EvaluatorBuilder<'b> {
     let AstNode::Satisfies(satisfies) = rhs else {
       return build_err_msg(err_msg_expected_node("Satisfies", lhs));
     };
-    let satisfies_evaluator = self.build(satisfies);
+    // The body binds the quantified variables, so an enclosing hoist must not reach into it.
+    let satisfies_evaluator = self.build_isolated(satisfies);
     Box::new(move |scope: &FeelScope| {
       let mut expression_evaluator = EveryExpressionEvaluator::new();
       for (name, expr_evaluator) in &expr_evaluators {
@@ -886,7 +999,8 @@ impl<'b> EvaluatorBuilder<'b> {
       let args = argument_evaluators.iter().map(|evaluator| evaluator(scope)).collect::<Vec<Value>>();
       match function {
         Value::BuiltInFunction(bif) => bifs::positional::evaluate_bif(bif, &args),
-        Value::FunctionDefinition(params, body, external, _, closure_ctx, result_type) => {
+        Value::FunctionDefinition(fd) => {
+          let (params, body, external, _, closure_ctx, result_type) = *fd;
           if external {
             eval_external_function_with_positional_parameters(scope, &args, &params, &body, result_type)
           } else {
@@ -940,7 +1054,8 @@ impl<'b> EvaluatorBuilder<'b> {
       let args = arguments_evaluator(scope);
       match function {
         Value::BuiltInFunction(bif) => bifs::named::evaluate_bif(bif, &args),
-        Value::FunctionDefinition(params, body, external, _, closure_ctx, result_type) => {
+        Value::FunctionDefinition(fd) => {
+          let (params, body, external, _, closure_ctx, result_type) = *fd;
           if external {
             eval_external_function_with_named_parameters(scope, &args, &params, &body, result_type)
           } else {
@@ -1612,9 +1727,22 @@ impl<'b> EvaluatorBuilder<'b> {
       Some(AstNode::UnaryGe(_)) => |value: Value| (Value::UnaryGreaterOrEqual(value.into()), true),
       _ => |value: Value| (value, false),
     };
+    // When the base of the path is a plain name, this code reads the entry straight
+    // from the context bound to that name. Evaluating the base instead clones the
+    // whole context just to read one entry. That cost dominates field access.
+    let opt_base_name = if let AstNode::Name(base_name) = lhs { Some(base_name.clone()) } else { None };
     let lhe = self.build(lhs);
     // prepare and return the evaluator
     Box::new(move |scope: &FeelScope| {
+      // Fast path. `get_context_entry` resolves the base name exactly like the general path
+      // below does. It returns a value only when the general path would return that
+      // same value. Everything else, including a missing entry, falls through, so the
+      // reported reasons for a null result stay unchanged.
+      if let Some(base_name) = &opt_base_name
+        && let Some(value) = scope.get_context_entry(base_name, &name)
+      {
+        return value;
+      }
       let lhv = lhe(scope);
       match lhv {
         Value::Context(context) => {
@@ -1693,7 +1821,8 @@ impl<'b> EvaluatorBuilder<'b> {
     let AstNode::Satisfies(satisfies) = rhs else {
       return build_err_msg(err_msg_expected_node("Satisfies", lhs));
     };
-    let satisfies_evaluator = self.build(satisfies);
+    // The body binds the quantified variables, so an enclosing hoist must not reach into it.
+    let satisfies_evaluator = self.build_isolated(satisfies);
     Box::new(move |scope: &FeelScope| {
       let mut expression_evaluator = SomeExpressionEvaluator::new();
       for (name, expr_evaluator) in &expr_evaluators {
@@ -1730,7 +1859,7 @@ impl<'b> EvaluatorBuilder<'b> {
           }
           Value::DateTime(rh) => {
             let l = FeelDateTime::new(lh, FeelTime::utc(0, 0, 0, 0));
-            if let Some(result) = l - rh {
+            if let Some(result) = l - Arc::unwrap_or_clone(rh) {
               return Value::DaysAndTimeDuration(result);
             }
           }
@@ -1760,23 +1889,23 @@ impl<'b> EvaluatorBuilder<'b> {
         Value::DateTime(lh) => match rhv {
           Value::Date(rh) => {
             let r = FeelDateTime::new(rh, FeelTime::utc(0, 0, 0, 0));
-            if let Some(result) = lh - r {
+            if let Some(result) = Arc::unwrap_or_clone(lh) - r {
               return Value::DaysAndTimeDuration(result);
             }
           }
           Value::DateTime(rh) => {
-            if let Some(result) = lh - rh {
+            if let Some(result) = Arc::unwrap_or_clone(lh) - Arc::unwrap_or_clone(rh) {
               return Value::DaysAndTimeDuration(result);
             }
           }
           Value::DaysAndTimeDuration(rh) => {
-            if let Some(result) = lh - rh {
-              return Value::DateTime(result);
+            if let Some(result) = Arc::unwrap_or_clone(lh) - rh {
+              return Value::DateTime(result.into());
             }
           }
           Value::YearsAndMonthsDuration(rh) => {
-            if let Some(result) = lh - rh {
-              return Value::DateTime(result);
+            if let Some(result) = Arc::unwrap_or_clone(lh) - rh {
+              return Value::DateTime(result.into());
             }
           }
           _ => {}
@@ -2669,14 +2798,15 @@ fn eval_function_definition(scope: &FeelScope, params_ctx: FeelContext, body: &F
   scope.push(closure_ctx); // closure_ctx
   scope.push(params_ctx); // params_ctx
   let mut result = body.evaluate(scope);
-  if let Value::FunctionDefinition(fd_params, fd_body, fd_external, fd_closure, fd_closure_ctx, fd_result_type) = &result {
+  if let Value::FunctionDefinition(fd) = &result {
+    let (fd_params, fd_body, fd_external, fd_closure, fd_closure_ctx, fd_result_type) = &**fd;
     let mut new_closure_ctx = fd_closure_ctx.clone();
     for closure_name in fd_closure.iter() {
       if let Some(closure_value) = scope.search_entry(closure_name) {
         new_closure_ctx.create_entry(closure_name, closure_value);
       }
     }
-    result = Value::FunctionDefinition(
+    result = Value::function_definition(
       fd_params.to_owned(),
       fd_body.to_owned(),
       fd_external.to_owned(),

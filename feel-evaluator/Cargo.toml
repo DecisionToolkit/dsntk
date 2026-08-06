@@ -12,6 +12,7 @@ license = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
+rayon = "1"
 regex = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

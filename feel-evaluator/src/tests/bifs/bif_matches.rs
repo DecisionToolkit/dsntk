@@ -280,3 +280,21 @@ fn _0047() {
 fn _0048() {
   te_bool(false, &scope!(), r#"matches("aA", "(a)\1", "i")"#, true);
 }
+
+/// `matches` inside a `for` body long enough to take the parallel path.
+///
+/// The list has 2,000 elements, well past the 512-element parallel threshold. The body
+/// passes every static rule, so Rayon workers call `matches` concurrently. The count
+/// pins the answer to the serial one. This guards the compiled-pattern cache, which is
+/// per-thread: every worker must compile and match independently and still agree with
+/// a single-threaded run.
+#[test]
+fn _0049() {
+  te_number(
+    false,
+    &scope!(),
+    r#"count((for s in (for i in 1..2000 return string(i)) return matches(s, "^1\\d{2}$"))[item = true])"#,
+    100,
+    0,
+  );
+}
