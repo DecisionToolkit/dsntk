@@ -781,6 +781,11 @@ impl<'b> EvaluatorBuilder<'b> {
         }
       }
     }
+    // Rule 6. `binding_variables` is only complete here, and `analyze` never sees the left side
+    // of the `for`, so this check cannot live inside it. A loop variable that spells a built-in
+    // makes the body invoke a data value through a name the analysis cleared as a built-in.
+    let mut safety = safety;
+    safety.forbid_names(&binding_variables);
     Box::new(move |scope: &FeelScope| {
       let mut for_expression_evaluator = ForExpressionEvaluator::new();
       for_expression_evaluator.set_safety(safety.clone());

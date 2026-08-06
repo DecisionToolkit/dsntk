@@ -33,6 +33,22 @@
 //! 4. No name bound inside the body parses as a built-in function name. Without this, a
 //!    context entry such as `{ contains: someOuterFunction, v: contains(1) }` would satisfy
 //!    rule 3 while actually calling a user-defined function.
+//! 5. No [AstNode::Filter] in the body has a predicate that invokes anything. Evaluating a
+//!    filter pushes the filtered element's **own entries** onto the live scope. So when an
+//!    element is a context, its keys become names the predicate can call. Rules 1 to 4 read
+//!    the body as written and [ParallelSafety::is_safe_in] reads the scope as it stands when
+//!    the `for` begins. Neither can see a binding that arrives later, from data.
+//!
+//! 6. No loop variable of the `for` shares a name with a callee invoked in the body. This one
+//!    is checked in `build_for` rather than here, because [analyze] only ever sees the body.
+//!    The loop variables come from the `for` expression's left side. See
+//!    [ParallelSafety::forbid_names].
+//!
+//! Rule 5 is what makes rules 3 and 4 hold up. Without it, a list element such as
+//! `{ sum: function(x) count(partial), v: 1 }` binds `sum` to a function that reads `partial`.
+//! A predicate calling `sum(item)` then passes rule 3 as a built-in call. The serial path
+//! binds `partial` and the parallel path does not, so the two disagree. `count(null)`
+//! returns 1, and the predicate becomes true for every element.
 //!
 //! Rule 3 is sound for built-ins. Only three of them evaluate a `FEEL` expression at
 //! all — `list replace`, `sort` and `range`. Each of the three builds a **fresh** scope
@@ -58,6 +74,14 @@ fn is_builtin(name: &Name) -> bool {
   Bif::from_str(&name.to_string()).is_ok()
 }
 
+/// Returns `true` when `node` contains a function invocation anywhere below it.
+///
+/// Used by rule 5. The callee is not inspected: a name that resolves to a built-in when read
+/// statically may resolve to an element's entry once the filter pushes it.
+fn contains_invocation(node: &AstNode) -> bool {
+  matches!(node, AstNode::FunctionInvocation(..)) || children(node).into_iter().any(contains_invocation)
+}
+
 /// The result of analyzing the body of a `for` expression.
 #[derive(Debug, Clone, Default)]
 pub struct ParallelSafety {
@@ -69,6 +93,28 @@ pub struct ParallelSafety {
 }
 
 impl ParallelSafety {
+  /// Refuses parallel evaluation when a loop variable shares a name with an invoked callee.
+  ///
+  /// Rule 6, and the reason it cannot live in [analyze]: the loop variables come from the
+  /// `for` expression's left side, which [analyze] never sees. It reads only the body.
+  ///
+  /// A loop variable binds a **data value** to a name the model author chose, so that name
+  /// can spell a built-in. `for sum in fs return sum(1)` satisfies rules 1 to 5: `sum`
+  /// parses as a built-in, nothing inside the body binds it, and there is no filter. It
+  /// also satisfies [Self::is_safe_in], because at loop entry `sum` is not bound yet. Then
+  /// each iteration binds it to an element. If that element is a function reading
+  /// `partial`, the serial path binds `partial` and the parallel path does not, and the
+  /// two disagree.
+  ///
+  /// The intersection is exact rather than conservative. Rule 3 already forces every
+  /// callee to be a plain name. So the only way to invoke a loop-bound value is through a
+  /// callee name equal to a loop-variable name.
+  pub fn forbid_names(&mut self, names: &std::collections::HashSet<Name>) {
+    if self.callees.iter().any(|callee| names.contains(callee)) {
+      self.statically_safe = false;
+    }
+  }
+
   /// Returns `true` when this body can run in parallel in the given scope.
   ///
   /// This checks the static rules only once, at evaluator build time. This adds one
@@ -133,6 +179,18 @@ impl Analysis {
           }
         }
         self.walk(arguments);
+        return;
+      }
+      // Rule 5. A filter pushes the filtered element's own entries onto the live scope. So a
+      // predicate that calls anything may be calling a name that arrived from data. The list
+      // being filtered is still walked: only the predicate sees the element's entries.
+      AstNode::Filter(list, predicate) => {
+        if contains_invocation(predicate) {
+          self.unsafe_found = true;
+          return;
+        }
+        self.walk(list);
+        self.walk(predicate);
         return;
       }
       // Names that a body binds. Collected for rule 4.

@@ -218,3 +218,52 @@ fn _0022() {
     "[1, 2, 3, 4, 5, 6, 7, 8]",
   );
 }
+
+#[test]
+fn _0023() {
+  //--------------------------------------------------------------------------------------------------------------------
+  // Rule 5. A filter predicate that invokes may call a name pushed from the filtered element's
+  // own entries, so the body must not run in parallel. The element binds `sum` to a function
+  // reading `partial`, which only the serial path binds. Below PARALLEL_MIN_ELEMENTS both paths
+  // agreed, so the list must be long enough to cross the threshold.
+  //--------------------------------------------------------------------------------------------------------------------
+  te_be_value(
+    false,
+    &scope!(),
+    "{ data: [{sum: function(x) count(partial), v: 1}], big: (for k in 1..600 return k), \
+       r: (sum(for i in big return count(data[sum(item) > 0]))) }.r",
+    "599",
+  );
+}
+
+#[test]
+fn _0024() {
+  //--------------------------------------------------------------------------------------------------------------------
+  // Rule 6. The loop variable itself binds a data value to a name the author chose, so it can
+  // spell a built-in. `sum` passes rules 1 to 5 and is unbound at loop entry, then each iteration
+  // binds it to a function reading `partial`. Parallel used to answer [1, 1, ...] here.
+  //--------------------------------------------------------------------------------------------------------------------
+  te_be_value(
+    false,
+    &scope!(),
+    "{f: function(z) count(partial), fs: for i in 1..600 return f, \
+       r: for sum in fs return sum(1), out: [r[1], r[600], count(r[item = 1])]}.out",
+    "[0, 599, 1]",
+  );
+}
+
+#[test]
+fn _0025() {
+  //--------------------------------------------------------------------------------------------------------------------
+  // Rule 6 control. The same shape with a loop variable that is not a built-in name stays serial
+  // through rule 3, and must give the same answer. This guards against a fix that only works by
+  // disabling parallelism everywhere.
+  //--------------------------------------------------------------------------------------------------------------------
+  te_be_value(
+    false,
+    &scope!(),
+    "{f: function(z) count(partial), fs: for i in 1..600 return f, \
+       r: for g in fs return g(1), out: [r[1], r[600], count(r[item = 1])]}.out",
+    "[0, 599, 1]",
+  );
+}
