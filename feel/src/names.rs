@@ -63,13 +63,18 @@
 //!
 //! - The table never shrinks. This module leaks name text deliberately, which is what
 //!   makes `as_str` able to hand out `&'static str` and what makes a handle copyable. Name
-//!   text comes from identifiers and context keys, so the set is bounded by the shape of
-//!   the input, not by its size. A process that parses unboundedly many *distinct* names
-//!   grows without bound.
-//! - At most `2^20 - 1` distinct names. Past that the handle could not stay injective, so
-//!   interning panics rather than return a handle that compares equal to another name. The
-//!   four models in this repository intern 50 to 175.
-//! - The rank space is 44 bits, and it bounds three separate things. At least **131,072**
+//!   text comes from identifiers and context keys. The `context` built-in also interns
+//!   every key that arrives as **runtime data**. So a model that builds a context from
+//!   input strings grows the table with its input. A process that interns unboundedly
+//!   many *distinct* names grows without bound.
+//! - Only the first `2^20 - 1` distinct names carry a rank beside their identity. A name
+//!   interned past that takes a **wide handle**: [WIDE_BIT] set, the rest of the handle
+//!   is identity. A wide handle carries no rank, so it compares by text, exactly like a
+//!   name whose rank gap was exhausted. Both paths agree with lexicographic order, so no
+//!   answer changes. Lookups on wide names are slower, and that is all. The identity
+//!   space of a wide handle is 63 bits, which memory exhausts long before the table does.
+//!   The four models in this repository intern 50 to 175 names.
+//! - The rank space is 43 bits, and it bounds three separate things. At least **65,536**
 //!   names may be appended past the largest name so far, or prepended below the smallest. At
 //!   least **4,096** names of one family fit in one appended gap. At least **15** more names
 //!   may halve a gap that has become too narrow to step through.
@@ -90,11 +95,12 @@ use std::fmt;
 use std::hash::{BuildHasherDefault, Hasher};
 use std::sync::{LazyLock, OnceLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-/// Number of low bits of a handle that hold the identity of a name.
+/// Number of low bits of a handle that hold the identity of a **ranked** name.
 ///
-/// Twenty bits allow 1,048,575 distinct names and leave 44 bits of rank space. The models
-/// in this repository intern between 50 and 175 names. The set is bounded by the shape of
-/// the input rather than by its size.
+/// Twenty bits allow 1,048,575 ranked names beside 43 bits of rank space. Names interned
+/// past that take a [WIDE_BIT] handle and compare by text. The models in this repository
+/// intern between 50 and 175 names. So only a model that interns runtime data — the
+/// `context` built-in does — ever reaches the wide range.
 const ID_BITS: u32 = 20;
 
 /// Mask selecting the identity of a name.
@@ -103,13 +109,22 @@ const ID_MASK: u64 = (1 << ID_BITS) - 1;
 /// Mask selecting the rank of a name.
 const RANK_MASK: u64 = !ID_MASK;
 
-/// Largest assignable rank.
-const RANK_MAX: u64 = (1 << (64 - ID_BITS)) - 1;
+/// Bit marking a **wide** handle, one whose identity is too large to fit beside a rank.
+///
+/// The first `2^20 - 1` names encode as `rank << ID_BITS | id`. Every later name encodes
+/// as `WIDE_BIT | id`, carries no rank and compares by text. The three encodings cannot
+/// collide. A ranked handle has this bit clear, because [RANK_MAX] stops one bit short
+/// of it. An unranked narrow handle has every bit above [ID_BITS] clear. A wide handle
+/// is the only one with this bit set.
+const WIDE_BIT: u64 = 1 << 63;
+
+/// Largest assignable rank. One bit short of [WIDE_BIT], so a ranked handle never sets it.
+const RANK_MAX: u64 = (1 << (63 - ID_BITS)) - 1;
 
 /// Room left between a newly appended name and its predecessor, so that later insertions
 /// between the two have somewhere to go.
 ///
-/// `RANK_MAX / 2 / RANK_STRIDE` is 131,072, which is how many names may be appended past the
+/// `RANK_MAX / 2 / RANK_STRIDE` is 65,536, which is how many names may be appended past the
 /// largest name so far before the append room itself runs out.
 const RANK_STRIDE: u64 = 1 << 26;
 
@@ -200,17 +215,23 @@ fn intern_new(text: &str) -> Name {
     return Name(handle);
   }
   let id = interner.texts.len() as u64;
-  assert!(id < ID_MASK, "the FEEL name table is full at {ID_MASK} distinct names");
   // Leaked on purpose: it is what lets a handle be copied and `as_str` return a `&'static
   // str`. One leak per distinct name, never per occurrence.
   let text: &'static str = Box::leak(text.to_owned().into_boxed_str());
-  let rank = interner.rank_for(text);
-  let handle = (rank << ID_BITS) | id;
+  let handle = if id < ID_MASK {
+    let rank = interner.rank_for(text);
+    if rank != RANK_NONE {
+      interner.ranked.insert(text, rank);
+    }
+    (rank << ID_BITS) | id
+  } else {
+    // The identity no longer fits beside a rank. The name takes a wide handle instead:
+    // unranked, compared by text, identity in the low 63 bits. Interning stays injective
+    // and total order is kept, so nothing changes except the speed of this name.
+    WIDE_BIT | id
+  };
   interner.texts.push(text);
   interner.handles.insert(text, handle);
-  if rank != RANK_NONE {
-    interner.ranked.insert(text, rank);
-  }
   // Published before the write lock is released, so a thread that later holds this handle
   // always finds the slot filled.
   if let Some(slot) = TEXT_SLOTS.get(id as usize) {
@@ -345,11 +366,12 @@ impl Ord for Name {
   ///
   /// Ranked names compare in one unsigned compare, because the rank is the high part of the
   /// handle and rank order is lexicographic order. A name left unranked by an exhausted
-  /// rank gap compares by text. Both paths agree with lexicographic order, so mixing them
-  /// still gives a total order.
+  /// rank gap compares by text, and so does a wide handle, whose high bits are identity
+  /// rather than rank. Both paths agree with lexicographic order, so mixing them still
+  /// gives a total order.
   #[inline]
   fn cmp(&self, other: &Self) -> Ordering {
-    if (self.0 & RANK_MASK).min(other.0 & RANK_MASK) != RANK_NONE {
+    if (self.0 | other.0) & WIDE_BIT == 0 && (self.0 & RANK_MASK).min(other.0 & RANK_MASK) != RANK_NONE {
       return self.0.cmp(&other.0);
     }
     if self.0 == other.0 {
@@ -437,6 +459,22 @@ impl Jsonify for Name {
 }
 
 impl Name {
+  /// Returns the [Name] for `text` only when it already exists, and never creates one.
+  ///
+  /// For looking a name up rather than making one. A lookup that interns leaks a name on
+  /// every probe that misses, and the interner never gives one back. So a process probing
+  /// unbounded text grows without bound, which is exactly the risk in `get value`.
+  ///
+  /// `None` is safe to read as "no context anywhere holds this key". The tuple field of
+  /// [Name] is private to this module, and every constructor goes through [intern] or
+  /// [intern_new]. So a [Name] cannot exist without sitting in `handles`. Text absent from
+  /// `handles` therefore names no key in any [crate::FeelContext]. A caller that interned
+  /// it would have got a fresh handle that is by construction in no map. Both branches
+  /// return what the interning version returned, by construction rather than by test.
+  pub fn existing(text: &str) -> Option<Self> {
+    read_interner().handles.get(text.trim()).map(|&handle| Name(handle))
+  }
+
   /// Creates a [Name] from string parts.
   pub fn new(parts: &[&str]) -> Self {
     // A name of a single part is the common case, a context key or a variable reference of
@@ -461,7 +499,8 @@ impl Name {
 
   /// Extracts a string slice containing the entire [Name].
   pub fn as_str(&self) -> &str {
-    text_of(self.0 & ID_MASK)
+    let id = if self.0 & WIDE_BIT != 0 { self.0 & !WIDE_BIT } else { self.0 & ID_MASK };
+    text_of(id)
   }
 
   /// Returns `true` when this name is empty.

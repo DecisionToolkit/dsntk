@@ -1076,11 +1076,16 @@ pub fn get_entries(context: &Value) -> Value {
 pub fn get_value(context: &Value, key: &Value) -> Value {
   if let Value::Context(ctx) = context {
     if let Value::String(entry_key) = key {
-      let name = Name::from(entry_key.to_owned());
-      if let Some(entry_value) = ctx.get_entry(&name) {
-        entry_value.clone()
-      } else {
-        value_null!()
+      // Look the key up without interning it. Interning on every probe, including the ones
+      // that miss, grows the table without bound, because the interner never releases a
+      // name. A key that was never interned cannot name an entry in any context, so the
+      // miss answers null either way.
+      match Name::existing(entry_key) {
+        Some(name) => match ctx.get_entry(&name) {
+          Some(entry_value) => entry_value.clone(),
+          None => value_null!(),
+        },
+        None => value_null!(),
       }
     } else {
       invalid_argument_type!("get value", "string", key.type_of())

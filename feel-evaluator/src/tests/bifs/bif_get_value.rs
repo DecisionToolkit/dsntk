@@ -65,3 +65,16 @@ fn _0009() {
 fn _0010() {
   te_be_value(false, &scope!(), r#"get value(m: {a: "foo"}, key: "b")"#, r#"null"#);
 }
+
+#[test]
+fn _0011() {
+  // A key absent from the context answers null, and must not intern the probed text. The
+  // interner never releases a name, so a lookup that interns would leak one per probe.
+  te_null(false, &scope!(), r#"get value({a: 1}, "no such key 3b7f")"#, "");
+}
+
+#[test]
+fn _0012() {
+  // The hit path is unchanged by the lookup-only probe.
+  te_number(false, &scope!(), r#"get value({a: 1, b: 2}, "b")"#, 2, 0);
+}
