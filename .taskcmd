@@ -1,0 +1,21 @@
+.vars
+  .RUST_TOOLKIT +stable
+  .RUST_TOOLKIT_NIGHTLY +nightly
+
+.tasks
+
+  .build
+    .desc Builds in debug mode
+    .cmd cargo {{RUST_TOOLKIT}} build --workspace
+
+  .clean
+    .desc Cleans all targets
+    .cmd cargo {{RUST_TOOLKIT}} clean
+
+  .clippy
+    .desc Runs clippy for all targets
+    .cmd cargo {{RUST_TOOLKIT_NIGHTLY}} clippy --workspace --all-targets
+
+  .fmt
+    .desc Runs the code formatter
+    .cmd cargo {{RUST_TOOLKIT_NIGHTLY}} fmt --all

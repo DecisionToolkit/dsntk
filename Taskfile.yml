@@ -31,11 +31,6 @@ tasks:
       - cmd: mkdir -p ./target/benchmarks
       - cmd: cargo +nightly bench -p dsntk-model-evaluator -q compatibility | tee ./target/benchmarks/out.txt | grep 'bench' > ./target/benchmarks/benchmarks.txt
 
-  build:
-    desc: Builds in debug mode
-    cmds:
-      - cmd: cargo +stable build --workspace
-
   build-tck:
     desc: Builds in debug mode
     cmds:
@@ -50,16 +45,6 @@ tasks:
     desc: Performs checks in debug mode
     cmds:
       - cmd: cargo +stable check
-
-  clean:
-    desc: Cleans all targets
-    cmds:
-      - cmd: cargo +stable clean
-
-  clippy:
-    desc: Runs clippy for all targets
-    cmds:
-      - cmd: cargo +nightly clippy --workspace --all-targets
 
   clippy-tck:
     desc: Runs clippy for all targets and TCK feature
@@ -115,11 +100,6 @@ tasks:
     desc: Generates documentation with private items and opens it in browser
     cmds:
       - cmd: cargo +stable doc --no-deps --open --document-private-items
-
-  fmt:
-    desc: Runs the code formatter
-    cmds:
-      - cmd: cargo +nightly fmt --all
 
   install:
     desc: Builds and installs release version from local sources
