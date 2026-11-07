@@ -4,8 +4,8 @@ use super::*;
 
 #[test]
 fn _0001() {
-  let scope = &te_scope(
-    r#"
+    let scope = &te_scope(
+        r#"
       {
         offer: [
           { tenor:   7, rate: 3.8300 },
@@ -25,11 +25,11 @@ fn _0001() {
         ]
       }
   "#,
-  );
-  let expression = r#"
+    );
+    let expression = r#"
       for i in 1..6 return ((log(1 + (offer[i].rate / 100) * (offer[i].tenor / 365))) / (offer[i].tenor / 365) + (log(1 + (bid[i].rate / 100) * (bid[i].tenor / 365))) / (bid[i].tenor / 365)) / 2
   "#;
-  let expected = r#"[
+    let expected = r#"[
     0.03728665564658653288015998590256039,
     0.03907069051683237804063421928246624,
     0.04103069553301539980418540264587278,
@@ -37,13 +37,13 @@ fn _0001() {
     0.04939327625296464963140082299537544,
     0.0497583218296869197946039145374107
   ]"#;
-  te_be_value(false, scope, expression, expected);
+    te_be_value(false, scope, expression, expected);
 }
 
 #[test]
 fn _0002() {
-  let scope = &te_scope(
-    r#"
+    let scope = &te_scope(
+        r#"
         {
           Bounds: {
             Min: { Tenor: 7,  Rate: 0.03728665564658653288015998590256039 },
@@ -52,7 +52,12 @@ fn _0002() {
           Days: 12
         }
     "#,
-  );
-  let expression = r#" ((Bounds.Max.Rate - Bounds.Min.Rate) * (Days - Bounds.Min.Tenor) / (Bounds.Max.Tenor - Bounds.Min.Tenor)) + Bounds.Min.Rate "#;
-  te_be_value(false, scope, expression, r#"0.03856096626819070799478443831677885"#);
+    );
+    let expression = r#" ((Bounds.Max.Rate - Bounds.Min.Rate) * (Days - Bounds.Min.Tenor) / (Bounds.Max.Tenor - Bounds.Min.Tenor)) + Bounds.Min.Rate "#;
+    te_be_value(
+        false,
+        scope,
+        expression,
+        r#"0.03856096626819070799478443831677885"#,
+    );
 }

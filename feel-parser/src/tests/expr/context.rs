@@ -3,42 +3,42 @@ use crate::lalr::TokenType::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{}"#,
+        r#"
        Context
        └─ (empty)
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0002() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    " \n { \t } \r ",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        " \n { \t } \r ",
+        r#"
        Context
        └─ (empty)
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0003() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{age:49}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{age:49}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -46,18 +46,18 @@ fn _0003() {
           └─ Numeric
              └─ `49`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0004() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{"age":49}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{"age":49}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -65,18 +65,18 @@ fn _0004() {
           └─ Numeric
              └─ `49`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0005() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{Birth_date: date("1956-07-11")}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{Birth_date: date("1956-07-11")}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -88,18 +88,18 @@ fn _0005() {
                 └─ String
                    └─ `1956-07-11`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0006() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{name:"Dariusz",age:49}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{name:"Dariusz",age:49}"#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -112,18 +112,18 @@ fn _0006() {
           └─ Numeric
              └─ `49`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0007() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{"name": "Dariusz", "age": 49}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{"name": "Dariusz", "age": 49}"#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -136,18 +136,18 @@ fn _0007() {
           └─ Numeric
              └─ `49`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0008() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{name:"Dariusz",age:49,car:{model:"Skoda",production year:2016}}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{name:"Dariusz",age:49,car:{model:"Skoda",production year:2016}}"#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -174,18 +174,18 @@ fn _0008() {
                 └─ Numeric
                    └─ `2016`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0009() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{"name":"Dariusz","age":49,"car":{"model":"Skoda","production year":2016}}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{"name":"Dariusz","age":49,"car":{"model":"Skoda","production year":2016}}"#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -212,18 +212,18 @@ fn _0009() {
                 └─ Numeric
                    └─ `2016`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _00010() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{ a: 1, b: 2, c: 1 + 2}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{ a: 1, b: 2, c: 1 + 2}"#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -244,20 +244,20 @@ fn _00010() {
              └─ Numeric
                 └─ `2`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _00011() {
-  let scope = scope!();
-  scope.set_entry_name("d".into());
-  scope.set_entry_name("e".into());
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{ a: 1, b: 2, c: d + e}"#,
-    r#"
+    let scope = scope!();
+    scope.set_entry_name("d".into());
+    scope.set_entry_name("e".into());
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{ a: 1, b: 2, c: d + e}"#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -278,18 +278,18 @@ fn _00011() {
              └─ Name
                 └─ `e`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _00012() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{ a: 1, b: 2, c: a + b}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{ a: 1, b: 2, c: a + b}"#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -310,17 +310,17 @@ fn _00012() {
              └─ Name
                 └─ `b`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _00013() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"
       {
         "Another Date": @"2018-07-31",
         "Another Date and Time": @"2018-07-31T17:13:00Z",
@@ -342,7 +342,7 @@ fn _00013() {
         }
       }
     "#,
-    r#"
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -429,18 +429,18 @@ fn _00013() {
                 └─ At
                    └─ `P5M`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0014() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{Full Name: "John Doe"}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{Full Name: "John Doe"}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -448,18 +448,18 @@ fn _0014() {
           └─ String
              └─ `John Doe`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0015() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{Full           Name: "John Doe"}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{Full           Name: "John Doe"}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -467,18 +467,18 @@ fn _0015() {
           └─ String
              └─ `John Doe`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0016() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{"Full Name": "John Doe"}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{"Full Name": "John Doe"}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -486,18 +486,18 @@ fn _0016() {
           └─ String
              └─ `John Doe`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0017() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{"Full           Name": "John Doe"}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{"Full           Name": "John Doe"}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -505,18 +505,18 @@ fn _0017() {
           └─ String
              └─ `John Doe`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0018() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{person: {name: "John", age: 27}}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{person: {name: "John", age: 27}}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -533,18 +533,18 @@ fn _0018() {
                 └─ Numeric
                    └─ `27`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0019() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{Another Date: "2018-07-30"}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{Another Date: "2018-07-30"}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -552,18 +552,18 @@ fn _0019() {
           └─ String
              └─ `2018-07-30`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0020() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{Another Date and Time: "2018-07-30"}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{Another Date and Time: "2018-07-30"}"#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -571,18 +571,18 @@ fn _0020() {
           └─ String
              └─ `2018-07-30`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0021() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"{"Another Date": "2018-07-30", "Another Date and Time": "2018-07-30T16:00:00"}"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"{"Another Date": "2018-07-30", "Another Date and Time": "2018-07-30T16:00:00"}"#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -595,6 +595,6 @@ fn _0021() {
           └─ String
              └─ `2018-07-30T16:00:00`
     "#,
-    false,
-  );
+        false,
+    );
 }

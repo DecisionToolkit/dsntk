@@ -17,4 +17,6 @@ mod tests;
 
 pub use crate::evaluators::*;
 pub use crate::filters::FilterExpressionEvaluator;
-pub use crate::iterations::{EveryExpressionEvaluator, ForExpressionEvaluator, SomeExpressionEvaluator};
+pub use crate::iterations::{
+    EveryExpressionEvaluator, ForExpressionEvaluator, SomeExpressionEvaluator,
+};

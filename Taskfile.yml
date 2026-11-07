@@ -164,16 +164,6 @@ tasks:
     cmds:
       - cmd: cargo +stable run --release --features=tck --target=x86_64-unknown-linux-musl -- srv -H 127.0.0.1 -D ../tck/TestCases
 
-  test:
-    desc: Runs tests in debug mode
-    cmds:
-      - cmd: cargo +stable test --workspace
-
-  testn:
-    desc: Runs tests in debug mode using nextest
-    cmds:
-      - cmd: cargo +stable nextest run --workspace --no-fail-fast
-
   validate13:
     desc: Validates specified DMN model against XSD schema in version 1.3
     cmds:

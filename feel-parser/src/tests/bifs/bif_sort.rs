@@ -2,12 +2,12 @@ use super::super::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "sort(metricsTable, function(x,y) x < y)",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "sort(metricsTable, function(x,y) x < y)",
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `sort`
@@ -33,6 +33,6 @@ fn _0001() {
                    └─ Name
                       └─ `y`
     "#,
-    false,
-  );
+        false,
+    );
 }

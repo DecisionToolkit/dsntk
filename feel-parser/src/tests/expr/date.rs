@@ -2,12 +2,12 @@ use super::super::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    r#"date("2012-12-25")"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        r#"date("2012-12-25")"#,
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `date`
@@ -15,18 +15,18 @@ fn _0001() {
           └─ String
              └─ `2012-12-25`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0002() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    r#"date(from:"2012-12-25")"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        r#"date(from:"2012-12-25")"#,
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `date`
@@ -37,18 +37,18 @@ fn _0002() {
              └─ String
                 └─ `2012-12-25`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0003() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    r#"date(string("2012-12-25"))"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        r#"date(string("2012-12-25"))"#,
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `date`
@@ -60,6 +60,6 @@ fn _0003() {
                 └─ String
                    └─ `2012-12-25`
     "#,
-    false,
-  );
+        false,
+    );
 }

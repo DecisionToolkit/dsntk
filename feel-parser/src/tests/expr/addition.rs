@@ -2,48 +2,48 @@ use super::super::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "1+2",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "1+2",
+        r#"
        Add
        ├─ Numeric
        │  └─ `1`
        └─ Numeric
           └─ `2`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0002() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "1 + 2",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "1 + 2",
+        r#"
        Add
        ├─ Numeric
        │  └─ `1`
        └─ Numeric
           └─ `2`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0003() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    " 5 +2 +1",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        " 5 +2 +1",
+        r#"
        Add
        ├─ Add
        │  ├─ Numeric
@@ -53,18 +53,18 @@ fn _0003() {
        └─ Numeric
           └─ `1`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0004() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "2+20+200",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "2+20+200",
+        r#"
        Add
        ├─ Add
        │  ├─ Numeric
@@ -74,18 +74,18 @@ fn _0004() {
        └─ Numeric
           └─ `200`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0005() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "( 1 + 2 ) + ( 3 + 4 )",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "( 1 + 2 ) + ( 3 + 4 )",
+        r#"
        Add
        ├─ Add
        │  ├─ Numeric
@@ -98,36 +98,36 @@ fn _0005() {
           └─ Numeric
              └─ `4`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0006() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "( ( ( 1 + 2 ) ) )",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "( ( ( 1 + 2 ) ) )",
+        r#"
        Add
        ├─ Numeric
        │  └─ `1`
        └─ Numeric
           └─ `2`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0007() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "(1+2)*(3+4)",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "(1+2)*(3+4)",
+        r#"
        Mul
        ├─ Add
        │  ├─ Numeric
@@ -140,15 +140,20 @@ fn _0007() {
           └─ Numeric
              └─ `4`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0008() {
-  let scope = scope!();
-  assert_eq!(
-    "<ParserError> syntax error: +1",
-    Parser::new(&scope, StartExpression, "+1", false).parse().err().unwrap().to_string().as_str()
-  );
+    let scope = scope!();
+    assert_eq!(
+        "<ParserError> syntax error: +1",
+        Parser::new(&scope, StartExpression, "+1", false)
+            .parse()
+            .err()
+            .unwrap()
+            .to_string()
+            .as_str()
+    );
 }

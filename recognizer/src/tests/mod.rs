@@ -8,27 +8,27 @@ mod test_point;
 mod test_recognizer;
 
 fn eq_vectors(actual: &[String], expected: &[&str]) {
-  assert_eq!(actual.len(), expected.len());
-  for (index, value) in actual.iter().enumerate() {
-    assert_eq!(value, expected[index]);
-  }
+    assert_eq!(actual.len(), expected.len());
+    for (index, value) in actual.iter().enumerate() {
+        assert_eq!(value, expected[index]);
+    }
 }
 
 fn eq_opt_vectors(actual: &[Option<String>], expected: &[Option<&str>]) {
-  assert_eq!(actual.len(), expected.len());
-  for (index, value) in actual.iter().enumerate() {
-    assert_eq!(*value, expected[index].map(|s| s.to_string()));
-  }
+    assert_eq!(actual.len(), expected.len());
+    for (index, value) in actual.iter().enumerate() {
+        assert_eq!(*value, expected[index].map(|s| s.to_string()));
+    }
 }
 
 fn eq_matrices(actual: &[Vec<String>], expected: &[&[&str]]) {
-  assert_eq!(actual.len(), expected.len());
-  for (r, row) in actual.iter().enumerate() {
-    assert_eq!(row.len(), expected[r].len());
-    for (c, col) in row.iter().enumerate() {
-      assert_eq!(col, expected[r][c]);
+    assert_eq!(actual.len(), expected.len());
+    for (r, row) in actual.iter().enumerate() {
+        assert_eq!(row.len(), expected[r].len());
+        for (c, col) in row.iter().enumerate() {
+            assert_eq!(col, expected[r][c]);
+        }
     }
-  }
 }
 
 const EX_01: &str = r#"

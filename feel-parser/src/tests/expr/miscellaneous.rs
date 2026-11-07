@@ -6,17 +6,17 @@ use crate::lalr::TokenType::List;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  let mut ctx = ParsingContext::default();
-  ctx.set_name("principal".into());
-  ctx.set_name("rate".into());
-  ctx.set_name("termMonths".into());
-  scope.set_context("loan".into(), ctx);
-  accept(
-    &scope,
-    StartExpression,
-    r#"(loan.principal*loan.rate/12)/(1-(1+loan.rate/12)**-loan.termMonths)"#,
-    r#"
+    let scope = scope!();
+    let mut ctx = ParsingContext::default();
+    ctx.set_name("principal".into());
+    ctx.set_name("rate".into());
+    ctx.set_name("termMonths".into());
+    scope.set_context("loan".into(), ctx);
+    accept(
+        &scope,
+        StartExpression,
+        r#"(loan.principal*loan.rate/12)/(1-(1+loan.rate/12)**-loan.termMonths)"#,
+        r#"
        Div
        ├─ Div
        │  ├─ Mul
@@ -54,13 +54,13 @@ fn _0001() {
                    └─ Name
                       └─ `termMonths`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 /// Tests how the parser behaves, when invalid starting point is given.
 #[test]
 fn _0002() {
-  let scope = scope!();
-  assert!(Parser::new(&scope, List, "[1,2,3]", false).parse().is_err());
+    let scope = scope!();
+    assert!(Parser::new(&scope, List, "[1,2,3]", false).parse().is_err());
 }

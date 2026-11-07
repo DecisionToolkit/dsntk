@@ -2,30 +2,30 @@ use super::super::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "true and false",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "true and false",
+        r#"
        And
        ├─ Boolean
        │  └─ `true`
        └─ Boolean
           └─ `false`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0002() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "true and false and true",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "true and false and true",
+        r#"
        And
        ├─ And
        │  ├─ Boolean
@@ -35,18 +35,18 @@ fn _0002() {
        └─ Boolean
           └─ `true`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0003() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "(true and true) and false",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "(true and true) and false",
+        r#"
        And
        ├─ And
        │  ├─ Boolean
@@ -56,18 +56,18 @@ fn _0003() {
        └─ Boolean
           └─ `false`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0004() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "true and (true and false)",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "true and (true and false)",
+        r#"
        And
        ├─ Boolean
        │  └─ `true`
@@ -77,6 +77,6 @@ fn _0004() {
           └─ Boolean
              └─ `false`
     "#,
-    false,
-  );
+        false,
+    );
 }

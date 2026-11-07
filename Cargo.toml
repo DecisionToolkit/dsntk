@@ -1,6 +1,6 @@
 [workspace]
 
-resolver = "2"
+resolver = "3"
 
 members = [
     "common",
@@ -24,11 +24,12 @@ members = [
 ]
 
 [workspace.package]
-version = "0.3.0-dev"
+version = "0.3.1-dev"
 authors = ["Dariusz Depta <depta@engos.de>"]
 repository = "https://github.com/DecisionToolkit/dsntk.git"
 homepage = "https://decision-toolkit.org"
 license = "MIT OR Apache-2.0"
+rust-version = "1.85.0"
 edition = "2024"
 
 [workspace.dependencies]

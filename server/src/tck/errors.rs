@@ -7,5 +7,5 @@ use dsntk_common::{DsntkError, ToErrorMessage};
 struct TckServerError(String);
 
 pub fn err_missing_attribute(name: &str) -> DsntkError {
-  TckServerError(format!("missing attribute: {name}")).into()
+    TckServerError(format!("missing attribute: {name}")).into()
 }

@@ -54,8 +54,18 @@ const INPUT_DATA: &str = r#"
 
 #[bench]
 fn _0001(b: &mut Bencher) {
-  let ctx = context(INPUT_DATA);
-  let invocable_name = "Join";
-  assert_decision(&MODEL_EVALUATOR, &MODEL_NAMESPACE, &MODEL_NAME, invocable_name, &ctx, r#""Smith""#);
-  iter!(b, MODEL_EVALUATOR.evaluate_invocable(&MODEL_NAMESPACE, &MODEL_NAME, invocable_name, &ctx));
+    let ctx = context(INPUT_DATA);
+    let invocable_name = "Join";
+    assert_decision(
+        &MODEL_EVALUATOR,
+        &MODEL_NAMESPACE,
+        &MODEL_NAME,
+        invocable_name,
+        &ctx,
+        r#""Smith""#,
+    );
+    iter!(
+        b,
+        MODEL_EVALUATOR.evaluate_invocable(&MODEL_NAMESPACE, &MODEL_NAME, invocable_name, &ctx)
+    );
 }

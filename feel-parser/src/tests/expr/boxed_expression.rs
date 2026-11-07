@@ -3,12 +3,12 @@ use crate::lalr::TokenType::StartBoxedExpression;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"function () "the body" "#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"function () "the body" "#,
+        r#"
        FunctionDefinition
        ├─ FormalParameters
        │  └─ (empty)
@@ -16,18 +16,18 @@ fn _0001() {
           └─ String
              └─ `the body`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0002() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"function () 1.414926 "#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"function () 1.414926 "#,
+        r#"
        FunctionDefinition
        ├─ FormalParameters
        │  └─ (empty)
@@ -35,18 +35,18 @@ fn _0002() {
           └─ Numeric
              └─ `1.414926`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0003() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"function () external { java: {class: "java.lang.Math", method signature: "min"} }"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"function () external { java: {class: "java.lang.Math", method signature: "min"} }"#,
+        r#"
        FunctionDefinition
        ├─ FormalParameters
        │  └─ (empty)
@@ -67,56 +67,56 @@ fn _0003() {
                       └─ String
                          └─ `min`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 #[should_panic]
 fn _0004() {
-  let scope = scope!();
-  accept(&scope, StartBoxedExpression, r#""#, r#""#, false);
+    let scope = scope!();
+    accept(&scope, StartBoxedExpression, r#""#, r#""#, false);
 }
 
 #[test]
 fn _0005() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[]"#,
+        r#"
        List
        └─ (empty)
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0006() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[1]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[1]"#,
+        r#"
        List
        └─ Numeric
           └─ `1`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0007() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#" [ 1 , 2 , 3 ] "#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#" [ 1 , 2 , 3 ] "#,
+        r#"
        List
        ├─ Numeric
        │  └─ `1`
@@ -125,33 +125,33 @@ fn _0007() {
        └─ Numeric
           └─ `3`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0008() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#" {} "#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#" {} "#,
+        r#"
        Context
        └─ (empty)
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0009() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#" { age: 50 } "#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#" { age: 50 } "#,
+        r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -159,18 +159,18 @@ fn _0009() {
           └─ Numeric
              └─ `50`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0010() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#" { name: "John", address: { street: "Bourbon Street" , house no: 15} , married: false } "#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#" { name: "John", address: { street: "Bourbon Street" , house no: 15} , married: false } "#,
+        r#"
        Context
        ├─ ContextEntry
        │  ├─ ContextEntryKey
@@ -197,6 +197,6 @@ fn _0010() {
           └─ Boolean
              └─ `false`
     "#,
-    false,
-  );
+        false,
+    );
 }

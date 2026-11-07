@@ -2,12 +2,12 @@ use super::super::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "not(true)",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "not(true)",
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `not`
@@ -15,18 +15,18 @@ fn _0001() {
           └─ Boolean
              └─ `true`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0002() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    " not (  false ) ",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        " not (  false ) ",
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `not`
@@ -34,6 +34,6 @@ fn _0002() {
           └─ Boolean
              └─ `false`
     "#,
-    false,
-  );
+        false,
+    );
 }

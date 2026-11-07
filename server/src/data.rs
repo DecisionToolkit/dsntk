@@ -5,5 +5,5 @@ use std::sync::Arc;
 
 /// Workspaces with decision model evaluators.
 pub struct ApplicationData {
-  pub workspaces: Arc<Workspaces>,
+    pub workspaces: Arc<Workspaces>,
 }

@@ -2,8 +2,13 @@ use dsntk_feel::{FeelScope, scope};
 
 #[test]
 fn _0001() {
-  let node = dsntk_feel_parser::parse_simple_expressions(&scope!(), "1 + 2, 3 - 4, 5 * 6, 7 / 8, 9 ** 2, -23", false).unwrap();
-  let expected = r#"
+    let node = dsntk_feel_parser::parse_simple_expressions(
+        &scope!(),
+        "1 + 2, 3 - 4, 5 * 6, 7 / 8, 9 ** 2, -23",
+        false,
+    )
+    .unwrap();
+    let expected = r#"
        ExpressionList
        ├─ Add
        │  ├─ Numeric
@@ -34,5 +39,5 @@ fn _0001() {
           └─ Numeric
              └─ `23`
     "#;
-  assert_eq!(expected, node.trace());
+    assert_eq!(expected, node.trace());
 }

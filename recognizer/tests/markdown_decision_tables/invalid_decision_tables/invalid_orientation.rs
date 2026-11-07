@@ -3,7 +3,7 @@ use dsntk_recognizer::from_markdown;
 /// Rule numbers are not monotonic.
 #[test]
 fn _0001() {
-  let markdown = r#"
+    let markdown = r#"
     | U |    Customer type     | Order size | Discount |         Priority          | Description | Reference |
     |:-:|:--------------------:|:----------:|:--------:|:-------------------------:|:-----------:|:---------:|
     |   | "Business","Private" |            |          | "Normal",**"High"**,"Low" |             |           |
@@ -12,16 +12,16 @@ fn _0001() {
     | 3 |      "Business"      |    >=10    |   0.15   |          "High"           | Large order |   Ref 2   |
     | 4 |      "Private"       |     -      |   0.05   |           "Low"           | All orders  |   Ref 3   |
   "#;
-  assert_eq!(
-    "<RecognizerError> invalid decision table, reason: can not recognize the preferred orientation",
-    from_markdown(markdown, false).unwrap_err().to_string()
-  );
+    assert_eq!(
+        "<RecognizerError> invalid decision table, reason: can not recognize the preferred orientation",
+        from_markdown(markdown, false).unwrap_err().to_string()
+    );
 }
 
 /// Rule numbers are not monotonic.
 #[test]
 fn _0002() {
-  let markdown = r#"
+    let markdown = r#"
     | U                     |       |                             |   1    |    2     |    4     |    3     |   5    |
     |:----------------------|:-----:|:---------------------------:|:------:|:--------:|:--------:|:--------:|:------:|
     | Applicant age         | `In`  |     <25, [25..60], >60      |  <25   |   <25    | [25..60] |   >60    |  >60   |
@@ -31,8 +31,8 @@ fn _0002() {
     | Additional acceptance | `Ann` |                             |   No   |    No    |    No    |    No    |  Yes   |
     | Reference             | `Ann` |                             |  Rf 0  |   Rf 1   |   Rf 2   |   Rf 3   |  Rf 4  |
   "#;
-  assert_eq!(
-    "<RecognizerError> invalid decision table, reason: can not recognize the preferred orientation",
-    from_markdown(markdown, false).unwrap_err().to_string()
-  );
+    assert_eq!(
+        "<RecognizerError> invalid decision table, reason: can not recognize the preferred orientation",
+        from_markdown(markdown, false).unwrap_err().to_string()
+    );
 }

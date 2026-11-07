@@ -2,30 +2,30 @@ use super::super::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "calculate()",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "calculate()",
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `calculate`
        └─ PositionalParameters
           └─ (empty)
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0002() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "calculate(a:2)",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "calculate(a:2)",
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `calculate`
@@ -36,18 +36,18 @@ fn _0002() {
              └─ Numeric
                 └─ `2`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0003() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "add(x:2,y:5)",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "add(x:2,y:5)",
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `add`
@@ -63,18 +63,18 @@ fn _0003() {
              └─ Numeric
                 └─ `5`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0004() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "calculate(56,34)",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "calculate(56,34)",
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `calculate`
@@ -84,6 +84,6 @@ fn _0004() {
           └─ Numeric
              └─ `34`
     "#,
-    false,
-  );
+        false,
+    );
 }

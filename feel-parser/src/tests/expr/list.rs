@@ -3,75 +3,75 @@ use crate::lalr::TokenType::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[]"#,
+        r#"
        List
        └─ (empty)
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0001_1() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    r#"[]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        r#"[]"#,
+        r#"
        List
        └─ (empty)
     "#,
-    true,
-  );
+        true,
+    );
 }
 
 #[test]
 fn _0002() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[[[]]]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[[[]]]"#,
+        r#"
        List
        └─ List
           └─ List
              └─ (empty)
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0003() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[12.45]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[12.45]"#,
+        r#"
        List
        └─ Numeric
           └─ `12.45`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0004() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"["family","home","job","car"]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"["family","home","job","car"]"#,
+        r#"
        List
        ├─ String
        │  └─ `family`
@@ -82,36 +82,36 @@ fn _0004() {
        └─ String
           └─ `car`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0005() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[1.1,2.2]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[1.1,2.2]"#,
+        r#"
        List
        ├─ Numeric
        │  └─ `1.1`
        └─ Numeric
           └─ `2.2`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0006() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"["a","b","c"]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"["a","b","c"]"#,
+        r#"
        List
        ├─ String
        │  └─ `a`
@@ -120,35 +120,35 @@ fn _0006() {
        └─ String
           └─ `c`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0007() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[[1]]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[[1]]"#,
+        r#"
        List
        └─ List
           └─ Numeric
              └─ `1`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0008() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[[1],[2]]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[[1],[2]]"#,
+        r#"
        List
        ├─ List
        │  └─ Numeric
@@ -157,18 +157,18 @@ fn _0008() {
           └─ Numeric
              └─ `2`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _0009() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[[1],[2],[3]]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[[1],[2],[3]]"#,
+        r#"
        List
        ├─ List
        │  └─ Numeric
@@ -180,36 +180,36 @@ fn _0009() {
           └─ Numeric
              └─ `3`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _00010() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[[[1]]]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[[[1]]]"#,
+        r#"
        List
        └─ List
           └─ List
              └─ Numeric
                 └─ `1`
     "#,
-    false,
-  );
+        false,
+    );
 }
 
 #[test]
 fn _00011() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartBoxedExpression,
-    r#"[[[1],[2],[3]],[[4],[5]],[7,8,9]]"#,
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartBoxedExpression,
+        r#"[[[1],[2],[3]],[[4],[5]],[7,8,9]]"#,
+        r#"
        List
        ├─ List
        │  ├─ List
@@ -236,6 +236,6 @@ fn _00011() {
           └─ Numeric
              └─ `9`
     "#,
-    false,
-  );
+        false,
+    );
 }

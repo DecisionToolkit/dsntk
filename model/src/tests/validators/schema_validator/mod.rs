@@ -11,13 +11,13 @@ mod test_input_data_v14;
 mod test_root_element_v13;
 
 fn document(input: &str) -> Document<'_> {
-  Document::parse(input).unwrap()
+    Document::parse(input).unwrap()
 }
 
 fn expect_err(input: &str) -> DsntkError {
-  validate_schema(&document(input)).unwrap_err()
+    validate_schema(&document(input)).unwrap_err()
 }
 
 fn expect_err_str(input: &str) -> String {
-  expect_err(input).to_string()
+    expect_err(input).to_string()
 }

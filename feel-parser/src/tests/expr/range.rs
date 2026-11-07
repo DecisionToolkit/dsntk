@@ -2,8 +2,8 @@ use super::super::*;
 
 #[test]
 fn _0001() {
-  let input = "[1..10]";
-  let expected = r#"
+    let input = "[1..10]";
+    let expected = r#"
        Range
        ├─ IntervalStart (closed)
        │  └─ Numeric
@@ -12,13 +12,13 @@ fn _0001() {
           └─ Numeric
              └─ `10`
     "#;
-  accept(&scope!(), StartExpression, input, expected, false);
+    accept(&scope!(), StartExpression, input, expected, false);
 }
 
 #[test]
 fn _0002() {
-  let input = r#"date("2012-12-25") in [date("2012-01-01")..date("2021-12-31")]"#;
-  let expected = r#"
+    let input = r#"date("2012-12-25") in [date("2012-01-01")..date("2021-12-31")]"#;
+    let expected = r#"
        In
        ├─ FunctionInvocation
        │  ├─ Name
@@ -42,13 +42,13 @@ fn _0002() {
                    └─ String
                       └─ `2021-12-31`
     "#;
-  accept(&scope!(), StartExpression, input, expected, false);
+    accept(&scope!(), StartExpression, input, expected, false);
 }
 
 #[test]
 fn _0003() {
-  let input = "(<=10) = [1..10]";
-  let expected = r#"
+    let input = "(<=10) = [1..10]";
+    let expected = r#"
        Eq
        ├─ UnaryLe
        │  └─ Numeric
@@ -61,13 +61,13 @@ fn _0003() {
              └─ Numeric
                 └─ `10`
     "#;
-  accept(&scope!(), StartExpression, input, expected, false);
+    accept(&scope!(), StartExpression, input, expected, false);
 }
 
 #[test]
 fn _0004() {
-  let input = "10 in =10";
-  let expected = r#"
+    let input = "10 in =10";
+    let expected = r#"
        In
        ├─ Numeric
        │  └─ `10`
@@ -75,13 +75,13 @@ fn _0004() {
           └─ Numeric
              └─ `10`
     "#;
-  accept(&scope!(), StartExpression, input, expected, false);
+    accept(&scope!(), StartExpression, input, expected, false);
 }
 
 #[test]
 fn _0005() {
-  let input = "[1,2,3] in =[1,2,3]";
-  let expected = r#"
+    let input = "[1,2,3] in =[1,2,3]";
+    let expected = r#"
        In
        ├─ List
        │  ├─ Numeric
@@ -99,13 +99,13 @@ fn _0005() {
              └─ Numeric
                 └─ `3`
     "#;
-  accept(&scope!(), StartExpression, input, expected, false);
+    accept(&scope!(), StartExpression, input, expected, false);
 }
 
 #[test]
 fn _0006() {
-  let input = "(=10).start";
-  let expected = r#"
+    let input = "(=10).start";
+    let expected = r#"
        Path
        ├─ UnaryEq
        │  └─ Numeric
@@ -113,13 +113,13 @@ fn _0006() {
        └─ Name
           └─ `start`
     "#;
-  accept(&scope!(), StartExpression, input, expected, false);
+    accept(&scope!(), StartExpression, input, expected, false);
 }
 
 #[test]
 fn _0007() {
-  let input = "(>10).start";
-  let expected = r#"
+    let input = "(>10).start";
+    let expected = r#"
        Path
        ├─ UnaryGt
        │  └─ Numeric
@@ -127,5 +127,5 @@ fn _0007() {
        └─ Name
           └─ `start`
     "#;
-  accept(&scope!(), StartExpression, input, expected, false);
+    accept(&scope!(), StartExpression, input, expected, false);
 }

@@ -18,5 +18,5 @@ use uuid::Uuid;
 /// - [Version 4 UUIDs in RFC4122](https://www.rfc-editor.org/rfc/rfc4122#section-4.4)
 ///
 pub fn gen_id() -> String {
-  Uuid::new_v4().to_string()
+    Uuid::new_v4().to_string()
 }

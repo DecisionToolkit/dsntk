@@ -22,5 +22,6 @@ pub use builder::from_unicode;
 pub use markdown::from_markdown;
 
 pub use model::{
-  AnnotationClause, AnnotationEntry, BuiltinAggregator, DecisionRule, DecisionTable, DecisionTableOrientation, HitPolicy, InputClause, InputEntry, OutputClause, OutputEntry,
+    AnnotationClause, AnnotationEntry, BuiltinAggregator, DecisionRule, DecisionTable,
+    DecisionTableOrientation, HitPolicy, InputClause, InputEntry, OutputClause, OutputEntry,
 };

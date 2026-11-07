@@ -1,21 +1,31 @@
+.note To use these task definitions, install `task-commander` by running:
+      `cargo install task-commander`
+
 .vars
-  .RUST_TOOLKIT +stable
-  .RUST_TOOLKIT_NIGHTLY +nightly
+  .RUST_TOOLCHAIN +stable
 
 .tasks
 
   .build
     .desc Builds in debug mode
-    .cmd cargo {{RUST_TOOLKIT}} build --workspace
+    .cmd cargo {{RUST_TOOLCHAIN}} build --workspace
 
   .clean
     .desc Cleans all targets
-    .cmd cargo {{RUST_TOOLKIT}} clean
+    .cmd cargo {{RUST_TOOLCHAIN}} clean
 
   .clippy
     .desc Runs clippy for all targets
-    .cmd cargo {{RUST_TOOLKIT_NIGHTLY}} clippy --workspace --all-targets
+    .cmd cargo {{RUST_TOOLCHAIN}} clippy --workspace --all-targets
 
   .fmt
     .desc Runs the code formatter
-    .cmd cargo {{RUST_TOOLKIT_NIGHTLY}} fmt --all
+    .cmd cargo {{RUST_TOOLCHAIN}} fmt --all
+
+  .test
+    .desc Runs tests in debug mode
+    .cmd cargo {{RUST_TOOLCHAIN}} test --workspace
+
+  .testn
+    .desc Runs tests in debug mode using nextest
+    .cmd cargo {{RUST_TOOLCHAIN}} nextest run --workspace --no-fail-fast

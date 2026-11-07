@@ -4,17 +4,18 @@ use crate::ascii_model::print_model;
 use antex::ColorMode;
 
 macro_rules! test_print_model {
-  ($test_name:tt,$model_name:tt) => {
-    #[test]
-    #[allow(clippy::redundant_clone)]
-    fn $test_name() {
-      let definitions = dsntk_model::parse(dsntk_examples::$model_name).expect("parsing model failed");
-      print_model(definitions.clone(), ColorMode::On);
-      let expected = format!("{:?}", definitions);
-      let actual = format!("{:?}", definitions);
-      assert_eq!(expected, actual);
-    }
-  };
+    ($test_name:tt,$model_name:tt) => {
+        #[test]
+        #[allow(clippy::redundant_clone)]
+        fn $test_name() {
+            let definitions =
+                dsntk_model::parse(dsntk_examples::$model_name).expect("parsing model failed");
+            print_model(definitions.clone(), ColorMode::On);
+            let expected = format!("{:?}", definitions);
+            let actual = format!("{:?}", definitions);
+            assert_eq!(expected, actual);
+        }
+    };
 }
 
 test_print_model!(_2_0001, DMN_2_0001);
@@ -151,12 +152,12 @@ test_print_model!(_3_1130, DMN_3_1130);
 
 #[test]
 fn test_single_model() {
-  let definitions = dsntk_model::parse(dsntk_examples::DMN_3_1108).expect("parsing model failed");
-  print_model(definitions, ColorMode::On);
+    let definitions = dsntk_model::parse(dsntk_examples::DMN_3_1108).expect("parsing model failed");
+    print_model(definitions, ColorMode::On);
 }
 
 #[test]
 fn test_full_model() {
-  let definitions = dsntk_model::parse(dsntk_examples::DMN_FULL).expect("parsing model failed");
-  print_model(definitions, ColorMode::On);
+    let definitions = dsntk_model::parse(dsntk_examples::DMN_FULL).expect("parsing model failed");
+    print_model(definitions, ColorMode::On);
 }

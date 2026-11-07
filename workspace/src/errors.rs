@@ -7,5 +7,5 @@ use dsntk_common::{DsntkError, ToErrorMessage};
 struct WorkspaceError(String);
 
 pub fn err_invocable_not_found(invocable_path: &str) -> DsntkError {
-  WorkspaceError(format!("invocable not found: '{invocable_path}'")).into()
+    WorkspaceError(format!("invocable not found: '{invocable_path}'")).into()
 }

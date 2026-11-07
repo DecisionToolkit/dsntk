@@ -2,7 +2,7 @@ use dsntk_feel::{FeelScope, scope};
 
 #[test]
 fn _0001() {
-  let input = r#"{
+    let input = r#"{
     date: {
       time: {
         duration: {
@@ -11,8 +11,8 @@ fn _0001() {
       }
     }
   }"#;
-  let node = dsntk_feel_parser::parse_context(&scope!(), input, false).unwrap();
-  let expected = r#"
+    let node = dsntk_feel_parser::parse_context(&scope!(), input, false).unwrap();
+    let expected = r#"
        Context
        └─ ContextEntry
           ├─ ContextEntryKey
@@ -32,5 +32,5 @@ fn _0001() {
                             └─ Numeric
                                └─ `10`
     "#;
-  assert_eq!(expected, node.trace());
+    assert_eq!(expected, node.trace());
 }

@@ -2,12 +2,12 @@ use super::super::*;
 
 #[test]
 fn _0001() {
-  let scope = scope!();
-  accept(
-    &scope,
-    StartExpression,
-    "list contains(list1,list2)",
-    r#"
+    let scope = scope!();
+    accept(
+        &scope,
+        StartExpression,
+        "list contains(list1,list2)",
+        r#"
        FunctionInvocation
        ├─ Name
        │  └─ `list contains`
@@ -17,6 +17,6 @@ fn _0001() {
           └─ Name
              └─ `list2`
     "#,
-    false,
-  );
+        false,
+    );
 }

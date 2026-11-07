@@ -7,6 +7,6 @@ use test::Bencher;
 
 #[bench]
 fn bench_trunc_001(b: &mut Bencher) {
-  let x = FeelNumber::new(123456789, 4);
-  b.iter(|| x.trunc())
+    let x = FeelNumber::new(123456789, 4);
+    b.iter(|| x.trunc())
 }
