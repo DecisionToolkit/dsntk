@@ -18,6 +18,11 @@
     .desc Runs clippy for all targets
     .cmd cargo {{RUST_TOOLCHAIN}} clippy --workspace --all-targets
 
+  .cov
+    .desc Generates code coverage report in text format
+    .cmd cargo {{RUST_TOOLCHAIN}} llvm-cov clean
+    .cmd cargo {{RUST_TOOLCHAIN}} llvm-cov --no-cfg-coverage --workspace
+
   .fmt
     .desc Runs the code formatter
     .cmd cargo {{RUST_TOOLCHAIN}} fmt --all
@@ -28,4 +33,4 @@
 
   .testn
     .desc Runs tests in debug mode using nextest
-    .cmd cargo {{RUST_TOOLCHAIN}} nextest run --workspace --no-fail-fast
+    .cmd cargo {{RUST_TOOLCHAIN}} nextest run --workspace
