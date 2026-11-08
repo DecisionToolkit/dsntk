@@ -181,14 +181,12 @@
     </decision>
 
     <decision name="time_006" id="_time_006">
-        <description>Tests FEEL expression: 'is(@"23:00:50@Australia/Melbourne", @"23:00:50+11:00")' and expects result:
-            'false (boolean)'
-        </description>
-        <question>Result of FEEL expression 'is(@"23:00:50@Australia/Melbourne", @"23:00:50+11:00")'?</question>
+        <description>Tests FEEL expression: 'is(@"23:00:50@Australia/Melbourne", @"23:00:50+10:00")' and expects result: 'false (boolean)'</description>
+        <question>Result of FEEL expression 'is(@"23:00:50@Australia/Melbourne", @"23:00:50+10:00")'?</question>
         <allowedAnswers>false (boolean)</allowedAnswers>
         <variable name="time_006"/>
         <literalExpression>
-            <text>is(@"23:00:50@Australia/Melbourne", @"23:00:50+11:00")</text>
+            <text>is(@"23:00:50@Australia/Melbourne", @"23:00:50+10:00")</text>
         </literalExpression>
     </decision>
 
